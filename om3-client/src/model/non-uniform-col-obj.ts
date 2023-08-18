@@ -13,6 +13,11 @@ export class NoUniformColObj {
     index: number;
     startV: number | undefined;
     endV: number | undefined;
+    average: number;
+    currentSum: number;
+    currentPointNum: number;
+    currentRange: Array<Array<number>>;
+    ordinalLevelCount: number;
     vRange: Array<number>;
     width: number;
     globalDataLen: number;
@@ -38,6 +43,11 @@ export class NoUniformColObj {
         this.isMis = false;
         this.startV = undefined;
         this.endV = undefined;
+        this.average = 0;
+        this.currentSum = 0;
+        this.currentPointNum = 0;
+        this.currentRange = [];
+        this.ordinalLevelCount = 0;
         this.minVTimeRange = [0, 0];
         this.maxVTimeRange = [0, 0];
         this.vRange = [Infinity, -Infinity];
@@ -51,7 +61,6 @@ export class NoUniformColObj {
         this.startIndex = 0;
         this.endIndex = 0;
         this.index = 0;
-       
        
         this.globalDataLen = globalDataLen;
         this.maxLevel = maxLevel
@@ -82,6 +91,11 @@ export class NoUniformColObj {
         this.index = 0;
         this.startV = undefined;
         this.endV = undefined;
+        this.average = 0;
+        this.currentSum = 0;
+        this.currentPointNum = 0;
+        this.currentRange = [];
+        this.ordinalLevelCount = 0;
         this.vRange[0] = Infinity;
         this.vRange[1] = -Infinity;
         this.globalDataLen = globalDataLen;
@@ -171,7 +185,6 @@ export class NoUniformColObj {
                 const tRange = getIndexTime(p.level, p.index, this.maxLevel);
                 this.maxVTimeRange = [tRange.startT, tRange.endT];
             }
-
             return 1;
         } else if (pTimeS <= this.tEnd && pTimeE > this.tEnd) {
             return 2;
@@ -185,7 +198,6 @@ export class NoUniformColObj {
             return 5
         } else {
             console.log(p, this)
-
             throw new Error("time out of range")
         }
     }
@@ -195,7 +207,6 @@ export class NoUniformColObj {
         const pTimeS = p.index * pTRange;
         const pTimeE = pTRange + pTimeS - 1;
 
-       
         if (pTimeE >= this.globalDataLen) {
             return 6;
         }
@@ -225,7 +236,6 @@ export class NoUniformColObj {
         }
     }
     containColumnRange(p: TrendTree, type: number) {
-
         if (p.nodeType === "NULL") {
             return
         }
@@ -238,12 +248,10 @@ export class NoUniformColObj {
         const pTimeS = p.index * pTRange;
         const pTimeE = pTRange + pTimeS - 1;
         if (this.tStart === pTimeS) {
-            
             // throw new Error("cannot use this val")
             // this.startV = p.yArray[0];
         }
         if (this.tEnd === pTimeE) {
-            
             // throw new Error("cannot use this val")
             // this.endV = 0;//p.yArray[3];
         }
@@ -264,6 +272,24 @@ export class NoUniformColObj {
                 const tRange = getIndexTime(p.level, p.index, this.maxLevel);
                 this.maxVTimeRange = [tRange.startT, tRange.endT];
             }
+            if(this.ordinalLevelCount === 0){
+                this.average = p.yArray[3];
+                this.currentSum += p.yArray[3] * pTRange;
+                this.currentPointNum += pTRange;
+                this.currentRange.push([pTimeS, pTimeE]);
+                this.ordinalLevelCount++;
+            }
+            else{
+                // let levelDif = 2 ** this.ordinalLevelCount;
+                // // let newAverage = (this.average + (1 / levelDif) * p.yArray[3]) / (1 + (1 / levelDif));
+                // let newAverage = (this.average * (levelDif - 1) * 2 + p.yArray[3]) / (levelDif * 2 - 1);
+                // this.average = newAverage;
+                this.currentSum += p.yArray[3] * pTRange;
+                this.currentPointNum += pTRange;
+                this.average = this.currentSum / this.currentPointNum;
+                this.currentRange.push([pTimeS, pTimeE]);
+                this.ordinalLevelCount++;
+            }
             // if (p.parent && p.parent.nodeType === 'LEFTNULL') {
             //     this.startV = p.yArray[0];
             // }
@@ -276,28 +302,47 @@ export class NoUniformColObj {
         }
         return;
     }
-   
 
 
-    
-   
-
-
-
-    addLastVal(v: number) {
-
+    addLastVal(v: number, p?: any) {
         if (v === undefined) {
             return
         }
         this.endV = v
+
+        let index = p.index * 2;
+        let rangeArray = this.currentRange;
+        let max = 0;
+        for(let i=0;i<rangeArray.length;++i){
+            if(rangeArray[i][1] > max) max = rangeArray[i][1];
+        }
+        if(index > max && index === max+1){
+            this.currentRange.push([index]);
+        }
+        this.currentSum += v;
+        this.currentPointNum += 1;
+        this.average = this.currentSum / this.currentPointNum;
     }
-    addFirstVal(v: number) {
+    addFirstVal(v: number, p?: any) {
         if (v === undefined) {
             return
         }
         this.startV = v;
+
+        let index = p.index * 2 + 1;
+        let rangeArray = this.currentRange;
+        let min = rangeArray[0][0];
+        for(let i=0;i<rangeArray.length;++i){
+            if(rangeArray[i][0] < min) min = rangeArray[i][0];
+        }
+        if(min > index && index === min-1){
+            this.currentRange.push([index]);
+        }
+        this.currentSum += v;
+        this.currentPointNum += 1;
+        this.average = this.currentSum / this.currentPointNum;
     }
-    forceMerge(val: number) {
+    forceMerge(val: number, index?: number) {
         if (val === undefined) {
             throw new Error("undefine")
             return
@@ -308,9 +353,9 @@ export class NoUniformColObj {
         if (val > this.vRange[1]) {
             this.vRange[1] = val;
         }
+
     }
     mergeLast(k: number, b: number) {
-
         const val = k * this.tEnd + b;
         if (val === undefined) {
             throw new Error("undefine")

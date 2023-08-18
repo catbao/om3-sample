@@ -38,7 +38,7 @@ async function getBuffer(state: GlobalState, url: string) {
         if (cacheFlag && cacheFlag !== '' && cacheFlag !== undefined && cacheFlag !== null) {
             //@ts-ignore
             const flagBuffer = base64ToArrayBuffer(cacheFlag!);
-            console.log(url, "use flag cache:", flagBuffer.byteLength);
+            // console.log(url, "use flag cache:", flagBuffer.byteLength);
             return flagBuffer
         }
 

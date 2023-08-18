@@ -3,7 +3,7 @@ import axios from "axios";
 import TrendTree from "@/helper/tend-query-tree";
 import store, { pushTimeArray } from "@/store";
 import * as d3 from 'd3';
-import { canCut, checkSetType, computeLosedDataRange, computeLosedDataRangeV1, computeTimeSE, deleteSavedNodeIndex, computeSemanticColumn, convertWaveletToRawTableName, computeLosedDataRangeV1ForRawMinMax } from "@/helper/util";
+import { canCut, checkSetType, computeLosedDataRange, computeLosedDataRangeV1, computeTimeSE, deleteSavedNodeIndex, computeSemanticColumn, convertWaveletToRawTableName, computeLosedDataRangeV1ForRawMinMax, computeTimeSE1 } from "@/helper/util";
 import { NoUniformColObj } from "./non-uniform-col-obj";
 import { UniformGapObj } from "./uniform-gap-obj";
 // import { loadDataForRangeLevel, batchLoadDataForRangeLevelRawMinMax, batchLoadDataForRangeLevel, batchLoadDataForRangeLevel1, batchLoadDataForRangeLevel2MinMaxMiss, batchLoadDataForRangeLevel1MinMaxMiss, batchLoadDataForRangeLevel1WS, batchLoadDataForRangeLevelForMinMaxMiss } from "../api/build_tree"
@@ -441,7 +441,7 @@ export default class LevelDataManager {
                     }
                     if(p.difference![3] <= 0 || p.difference![3] >= 0){
                         yArray1[3] = (p.yArray[3] * 2 + p.difference![3]) / 2; 
-                        yArray1[3] = (p.yArray[3] * 2 - p.difference![3]) / 2; 
+                        yArray2[3] = (p.yArray[3] * 2 - p.difference![3]) / 2; 
                     }
                     const firstNode = new TrendTree(p, true, p.index, yArray1, null);
                     const secondNode = new TrendTree(p, false, p.index, yArray2, null);
@@ -533,7 +533,7 @@ export default class LevelDataManager {
                     }
                     if(p.difference![3] <= 0 || p.difference![3] >= 0){
                         yArray1[3] = (p.yArray[3] * 2 + p.difference![3]) / 2; 
-                        yArray1[3] = (p.yArray[3] * 2 - p.difference![3]) / 2; 
+                        yArray2[3] = (p.yArray[3] * 2 - p.difference![3]) / 2; 
                     }
                     const firstNode = new TrendTree(p, true, p.index, yArray1, null);
                     const secondNode = new TrendTree(p, false, p.index, yArray2, null);
@@ -891,12 +891,6 @@ export default class LevelDataManager {
     }
 
 
-
-
-
-
-
-
     checkLoadedDataInSingalLevel(losedDataInfo: Array<Array<number>>) {
         const currentLevelLosedRange = [];
         for (let j = 0; j < losedDataInfo.length; j++) {
@@ -983,7 +977,6 @@ export default class LevelDataManager {
     }
 
 
-
     evictTreeNode() {
         setInterval(() => {
             if (this.isIntering) {
@@ -1003,6 +996,8 @@ export default class LevelDataManager {
         }, 1000)
 
     }
+
+
     deleteNodeWhithChild(level: number, index: number) {
 
         let curLS = index;
@@ -1182,9 +1177,13 @@ export default class LevelDataManager {
             this.levelIndexObjs[j].firstNodes = newFirstNodes;
         }
     }
+
+
     updateMaxCacheSize(size: number) {
         this.maxCacheNodeNum = size;
     }
+
+    
     lruCacheDelete() {
         console.log(this.cacheMap.size)
         if (this.cacheMap.size <= this.maxCacheNodeNum) {
@@ -1220,11 +1219,6 @@ export default class LevelDataManager {
             }
         }
     }
-
-
-
-
-
 
 
     async computePowCon(currentLevel: number, width: number, gapNeedNodes: Array<TrendTree>, nonUniformColObjs: Array<NoUniformColObj>) {
@@ -1363,15 +1357,6 @@ export default class LevelDataManager {
         return nonUniformColObjs
 
     }
-
-
-
-
-
-
-
-
-
 
 
     bfsSearchTree(currentLevel: number, width: number, timeRange: Array<number>, nonUniformColObjs: Array<NoUniformColObj>) {
@@ -1649,11 +1634,6 @@ export default class LevelDataManager {
     }
 
 
-
-
-
-
-
     async viewChangeInteractionFinal(currentLevel: number, width: number, timeRange: Array<number>, yScale: any) {
         console.log(currentLevel, width, timeRange)
         const dataName = this.dataName.includes(".") ? this.dataName.split(".")[1] : this.dataName;
@@ -1824,7 +1804,6 @@ export default class LevelDataManager {
     }
 
 
-
     async viewChangeInteractionFinal1(currentLevel: number, width: number, timeRange: Array<number>, yScale: any, drawer: any) {
         
         const currentFlagInfo = getFlag(this.dataName);
@@ -1856,40 +1835,36 @@ export default class LevelDataManager {
                     if (type === 1) {
                         p = p.nextSibling!;
                     } else if (type === 2 || type === 7 || type === 8 || type === 9 || type === 10) {
-
                         if (type === 2) {
                             needLoadDifNode.push(p);
                         }
-                        if (type === 7) {
-                            needLoadDifNode.push(p);
-                            colIndex++;
-                        }
-                        if (type === 8) {
-                            if (colIndex != 0) {
-                                needLoadDifNode.push(p);
-                            }
-                        }
-                        if (type === 9) {
-                            colIndex++;
-                            if (colIndex !== nonUniformColObjs.length - 1) {
-                                needLoadDifNode.push(p);
-                            }
-                        }
-                        if (type === 10) {
-                            needLoadDifNode.push(p);
-                            //preColIndex.push(colIndex);
-                        }
+                        // if (type === 7) {
+                        //     needLoadDifNode.push(p);
+                        //     colIndex++;
+                        // }
+                        // if (type === 8) {
+                        //     if (colIndex != 0) {
+                        //         needLoadDifNode.push(p);
+                        //     }
+                        // }
+                        // if (type === 9) {
+                        //     colIndex++;
+                        //     if (colIndex !== nonUniformColObjs.length - 1) {
+                        //         needLoadDifNode.push(p);
+                        //     }
+                        // }
+                        // if (type === 10) {
+                        //     needLoadDifNode.push(p);
+                        //     //preColIndex.push(colIndex);
+                        // }
                         p = p.nextSibling!;
                     } else if (type === 3) {
                         colIndex++;
                     } else if (type === 5) {
-                      
                         p = p.nextSibling!
                     } else if (type === 6) {
-                        
                         break;
                     } else {
-                      
                         p = p.nextSibling!;
                         //throw new Error("node time is little than col");
                     }
@@ -1897,21 +1872,16 @@ export default class LevelDataManager {
             }else{
                 debugger
             }
-
         }
         // debugger
         if (needLoadDifNode.length === 0) {
             return nonUniformColObjs;
         }
-
         let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
-
         // debugger
         if (losedDataInfo.length > 0) {
-
             await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);
         }
-
 
         while (needLoadDifNode.length > 0) {
             colIndex = 0;
@@ -1949,31 +1919,30 @@ export default class LevelDataManager {
                 if (type === 1) {
                     continue;
                 } else if (type === 2 || type === 7 || type === 8 || type === 9 || type === 10) {
-
                     if (type === 2) {
                         tempNeedLoadDifNodes.push(tempQue[i]);
                         preColIndex.push(colIndex);
                     }
-                    if (type === 7) {
-                        tempNeedLoadDifNodes.push(tempQue[i]);
-                        preColIndex.push(colIndex)
-                    }
-                    if (type === 8) {
-                        if (colIndex != 0) {
-                            tempNeedLoadDifNodes.push(tempQue[i]);
-                            preColIndex.push(colIndex - 1)
-                        }
-                    }
-                    if (type === 9) {
-                        if (colIndex !== nonUniformColObjs.length - 1) {
-                            tempNeedLoadDifNodes.push(tempQue[i]);
-                            preColIndex.push(colIndex)
-                        }
-                    }
-                    if (type === 10) {
-                        tempNeedLoadDifNodes.push(tempQue[i]);
-                        preColIndex.push(colIndex);
-                    }
+                    // if (type === 7) {
+                    //     tempNeedLoadDifNodes.push(tempQue[i]);
+                    //     preColIndex.push(colIndex)
+                    // }
+                    // if (type === 8) {
+                    //     if (colIndex != 0) {
+                    //         tempNeedLoadDifNodes.push(tempQue[i]);
+                    //         preColIndex.push(colIndex - 1)
+                    //     }
+                    // }
+                    // if (type === 9) {
+                    //     if (colIndex !== nonUniformColObjs.length - 1) {
+                    //         tempNeedLoadDifNodes.push(tempQue[i]);
+                    //         preColIndex.push(colIndex)
+                    //     }
+                    // }
+                    // if (type === 10) {
+                    //     tempNeedLoadDifNodes.push(tempQue[i]);
+                    //     preColIndex.push(colIndex);
+                    // }
 
                 } else if (type === 3) {
                     colIndex++;
@@ -1988,57 +1957,52 @@ export default class LevelDataManager {
             if (preColIndex.length != tempNeedLoadDifNodes.length) {
                 throw new Error("cannot memory index");
             }
-            for (let i = 0; i < tempNeedLoadDifNodes.length; i++) {
-                if (tempNeedLoadDifNodes[i].gapFlag !== 'NO') {
-                    continue;
-                }
-                if (preColIndex[i] + 1 < nonUniformColObjs.length) {
-                    const con1 = canCut(tempNeedLoadDifNodes[i], nonUniformColObjs[preColIndex[i]], nonUniformColObjs[preColIndex[i] + 1], yScale);
-                    if (con1) {
-                        tempNeedLoadDifNodes.splice(i, 1)
-                        preColIndex.splice(i, 1);
-                    }
-                }
-
-            }
+            // for (let i = 0; i < tempNeedLoadDifNodes.length; i++) {
+            //     if (tempNeedLoadDifNodes[i].gapFlag !== 'NO') {
+            //         continue;
+            //     }
+            //     if (preColIndex[i] + 1 < nonUniformColObjs.length) {
+            //         const con1 = canCut(tempNeedLoadDifNodes[i], nonUniformColObjs[preColIndex[i]], nonUniformColObjs[preColIndex[i] + 1], yScale);
+            //         if (con1) {
+            //             tempNeedLoadDifNodes.splice(i, 1)
+            //             preColIndex.splice(i, 1);
+            //         }
+            //     }
+            // }
             needLoadDifNode = tempNeedLoadDifNodes;
-
             if (needLoadDifNode.length > 0 && needLoadDifNode[0].level === this.maxLevel - 1) {
-
                 for (let i = 0; i < needLoadDifNode.length; i++) {
-
                     const nodeFlag2 = currentFlagInfo[2 * needLoadDifNode[i].index + 1]
                     if (needLoadDifNode[i].gapFlag === 'NO') {
                         if (nodeFlag2 === 0) {
-                            nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[1]);
+                            nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[1], needLoadDifNode[i]);
                             nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[1]);
                             if (preColIndex[i] + 1 < nonUniformColObjs.length) {
-                                nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[2]);
+                                nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[2], needLoadDifNode[i]);
                                 nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[2]);
                             }
                         } else {
-                            nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[2]);
+                            nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[2], needLoadDifNode[i]);
                             nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[2]);
                             if (preColIndex[i] + 1 < nonUniformColObjs.length) {
-                                nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[1]);
+                                nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[1], needLoadDifNode[i]);
                                 nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[1]);
                             }
                         }
                     } else {
                         if (nodeFlag2 === 0) {
-                            nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[1]);
+                            nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[1], needLoadDifNode[i]);
                             nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[1]);
 
-                            nonUniformColObjs[preColIndex[i]].addFirstVal(needLoadDifNode[i].yArray[2]);
+                            nonUniformColObjs[preColIndex[i]].addFirstVal(needLoadDifNode[i].yArray[2], needLoadDifNode[i]);
                             nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[2]);
 
                         } else {
-                            nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[2]);
+                            nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[2], needLoadDifNode[i]);
                             nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[2]);
 
-                            nonUniformColObjs[preColIndex[i]].addFirstVal(needLoadDifNode[i].yArray[1]);
+                            nonUniformColObjs[preColIndex[i]].addFirstVal(needLoadDifNode[i].yArray[1], needLoadDifNode[i]);
                             nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[1]);
-
                         }
                     }
 
@@ -2048,7 +2012,6 @@ export default class LevelDataManager {
             if (store.state.controlParams.progressive && drawer) {
                 drawer(nonUniformColObjs, "progressive")
             }
-
             if (needLoadDifNode.length === 0) {
                 break;
             }
@@ -2058,6 +2021,7 @@ export default class LevelDataManager {
             }
 
         }
+
         for (let i = 0; i < nonUniformColObjs.length; i++) {
             nonUniformColObjs[i].checkIsMis();
         }

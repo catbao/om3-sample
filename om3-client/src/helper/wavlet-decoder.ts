@@ -609,7 +609,7 @@ function constructMinMaxMissTrendTree(data: Array<any>, width: number, tableName
                     yArray1[2] = lastNode.yArray[2];
                     yArray2[2] = lastNode.yArray[2] - dif[1];
                 }
-                if(dif[2] < 0){
+                if(dif[2] <= 0 || dif[2] >= 0){
                     yArray1[3] = (lastNode.yArray[3] * 2 + dif[2]) / 2;
                     yArray2[3] = (lastNode.yArray[3] * 2 - dif[2]) / 2;
                 }

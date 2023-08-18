@@ -124,15 +124,12 @@ export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
         }
         yAxisG = svg.append("g").attr('style', 'user-select:none').attr("transform", `translate(${pading.left},${pading.top})`).attr("class", 'y axis').call(yAxis);
 
-
-
         showXTimeScale = d3.scaleTime().domain([new Date(Math.floor(indexToTimeStampScale(lineChartObj.timeRange[0]))), new Date(Math.floor(indexToTimeStampScale(lineChartObj.timeRange[1])))]).range([0, lineChartObj.width]);
         xAxis = d3.axisBottom(showXTimeScale);
         if (xAxisG !== null && xAxisG !== undefined) {
             xAxisG.remove();
         }
         xAxisG = svg.append("g").attr('style', 'user-select:none').attr("transform", `translate(${pading.left},${lineChartObj.height + pading.top})`).attr("class", 'x axis').call(xAxis)
-
 
         if (foreignObj == null && nonUniformColObjs) {
             foreignObj = svg.append("foreignObject")
@@ -148,14 +145,12 @@ export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
             ctx = canvas.getContext("2d");
         }
 
-
         if (nonUniformColObjs && ctx) {
             formatNonPowDataForViewChange(nonUniformColObjs,lineChartObj.width,lineChartObj.maxLen,null)
             // console.log(nonUniformColObjs);
             ctx.clearRect(0, 0, lineChartObj.width, lineChartObj.height);
             ctx.beginPath();
             ctx.strokeStyle = "steelblue"
-            
             
             for (let i = 0; i < nonUniformColObjs.length; i++) {
                 if (nonUniformColObjs[i].isMis) {
@@ -172,8 +167,8 @@ export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
                     ctx.moveTo(nonUniformColObjs[i].positionInfo.endX, yScale(nonUniformColObjs[i].endV!));
                     ctx.lineTo(nonUniformColObjs[i + 1].positionInfo.startX, yScale(nonUniformColObjs[i + 1].startV!));
                 }
-
             }
+
             const stack = [];
             for (let i = 0; i < nonUniformColObjs.length - 1; i++) {
                 if (!nonUniformColObjs[i].isMis && nonUniformColObjs[i + 1].isMis) {
@@ -194,6 +189,22 @@ export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
                         }
                     }
                 }
+            }
+            ctx.stroke();
+        } else {
+            console.log("error")
+        }
+
+        if (nonUniformColObjs && ctx) {
+            formatNonPowDataForViewChange(nonUniformColObjs,lineChartObj.width,lineChartObj.maxLen,null)
+            // console.log(nonUniformColObjs);
+            ctx.clearRect(0, 0, lineChartObj.width, lineChartObj.height);
+            ctx.beginPath();
+
+            ctx.strokeStyle = 'red';
+            for(let i=0; i<nonUniformColObjs.length-1; i++){
+                ctx.moveTo(nonUniformColObjs[i].positionInfo.startX, yScale(nonUniformColObjs[i].average));
+                ctx.lineTo(nonUniformColObjs[i+1].positionInfo.startX, yScale(nonUniformColObjs[i+1].average));
             }
             ctx.stroke();
         } else {

@@ -129,9 +129,11 @@ export function computeTimeSE(currentLevel: number, width: number, timeRange: Ar
     let previousSegmentIndex = minSegmentIndex;
     for (let i = minSegmentIndex; i <= maxSegmentIndex; i++) {
         const relativeStartTime = i * timeRangeLength / width + startTime;
-        const relativeEndTime = (i + 1) * timeRangeLength / width + startTime - 1;
+        // const relativeEndTime = (i + 1) * timeRangeLength / width + startTime - 1;
+        const relativeEndTime = (i + 1) * timeRangeLength / width + startTime;
 
         const segmentStart = Math.ceil(relativeStartTime);
+        // const segmentStart = Math.floor(relativeStartTime);
         const segmentEnd = Math.floor(relativeEndTime);
 
         if (segmentStart <= segmentEnd) {
