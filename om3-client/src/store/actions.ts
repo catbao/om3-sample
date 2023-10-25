@@ -14,6 +14,7 @@ import { ElLoading } from 'element-plus'
 import { drawViewChangeLineChart } from "@/application/line-interaction";
 import { indexGetData, indexPutData, initIndexDB } from "@/indexdb";
 
+let lastMaxIndex = 0;
 
 async function get(state: GlobalState, url: string) {
 
@@ -25,27 +26,33 @@ async function get(state: GlobalState, url: string) {
     return data;
 }
 
-
+function getMultiples(n:any) {
+    if (n % 2 === 1) { 
+      return 0;
+    } else {
+      let i = 0;
+      while (n % Math.pow(2, i+1) === 0) { 
+        i++;
+      }
+      return i; 
+    }
+}
 
 async function getBuffer(state: GlobalState, url: string) {
-
     url = 'postgres' + url;
     // localStorage.removeItem(url)
     try {
         const timeGetCache = new Date().getTime()
         const cacheFlag = await indexGetData(url)
-
         if (cacheFlag && cacheFlag !== '' && cacheFlag !== undefined && cacheFlag !== null) {
             //@ts-ignore
             const flagBuffer = base64ToArrayBuffer(cacheFlag!);
             // console.log(url, "use flag cache:", flagBuffer.byteLength);
             return flagBuffer
         }
-
     } catch (err) {
         console.error(err)
     }
-
 
     //const loading = openLoading();
     const { data } = await axios.get(url, { responseType: 'arraybuffer' });
@@ -56,7 +63,6 @@ async function getBuffer(state: GlobalState, url: string) {
     // loading.close();
     return data;
 }
-
 
 
 const loadViewChangeQueryWSMinMaxMissDataInitData: ActionHandler<GlobalState, GlobalState> = (context: ActionContext<GlobalState, GlobalState>, payload: { startTime: number, endTime: number, width: number, height: number }) => {
@@ -129,7 +135,6 @@ const loadViewChangeQueryWSMinMaxMissDataInitData: ActionHandler<GlobalState, Gl
         } else {
             console.error(tempRes['msg'])
         }
-
     });
 }
 

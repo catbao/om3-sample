@@ -84,10 +84,68 @@ router.get('/getAllCustomTables', getAllCustomTables);
 router.get('/performTransformForSingeLine', performTransformForSingeLine);
 router.get('/getAllCustomTableAndInfo', getAllCustomTableAndInfo);
 router.get('/getAllDefaultTableAndInfo', getAllDefaultTableAndInfo);
-router.get('/performTransformForMultiLine', performTransformForMultiLine)
+router.get('/performTransformForMultiLine', performTransformForMultiLine);
 //router.options('/batchLevelDataProgressiveWavelet',batchLevelDataProgressiveWaveletPostHandler)
+router.get('/getEqualData', getEqualData);
 
 
+
+async function getEqualData(req,res){
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    // const queryMaxIndexSql = `select max(i) from om3.encode3`;
+    const queryMaxIndexSql = `select max(i) from om3.encode2`;
+    let maxI = await pool.query(queryMaxIndexSql);
+    let cofLen = parseInt(maxI.rows[0].max);
+    console.log(maxI.rows[0].max)
+    let maxL = Math.log2((cofLen+1)*2); //系数*2
+
+    // sqlStr1 = `select i,minvd,maxvd from om3.encode3 where i in (`
+    sqlStr1 = `select i,minvd,maxvd from om3.encode2 where i in (`
+    let array = new Array(maxL+1);
+    array[maxL] = new Array(1);
+    array[maxL][0] = 2 ** (maxL-1) - 1;
+    let tempStr1 = `${array[maxL][0]},`
+    // console.log(tempStr1)
+    let width = 10;
+    for(let i = maxL - 1; i > Math.max(1,maxL-width); --i){ //maxL-1-width和maxL-width
+        array[i] = new Array(2**(maxL - i));
+        for(let j = 0; j < array[i+1].length; ++j){
+            array[i][2*j] = array[i+1][j] - 2**(i-1);
+            tempStr1 += `${array[i][2*j]},`
+            // console.log(array[i][2*j]);
+            array[i][2*j+1] = array[i+1][j] - 1;
+            tempStr1 += `${array[i][2*j+1]},`
+        }
+        // console.log(tempStr1)
+    }
+    // console.log(tempStr1)
+    tempStr1 += `-1) order by array_positions(array[`
+    for(let i = maxL - 1; i > Math.max(1,maxL-width); --i){
+        for(let j = 0; j < array[i+1].length; ++j){
+            tempStr1 += `${array[i][2*j]},`
+            tempStr1 += `${array[i][2*j+1]},`
+        }
+    }
+    let sqlQuery1 = sqlStr1 + tempStr1 + `-1],i)`;
+    // console.log(sqlQuery1);
+    const startT = new Date().getTime();
+    pool.query(sqlQuery1, function (err, result) {
+        if (err) {
+            pool.end();
+            console.log("pool's query cuole!")
+            throw err;
+        }
+        const finalRes = []
+    
+        for(let i=0;i<result.rows.length;i++){
+            const tempVal=result.rows[i];
+            finalRes.push({minvd:tempVal['minvd'],maxvd:tempVal['maxvd']});
+        }
+        console.log("getEqualData's time every time: w i t", new Date().getTime() - startT);
+        console.log(finalRes.length);
+        res.send(finalRes);
+    });
+}
 
 let queryTime = [];
 function m4BenchmarkHandler(req, res) {
@@ -309,7 +367,6 @@ function batchLevelDataProgressiveWaveletMinMaxMissPostHandler(req, res) {
 let allWaveletTables = []
 function getAllTables(req, res) {
     res.setHeader("Access-Control-Allow-Origin", "*");
-
 
     const sqlStr = `select table_schema||'.'||table_name as table_fullname from information_schema."tables" where table_type = 'BASE TABLE' and table_schema not in ('pg_catalog', 'information_schema');`
     pool.query(sqlStr, (err, result) => {
