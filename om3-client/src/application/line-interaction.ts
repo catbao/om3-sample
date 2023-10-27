@@ -195,21 +195,21 @@ export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
             console.log("error")
         }
 
-        if (nonUniformColObjs && ctx) {
-            formatNonPowDataForViewChange(nonUniformColObjs,lineChartObj.width,lineChartObj.maxLen,null)
-            // console.log(nonUniformColObjs);
-            ctx.clearRect(0, 0, lineChartObj.width, lineChartObj.height);
-            ctx.beginPath();
+        // if (nonUniformColObjs && ctx) {
+        //     formatNonPowDataForViewChange(nonUniformColObjs,lineChartObj.width,lineChartObj.maxLen,null)
+        //     // console.log(nonUniformColObjs);
+        //     ctx.clearRect(0, 0, lineChartObj.width, lineChartObj.height);
+        //     ctx.beginPath();
 
-            ctx.strokeStyle = 'red';
-            for(let i=0; i<nonUniformColObjs.length-1; i++){
-                ctx.moveTo(nonUniformColObjs[i].positionInfo.startX, yScale(nonUniformColObjs[i].average));
-                ctx.lineTo(nonUniformColObjs[i+1].positionInfo.startX, yScale(nonUniformColObjs[i+1].average));
-            }
-            ctx.stroke();
-        } else {
-            console.log("error")
-        }
+        //     ctx.strokeStyle = 'red';
+        //     for(let i=0; i<nonUniformColObjs.length-1; i++){
+        //         ctx.moveTo(nonUniformColObjs[i].positionInfo.startX, yScale(nonUniformColObjs[i].average));
+        //         ctx.lineTo(nonUniformColObjs[i+1].positionInfo.startX, yScale(nonUniformColObjs[i+1].average));
+        //     }
+        //     ctx.stroke();
+        // } else {
+        //     console.log("error")
+        // }
 
     }
 
