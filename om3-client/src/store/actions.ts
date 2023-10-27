@@ -65,77 +65,109 @@ async function getBuffer(state: GlobalState, url: string) {
 }
 
 
-const loadViewChangeQueryWSMinMaxMissDataInitData: ActionHandler<GlobalState, GlobalState> = (context: ActionContext<GlobalState, GlobalState>, payload: { startTime: number, endTime: number, width: number, height: number }) => {
-    let maxLevel = 0
-    const currentTable = context.state.controlParams.currentTable;
-    let lineInfo: any = null
-    if (context.state.controlParams.currentMode === 'Default') {
-        lineInfo = context.state.defaultTableMap.get(currentTable);
-    } else {
-        lineInfo = context.state.customTableMap.get(currentTable);
-    }
+// const loadViewChangeQueryWSMinMaxMissDataInitData: ActionHandler<GlobalState, GlobalState> = (context: ActionContext<GlobalState, GlobalState>, payload: { startTime: number, endTime: number, width: number, height: number }) => {
+//     let maxLevel = 0
+//     const currentTable = context.state.controlParams.currentTable;
+//     let lineInfo: any = null
+//     if (context.state.controlParams.currentMode === 'Default') {
+//         lineInfo = context.state.defaultTableMap.get(currentTable);
+//     } else {
+//         lineInfo = context.state.customTableMap.get(currentTable);
+//     }
 
-    if (lineInfo === undefined) {
-        throw new Error("cannot get class info");
-    }
-    maxLevel = lineInfo['level'];
-    const startTimeStamp = new Date(lineInfo.start_time).getTime();
-    let endTimeStamp = 0
-    if (lineInfo.end_time !== '') {
-        endTimeStamp = new Date(lineInfo.end_time).getTime();
-    }
-    let timeInterval = 0;
-    if (lineInfo.interval !== 0) {
-        timeInterval = lineInfo.interval;
-    }
-    //@ts-ignore
-    const combinedUrl = `/line_chart/init_wavelet_bench_min_max_miss?width=${2 ** (Math.ceil(Math.log2(payload.width)))}&table_name=${context.state.controlParams.currentTable}&mode=${context.state.controlParams.currentMode}`;
-    const data = get(context.state, combinedUrl);
-    data.then(tempRes => {
-        if (tempRes['code'] === 200) {
-            const finalRes = tempRes['data']['result'];
-            const currentLevel = Math.ceil(Math.log2(payload.width));
+//     if (lineInfo === undefined) {
+//         throw new Error("cannot get class info");
+//     }
+//     maxLevel = lineInfo['level'];
+//     const startTimeStamp = new Date(lineInfo.start_time).getTime();
+//     let endTimeStamp = 0
+//     if (lineInfo.end_time !== '') {
+//         endTimeStamp = new Date(lineInfo.end_time).getTime();
+//     }
+//     let timeInterval = 0;
+//     if (lineInfo.interval !== 0) {
+//         timeInterval = lineInfo.interval;
+//     }
+//     //@ts-ignore
+//     const combinedUrl = `/line_chart/init_wavelet_bench_min_max_miss?width=${2 ** (Math.ceil(Math.log2(payload.width)))}&table_name=${context.state.controlParams.currentTable}&mode=${context.state.controlParams.currentMode}`;
+//     const data = get(context.state, combinedUrl);
+//     data.then(tempRes => {
+//         if (tempRes['code'] === 200) {
+//             const finalRes = tempRes['data']['result'];
+//             const currentLevel = Math.ceil(Math.log2(payload.width));
 
-            const { trendTree, dataManager } = constructMinMaxMissTrendTree(finalRes, payload.width);
-            dataManager.maxLevel = maxLevel
-            dataManager.realDataRowNum = lineInfo['max_len']
-            const { minv, maxv } = getGlobalMinMaxInfo(getLevelData(dataManager.levelIndexObjs[dataManager.levelIndexObjs.length - 1].firstNodes[0]));
+//             const { trendTree, dataManager } = constructMinMaxMissTrendTree(finalRes, payload.width);
+//             dataManager.maxLevel = maxLevel
+//             dataManager.realDataRowNum = lineInfo['max_len']
+//             const { minv, maxv } = getGlobalMinMaxInfo(getLevelData(dataManager.levelIndexObjs[dataManager.levelIndexObjs.length - 1].firstNodes[0]));
 
-            const viewChangeQueryObj: ViewChangeLineChartObj = {
-                id: uuidv4(),
-                width: payload.width,
-                height: payload.height,
-                x: Math.random() * 60,
-                y: Math.random() * 60,
-                root: trendTree,
-                data: { powRenderData: [], noPowRenderData: [], minv: minv!, maxv: maxv! },
-                timeRange: [0, lineInfo['max_len']],
-                startTime: startTimeStamp,
-                endTime: endTimeStamp,
-                algorithm: "",
-                dataManager: dataManager,
-                params: [0, 0],
-                currentLevel: Math.ceil(Math.log2(payload.width)),
-                isPow: false,
-                nonUniformColObjs: [],
-                maxLen: lineInfo['max_len']
-            }
-            const drawer = drawViewChangeLineChart(viewChangeQueryObj)
-            dataManager.getDataMinMaxMiss(currentLevel + 1, 0, 2 ** (currentLevel + 1) - 1).then(() => {
-                const minV = dataManager.levelIndexObjs[0].firstNodes[0].yArray[1];
-                const maxV = dataManager.levelIndexObjs[0].firstNodes[0].yArray[2];
-                const yScale = d3.scaleLinear().domain([minV, maxV]).range([payload.height, 0]);
+//             const viewChangeQueryObj: ViewChangeLineChartObj = {
+//                 id: uuidv4(),
+//                 width: payload.width,
+//                 height: payload.height,
+//                 x: Math.random() * 60,
+//                 y: Math.random() * 60,
+//                 root: trendTree,
+//                 data: { powRenderData: [], noPowRenderData: [], minv: minv!, maxv: maxv! },
+//                 timeRange: [0, lineInfo['max_len']],
+//                 startTime: startTimeStamp,
+//                 endTime: endTimeStamp,
+//                 algorithm: "",
+//                 dataManager: dataManager,
+//                 params: [0, 0],
+//                 currentLevel: Math.ceil(Math.log2(payload.width)),
+//                 isPow: false,
+//                 nonUniformColObjs: [],
+//                 maxLen: lineInfo['max_len']
+//             }
+//             const drawer = drawViewChangeLineChart(viewChangeQueryObj)
+//             dataManager.getDataMinMaxMiss(currentLevel + 1, 0, 2 ** (currentLevel + 1) - 1).then(() => {
+//                 const minV = dataManager.levelIndexObjs[0].firstNodes[0].yArray[1];
+//                 const maxV = dataManager.levelIndexObjs[0].firstNodes[0].yArray[2];
+//                 const yScale = d3.scaleLinear().domain([minV, maxV]).range([payload.height, 0]);
 
-                dataManager.viewChangeInteractionFinal1(Math.ceil(Math.log2(payload.width)), payload.width, [0, lineInfo['max_len'] - 1], yScale, drawer).then(res => {
-                    drawer(res)
-                    //context.commit("addViewChangeQueryNoPowLineChartObj", { trendTree, dataManager, data: res, startTime: payload.startTime, endTime: payload.endTime, algorithm: "trendtree", width: payload.width, height: payload.height });
-                });
-            });
+//                 dataManager.viewChangeInteractionFinal1(Math.ceil(Math.log2(payload.width)), payload.width, [0, lineInfo['max_len'] - 1], yScale, drawer).then(res => {
+//                     drawer(res)
+//                     //context.commit("addViewChangeQueryNoPowLineChartObj", { trendTree, dataManager, data: res, startTime: payload.startTime, endTime: payload.endTime, algorithm: "trendtree", width: payload.width, height: payload.height });
+//                 });
+//             });
 
-        } else {
-            console.error(tempRes['msg'])
+//         } else {
+//             console.error(tempRes['msg'])
+//         }
+//     });
+// }
+
+async function loadViewChangeQueryWSMinMaxMissDataInitData(context: ActionContext<GlobalState, GlobalState>, payload: { startTime: number, endTime: number, width: number, height: number }){
+    const getDataUrl = `/line_chart/getEqualData?width=${2 ** (Math.ceil(Math.log2(payload.width)))}` 
+    const data2 = get(context.state,getDataUrl);
+    console.log(data2);
+    const res = await data2;
+    const currentLevel = Math.ceil(Math.log2(payload.width));
+    const current_maxLevel = 11;
+    let res2;
+    for(let j=0; j<10; ++j){
+        if (Math.log2(payload.width) !== Math.ceil(Math.log2(payload.width))) {
+            const { trendTree, dataManager } = constructMinMaxMissTrendTree(res);
+            console.log(dataManager); 
+            //dataManager.realDataRowNum=2**dataManager.maxLevel;
+            await dataManager.getDataMinMaxMiss(currentLevel, 0, 2 ** (currentLevel) - 1);
+            const minV = dataManager.levelIndexObjs[0].firstNodes[0].yArray[1];
+            const maxV = dataManager.levelIndexObjs[0].firstNodes[0].yArray[2];
+            console.log(minV, maxV);
+            const yScale = d3.scaleLinear().domain([minV, maxV]).range([payload.height, 0]);
+            
+            if(j === 0)
+                // res2 = await dataManager.viewChangeInteractionFinal(Math.ceil(Math.log2(payload.width)), payload.width, [4000*j, 4000*j+20000], yScale,current_maxLevel+2);
+                res2 = await dataManager.viewChangeInteractionFinal(Math.ceil(Math.log2(payload.width)), payload.width, [4000*j, 4000*j+20000], yScale);
+            else
+                // res2 = await dataManager.viewChangeInteractionFinal(Math.ceil(Math.log2(payload.width)), payload.width, [4000*j, 4000*j+20000], yScale,current_maxLevel+2,res2);
+                res2 = await dataManager.viewChangeInteractionFinal(Math.ceil(Math.log2(payload.width)), payload.width, [4000*j, 4000*j+20000], yScale);
+            console.log(res2);
+            context.commit("addViewChangeQueryNoPowLineChartObj", { trendTree, dataManager, data: res2, startTime: payload.startTime, endTime: payload.endTime, algorithm: "trendtree", width: payload.width, height: payload.height });
+            await new Promise(resolve => setTimeout(resolve, 1000));
         }
-    });
+    }
 }
 
 const loadMultiTimeSeriesInitData: ActionHandler<GlobalState, GlobalState> = (context: ActionContext<GlobalState, GlobalState>, payload: { width: number, height: number, type: string }) => {

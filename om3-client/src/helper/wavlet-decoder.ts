@@ -532,8 +532,8 @@ function constructTrendTree(data: Array<any>, tableName?: string) {
 //     }
 // }
 
-function constructMinMaxMissTrendTree(data: Array<any>, width: number, tableName?: string) {
-    const initLevel = Math.ceil(Math.log2(width));
+function constructMinMaxMissTrendTree(data: Array<any>, width?: number, tableName?: string) {
+    const initLevel = Math.ceil(Math.log2(width!));
     //debugger
     const levelIndex = new Array<LevelIndexObj>(Math.ceil(Math.log2(data.length)) + 1);
 
@@ -554,6 +554,18 @@ function constructMinMaxMissTrendTree(data: Array<any>, width: number, tableName
     tempLast = avevd.pop();
     avevd.unshift(tempLast!);
 
+    let maxL = Math.ceil(Math.log2(data.length))+1; //+1是因为coeff与data的倍数关系
+    let array = new Array(maxL+1);
+    array[maxL] = new Array(1);
+    array[maxL][0] = 2 ** (maxL-1) - 1;
+    for(let i = maxL - 1; i >= 2 ;--i){
+        array[i] = new Array(2**(maxL - i));
+        for(let j = 0; j < array[i+1].length; ++j){
+            array[i][2*j] = array[i+1][j] - 2**(i-1);
+            array[i][2*j+1] = array[i+1][j] - 1;
+        }
+    }
+
     let lastLevelNodes = new Array<TrendTree>();
     let currentLevelNodes = new Array<TrendTree>();
     let nodeNum = 1;
@@ -565,6 +577,7 @@ function constructMinMaxMissTrendTree(data: Array<any>, width: number, tableName
 
     let difIndex = 1;
     for (let i = 1; i <= initLevel; i++) {
+    // for(let i = 1; i <= Math.log2(data.length); i++)
         for (let j = 0; j < lastLevelNodes.length; j++) {
             const lastNode = lastLevelNodes[j];
             if (lastNode.nodeType === "NULL") {
@@ -747,6 +760,145 @@ function constructMinMaxMissTrendTree(data: Array<any>, width: number, tableName
         trendTree: root
     }
 }
+
+// function constructMinMaxMissTrendTree3(data: Array<any>, tableName?: string) {
+//     const levelIndex = new Array<LevelIndexObj>(Math.ceil(Math.log2(data.length)));
+
+//     const minvd: Array<number> = [];
+//     const maxvd: Array<number> = [];
+//     const avevd: Array<number> = [];
+
+//     data.forEach(v => {
+//         minvd.push(v.minvd);
+//         maxvd.push(v.maxvd);
+//         avevd.push(v.avevd);
+//     });
+
+//     let tempLast = minvd.pop(); //数组的最后一个元素
+//     minvd.unshift(tempLast!);  //添加到数组的开头
+//     tempLast = maxvd.pop();
+//     maxvd.unshift(tempLast!);
+//     tempLast = avevd.pop();
+//     avevd.unshift(tempLast!);
+
+//     let maxL = Math.ceil(Math.log2(data.length))+1; //+1是因为coeff与data的倍数关系
+//     let array = new Array(maxL+1);
+//         array[maxL] = new Array(1);
+//         array[maxL][0] = 2 ** (maxL-1) - 1;
+//         for(let i = maxL - 1; i >= 2 ;--i){
+//             array[i] = new Array(2**(maxL - i));
+//             for(let j = 0; j < array[i+1].length; ++j){
+//                 array[i][2*j] = array[i+1][j] - 2**(i-1);
+//                 array[i][2*j+1] = array[i+1][j] - 1;
+//             }
+//         }
+
+//     let lastLevelNodes = new Array<TrendTree>();
+//     let currentLevelNodes = new Array<TrendTree>();
+//     let nodeNum = 1;
+//     //@ts-ignore
+//     const root = new TrendTree(null, true, 0, [undefined, minvd[0], maxvd[0], avevd[0], undefined], [undefined, minvd[1], maxvd[1], avevd[0], undefined]);
+//     // const root = new TrendTree(null, true, 0, [mivtd[0], minvd[0], maxvd[0], maxtd[0]], [mintd[1], minvd[1], maxvd[1],maxtd[1]]);
+//     lastLevelNodes.push(root);
+//     levelIndex[0] = new LevelIndexObj(0, true);
+//     levelIndex[0].addLoadedDataRange(root, [0, 0]);
+//     let index = 1;
+//     for (let i = 1; i <= Math.log2(data.length); i++) {
+//         // for (let j = 0; j < 2 ** (i - 1); j++) {
+//         for (let j = 0; j < lastLevelNodes.length; j++) {
+//             const lastNode = lastLevelNodes[j];
+//             let dif = lastNode.difference!;
+//             // let curNodeType: "O" | "NULL" | "LEFTNULL" | "RIGHTNULL" = 'O';
+//             let curNodeType: "O" | "NULL" | "LEFTNULL" | "RIGHTNULL" = 'O';
+//             if (dif[1] === undefined && dif[2] === undefined) {
+//                 curNodeType = "NULL";
+//             } else if (dif[1] === null) {
+//                 curNodeType = "LEFTNULL"
+//             } else if (dif[2] === null) {
+//                 curNodeType = "RIGHTNULL";
+//             }
+//             lastNode.nodeType = curNodeType;
+//             const yArray1: [any, any, any, any, any] = [undefined, undefined, undefined, undefined, undefined]
+//             const yArray2: [any, any, any, any, any] = [undefined, undefined, undefined, undefined, undefined]
+//             if (curNodeType === 'O') {
+
+//                 // yArray1[0] = lastNode.yArray[0];
+//                 // yArray2[0] = lastNode.yArray[0] - lastNode.difference![0];
+//                 // yArray1[3] = lastNode.yArray[3] + lastNode.difference![3];
+//                 // yArray2[3] = lastNode.yArray[3];
+//                 if (lastNode.difference![1] < 0) {
+//                     yArray1[1] = lastNode.yArray[1];
+//                     yArray2[1] = lastNode.yArray[1] - lastNode.difference![1];
+//                 } else {
+//                     yArray1[1] = lastNode.yArray[1] + lastNode.difference![1];
+//                     yArray2[1] = lastNode.yArray[1];
+//                 }
+//                 if (lastNode.difference![2] < 0) {
+//                     yArray1[2] = lastNode.yArray[2] + lastNode.difference![2];
+//                     yArray2[2] = lastNode.yArray[2];
+//                 } else {
+//                     yArray1[2] = lastNode.yArray[2];
+//                     yArray2[2] = lastNode.yArray[2] - lastNode.difference![2];
+//                 }
+//             } else if (curNodeType == "LEFTNULL") {
+//                 yArray2[1] = lastNode.yArray[1];
+//                 yArray2[2] = lastNode.yArray[2];
+//             } else if (curNodeType == "RIGHTNULL") {
+//                 yArray1[1] = lastNode.yArray[1];
+//                 yArray1[2] = lastNode.yArray[2];
+//             } else if (curNodeType === 'NULL') {
+//                 //console.log("null node")
+//             }
+//             else {
+//                 throw new Error("type error")
+
+//             }
+//             //@ts-ignore
+                
+//                 if (lastNode.nodeType === 'LEFTNULL' || lastNode.nodeType === 'NULL') {
+//                     const firstNode = new TrendTree(lastNode, true, lastNode.index, yArray1, i === Math.log2(data.length) ? null : [undefined, undefined, undefined, undefined]);
+//                     firstNode.nodeType = 'NULL';
+//                     currentLevelNodes.push(firstNode);
+//                     nodeNum += 1;
+//                 }
+//                 else{
+//                     index++;
+//                     const firstNode = new TrendTree(lastNode, true, lastNode.index, yArray1, i === Math.log2(data.length) ? null : [undefined, minvd[index], maxvd[index], undefined]);
+//                     // const firstNode = new TrendTree(lastNode, true, lastNode.index, yArray1, i === Math.log2(data.length) ? null : [mintd[index], minvd[index], maxvd[index], maxtd[index]]);
+//                     currentLevelNodes.push(firstNode);
+//                     nodeNum += 1;
+//                 }
+                
+//                 if (lastNode.nodeType === 'RIGHTNULL' || lastNode.nodeType == 'NULL') {
+//                     const secondNode = new TrendTree(lastNode, false, lastNode.index, yArray2, i === Math.log2(data.length) ? null : [undefined, undefined, undefined, undefined]);
+//                     secondNode.nodeType = 'NULL';
+//                     currentLevelNodes.push(secondNode);
+//                     nodeNum += 1;
+//                 }
+//                 else{
+//                     index++;
+//                     const secondNode = new TrendTree(lastNode, false, lastNode.index, yArray2, i === Math.log2(data.length) ? null : [undefined, minvd[index], maxvd[index], undefined]);
+//                     // const secondNode = new TrendTree(lastNode, false, lastNode.index, yArray2, i === Math.log2(data.length) ? null : [mintd[index], minvd[index], maxvd[index], maxtd[index]]);
+//                     currentLevelNodes.push(secondNode);
+//                     nodeNum += 1;
+//                 }
+//         }
+//         levelIndex[i] = new LevelIndexObj(currentLevelNodes[0].level, true);
+//         levelIndex[i].addLoadedDataRange(currentLevelNodes[0], [0, currentLevelNodes.length - 1]);
+//         for (let i = 0; i < currentLevelNodes.length - 1; i++) {
+//             currentLevelNodes[i].nextSibling = currentLevelNodes[i + 1];
+//             currentLevelNodes[i + 1].previousSibling = currentLevelNodes[i];
+        
+//         }
+//         lastLevelNodes = currentLevelNodes;
+//         currentLevelNodes = [];
+//     }
+//     const levelDataManager = new LevelDataManager(levelIndex, tableName ? tableName : store.state.controlParams.currentTable);
+//     return {
+//         dataManager: levelDataManager,
+//         trendTree: root
+//     }
+// }
 
 // export { constructRawMinMaxTrendTree, constructMinMaxMissTrendTree, constructMissTrendTree, initWaveletDecode, waveletDecode, constructTrendTree, constructHaarTree, constructMinMaxTrendTree }
 export { constructMinMaxMissTrendTree, initWaveletDecode, waveletDecode, constructTrendTree, constructHaarTree }

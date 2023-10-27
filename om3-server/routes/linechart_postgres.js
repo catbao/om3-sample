@@ -89,7 +89,6 @@ router.get('/performTransformForMultiLine', performTransformForMultiLine);
 router.get('/getEqualData', getEqualData);
 
 
-
 async function getEqualData(req,res){
     res.setHeader("Access-Control-Allow-Origin", "*");
     // const queryMaxIndexSql = `select max(i) from om3.encode3`;
