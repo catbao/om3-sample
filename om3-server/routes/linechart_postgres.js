@@ -99,7 +99,7 @@ async function getEqualData(req,res){
     let maxL = Math.log2((cofLen+1)*2); //系数*2
 
     // sqlStr1 = `select i,minvd,maxvd from om3.encode3 where i in (`
-    sqlStr1 = `select i,minvd,maxvd from om3.encode2 where i in (`
+    sqlStr1 = `select i,minvd,maxvd,avevd from om3.encode2 where i in (`
     let array = new Array(maxL+1);
     array[maxL] = new Array(1);
     array[maxL][0] = 2 ** (maxL-1) - 1;
@@ -138,7 +138,7 @@ async function getEqualData(req,res){
     
         for(let i=0;i<result.rows.length;i++){
             const tempVal=result.rows[i];
-            finalRes.push({minvd:tempVal['minvd'],maxvd:tempVal['maxvd']});
+            finalRes.push({minvd:tempVal['minvd'],maxvd:tempVal['maxvd'],avevd:tempVal['avevd']});
         }
         console.log("getEqualData's time every time: w i t", new Date().getTime() - startT);
         console.log(finalRes.length);
@@ -355,7 +355,16 @@ function batchLevelDataProgressiveWaveletMinMaxMissPostHandler(req, res) {
             maxV.push(v['maxvd']);
         });
 
+        // const result1 = [l, minV, maxV];
+        // const resultArray = [];
+        // if(result1 && result1[0] && result1[0].length > 0){
+        //     for(let i = 0; i < result1[0].length; i++){
+        //         resultArray.push({l: result1[0][i], dif: [0, result1[1][i], result1[2][i], 0]})
+        //     }
+        // }
+        // res.send(resultArray);
         res.send({ code: 200, msg: "success", data: [l, idx, minV, maxV] });
+        // res.send({ code: 200, msg: "success", data: resultArray });
     });
 }
 

@@ -201,13 +201,18 @@ export class NoUniformColObj {
             throw new Error("time out of range")
         }
     }
-    isMissContain(p: TrendTree) {
+    isMissContain(p: TrendTree, maxLevel:any) {
         const pL = p.level;
-        const pTRange = (2 ** this.maxLevel) / (2 ** pL);
+        // const pTRange = (2 ** this.maxLevel) / (2 ** pL);
+        const pTRange = (2 ** maxLevel) / (2 ** pL);
         const pTimeS = p.index * pTRange;
         const pTimeE = pTRange + pTimeS - 1;
+        const global = 2 ** maxLevel;
 
-        if (pTimeE >= this.globalDataLen) {
+        // if (pTimeE >= this.globalDataLen) {
+        //     return 6;
+        // }
+        if (pTimeE >= global) {
             return 6;
         }
         if (pTimeS >= this.tStart && pTimeE <= this.tEnd) {
@@ -235,7 +240,7 @@ export class NoUniformColObj {
             throw new Error("time out of range")
         }
     }
-    containColumnRange(p: TrendTree, type: number) {
+    containColumnRange(p: TrendTree, type: number, maxLevel:any) {
         if (p.nodeType === "NULL") {
             return
         }
@@ -244,7 +249,8 @@ export class NoUniformColObj {
             throw new Error("error val")
         }
         const pL = p.level;
-        const pTRange = (2 ** this.maxLevel) / (2 ** pL);
+        // const pTRange = (2 ** this.maxLevel) / (2 ** pL);
+        const pTRange = (2 ** maxLevel) / (2 ** pL);
         const pTimeS = p.index * pTRange;
         const pTimeE = pTRange + pTimeS - 1;
         if (this.tStart === pTimeS) {
@@ -264,12 +270,14 @@ export class NoUniformColObj {
         if (type === 1||type===7||type===8||type===9) {
             if (p.yArray[1] < this.vRange[0]) {
                 this.vRange[0] = p.yArray[1];
-                const tRange = getIndexTime(p.level, p.index, this.maxLevel);
+                // const tRange = getIndexTime(p.level, p.index, this.maxLevel);
+                const tRange = getIndexTime(p.level, p.index, maxLevel);
                 this.minVTimeRange = [tRange.startT, tRange.endT];
             }
             if (p.yArray[2] > this.vRange[1]) {
                 this.vRange[1] = p.yArray[2];
-                const tRange = getIndexTime(p.level, p.index, this.maxLevel);
+                // const tRange = getIndexTime(p.level, p.index, this.maxLevel);
+                const tRange = getIndexTime(p.level, p.index, maxLevel);
                 this.maxVTimeRange = [tRange.startT, tRange.endT];
             }
             if(this.ordinalLevelCount === 0){

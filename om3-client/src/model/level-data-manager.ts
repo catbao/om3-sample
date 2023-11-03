@@ -938,15 +938,6 @@ export default class LevelDataManager {
 
 
 
-    getIndexTime(l: number, index: number, maxLevel: number) {
-        const gap = 2 ** maxLevel / (2 ** l)
-        const startTime = index * gap;
-        const endTime = startTime + gap - 1;
-        return {
-            startT: startTime,
-            endT: endTime
-        }
-    }
 
     initCache() {
         const options = {
@@ -1633,26 +1624,36 @@ export default class LevelDataManager {
         return nonUniformColObjs;
     }
 
+    getIndexTime(l: number, index: number, maxLevel: number) {
+        const gap = 2 ** maxLevel / (2 ** l); //gap=6
+        const startTime = index * gap; // 0~1023
+        const endTime = startTime + gap - 1;
+        return {
+            startT: startTime,
+            endT: endTime
+        }
+    }
 
     async viewChangeInteractionFinal(currentLevel: number, width: number, timeRange: Array<number>, yScale: any) {
         console.log(currentLevel, width, timeRange)
         const dataName = this.dataName.includes(".") ? this.dataName.split(".")[1] : this.dataName;
         const currentFlagInfo = store.state.allFlags[this.dataName];
-        if (currentFlagInfo === undefined) {
-            throw new Error(this.dataName + "get flag faild")
-        } else {
-            console.log("flag length:", currentFlagInfo.length)
-        }
+        // if (currentFlagInfo === undefined) {
+        //     throw new Error(this.dataName + " get flag faild")
+        // } else {
+        //     console.log("flag length:", currentFlagInfo.length)
+        // }
 
         allTimes = []
+        let maxLevel = 16;
         // console.time("v_c")
         const nonUniformColObjs = computeTimeSE(currentLevel, width, timeRange, this.realDataRowNum, this.maxLevel);
         let needLoadDifNode: Array<TrendTree> = [];
         let colIndex = 0;
 
         for (let i = 0; i < this.levelIndexObjs[currentLevel].firstNodes.length; i++) {
-            const firtIndexTimeRange = this.getIndexTime(currentLevel, this.levelIndexObjs[currentLevel].loadedDataRange[i][0], this.maxLevel);
-            const lastIndexTimeRange = this.getIndexTime(currentLevel, this.levelIndexObjs[currentLevel].loadedDataRange[i][1], this.maxLevel);
+            const firtIndexTimeRange = this.getIndexTime(currentLevel, this.levelIndexObjs[currentLevel].loadedDataRange[i][0], maxLevel);
+            const lastIndexTimeRange = this.getIndexTime(currentLevel, this.levelIndexObjs[currentLevel].loadedDataRange[i][1], maxLevel);
             let p = this.levelIndexObjs[currentLevel].firstNodes[i];
 
             if (firtIndexTimeRange.startT <= timeRange[0] && lastIndexTimeRange.endT >= timeRange[1]) {
@@ -1661,8 +1662,8 @@ export default class LevelDataManager {
                         break;
                         //throw new Error("col index out range");
                     }
-                    const type = nonUniformColObjs[colIndex].isMissContain(p);
-                    nonUniformColObjs[colIndex].containColumnRange(p, type);
+                    const type = nonUniformColObjs[colIndex].isMissContain(p, maxLevel);
+                    nonUniformColObjs[colIndex].containColumnRange(p, type, maxLevel);
                     if (type === 1) {
                         p = p.nextSibling!;
                     } else if (type === 2) {
@@ -1692,7 +1693,6 @@ export default class LevelDataManager {
 
 
         if (losedDataInfo.length > 0) {
-
             await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);
         }
 
@@ -1725,8 +1725,8 @@ export default class LevelDataManager {
                     break;
                     //throw new Error("col index out range");
                 }
-                const type = nonUniformColObjs[colIndex].isMissContain(tempQue[i]);
-                nonUniformColObjs[colIndex].containColumnRange(tempQue[i], type);
+                const type = nonUniformColObjs[colIndex].isMissContain(tempQue[i], maxLevel);
+                nonUniformColObjs[colIndex].containColumnRange(tempQue[i], type, maxLevel);
                 if (type === 1) {
                     continue;
                 } else if (type === 2) {
@@ -1814,6 +1814,7 @@ export default class LevelDataManager {
             //console.log("flag length:", currentFlagInfo.length)
         }
 
+        let maxLevel = 16;
         allTimes = []
         // console.time("v_c")
         const nonUniformColObjs = computeTimeSE(currentLevel, width, timeRange, this.realDataRowNum, this.maxLevel);
@@ -1830,8 +1831,8 @@ export default class LevelDataManager {
                         break;
                         //throw new Error("col index out range");
                     }
-                    const type = nonUniformColObjs[colIndex].isMissContain(p);
-                    nonUniformColObjs[colIndex].containColumnRange(p, type);
+                    const type = nonUniformColObjs[colIndex].isMissContain(p, maxLevel);
+                    nonUniformColObjs[colIndex].containColumnRange(p, type, maxLevel);
                     if (type === 1) {
                         p = p.nextSibling!;
                     } else if (type === 2 || type === 7 || type === 8 || type === 9 || type === 10) {
@@ -1914,8 +1915,8 @@ export default class LevelDataManager {
                     break;
                     //throw new Error("col index out range");
                 }
-                const type = nonUniformColObjs[colIndex].isMissContain(tempQue[i]);
-                nonUniformColObjs[colIndex].containColumnRange(tempQue[i], type);
+                const type = nonUniformColObjs[colIndex].isMissContain(tempQue[i], maxLevel);
+                nonUniformColObjs[colIndex].containColumnRange(tempQue[i], type, maxLevel);
                 if (type === 1) {
                     continue;
                 } else if (type === 2 || type === 7 || type === 8 || type === 9 || type === 10) {

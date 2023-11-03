@@ -576,8 +576,8 @@ function constructMinMaxMissTrendTree(data: Array<any>, width?: number, tableNam
     levelIndex[0].addLoadedDataRange(root, [0, 0]);
 
     let difIndex = 1;
-    for (let i = 1; i <= initLevel; i++) {
-    // for(let i = 1; i <= Math.log2(data.length); i++)
+    // for (let i = 1; i <= initLevel; i++) {
+    for(let i = 1; i <= Math.log2(data.length); i++){
         for (let j = 0; j < lastLevelNodes.length; j++) {
             const lastNode = lastLevelNodes[j];
             if (lastNode.nodeType === "NULL") {
