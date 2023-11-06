@@ -47,7 +47,7 @@ const levelNameMap = {
     27: "1b",
     28: "3b",
     30: "10b",
-    5: "test",
+    4: "test",
 }
 
 function getTableLevel(tableName) {
@@ -65,7 +65,8 @@ function generateOM3TableName(rawName, maxT, className) {
     if (rawName.includes(".")) {
         tempName = tempName.split(".")[1];
     }
-    const levelNum = Math.ceil(Math.log2(maxT));
+    // const levelNum = Math.ceil(Math.log2(maxT));
+    const levelNum = 4;
     const levelStr = levelNameMap[levelNum];
     if (levelStr === undefined) {
         return ""

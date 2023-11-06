@@ -336,11 +336,11 @@ export default defineComponent({
       const endFullTime = endDateStr + " " + endTimeStr;
       this.openFullScreenLoading()
       store.dispatch("performTransformForMultiLine", { startTime: startFullTime, endTime: endFullTime, tableNames: Array.from(this.multiLineTableNames.values()), multiLineClassName: this.customMultiLineClassName }).then((res) => {
-        if (res.data['code'] === 200) {
+        if (res['code'] === 200) {
           console.log("multi line transform success")
           //  add tishi
         } else {
-          console.error(res.data['msg'])
+          console.error(res['msg'])
         }
         this.closeFullScreenLoading()
         this.multiLineTransformDialogVisible = false;

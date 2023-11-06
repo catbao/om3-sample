@@ -341,7 +341,7 @@ let multiSeriesMaxLevel = 20;
 function init_multi_timeseries(req, res) {
     res.setHeader("Access-Control-Allow-Origin", "*");
     const query = req.query;
-    const lineClassName = query['class_name'];
+    const lineClassName = query['class_name']; //bao
     const retureRes = [];
     const userCookie = req.headers['authorization'];
     let currentPool = pool
@@ -860,11 +860,12 @@ async function performTransformForMultiLine(req, res) {
         // crate om3 table
         for (let i = 0; i < query.tableName.length; i++) {
             const newTableName = generateOM3TableName(query.tableName[i], maxTArray[i], query.lineClass);
-            const createOm3TableSql = `DROP TABLE IF EXISTS ${newTableName};create table ${newTableName}(i integer primary key,minvd double precision,maxvd double precision)`;
+            const createOm3TableSql = `DROP TABLE IF EXISTS ${newTableName};create table ${newTableName}(i integer primary key,minvd double precision,maxvd double precision,avevd double precision)`;
             await new Promise((resolve, reject) => {
                 tempPool.query(createOm3TableSql, (err, result) => {
                     if (err) {
                         console.log(createOm3TableSql);
+                        console.log(err);
                         reject(err)
                         return
                     }
@@ -904,6 +905,7 @@ async function performTransformForMultiLine(req, res) {
         res.send({ code: 500, msg: err })
         return
     }
+    console.log("Success");
     res.send({ code: 200, msg: "success", data: { result: "success" } })
 }
 

@@ -156,6 +156,7 @@ async function nonuniformMinMaxEncode(pool,rawTableName,om3TableName,mode) {
         minV = curMinV;
         maxV = curMaxV;
         aveV = curAveV;
+        // console.log("minV:", minV);
 
         if (l === 1) {
             continue
