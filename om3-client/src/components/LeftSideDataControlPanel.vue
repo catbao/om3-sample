@@ -160,6 +160,21 @@
       </el-select>
     </div>
 
+    <div class="compute-line-container mt-2 ms-1" v-if="chooseLineType == 'Multi'">
+      <el-select v-model="currentMultiT" placeholder="Select" size="medium" @change="handleMultiLineClassChange"
+        v-if="chooseMode === 'Custom'">
+        <el-option v-for="(item, idx) in Array.from(allCustomMultiLineClass.keys())" :key="idx" :label="item"
+          :value="item">
+        </el-option>
+      </el-select>   
+      <el-select v-model="selectedOption" placeholder="Operator">
+        <el-option label="+" value="+"></el-option>
+        <el-option label="-" value="-"></el-option>
+        <el-option label="*" value="*"></el-option>
+        <el-option label="/" value="/"></el-option>
+        <el-option label="avg" value="avg"></el-option>
+      </el-select>
+    </div>
 
 
 
@@ -191,6 +206,7 @@ export default defineComponent({
       singleLineTableName: "",
       multiLineTableNames: [],
       customMultiLineClassName: "",
+      selectedOption: "",
     }
 
   },
@@ -336,11 +352,11 @@ export default defineComponent({
       const endFullTime = endDateStr + " " + endTimeStr;
       this.openFullScreenLoading()
       store.dispatch("performTransformForMultiLine", { startTime: startFullTime, endTime: endFullTime, tableNames: Array.from(this.multiLineTableNames.values()), multiLineClassName: this.customMultiLineClassName }).then((res) => {
-        if (res.data['code'] === 200) {
+        if (res['code'] === 200) {
           console.log("multi line transform success")
           //  add tishi
         } else {
-          console.error(res.data['msg'])
+          console.error(res['msg'])
         }
         this.closeFullScreenLoading()
         this.multiLineTransformDialogVisible = false;
