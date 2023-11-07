@@ -84,7 +84,8 @@ router.get('/getAllCustomTables', getAllCustomTables);
 router.get('/performTransformForSingeLine', performTransformForSingeLine);
 router.get('/getAllCustomTableAndInfo', getAllCustomTableAndInfo);
 router.get('/getAllDefaultTableAndInfo', getAllDefaultTableAndInfo);
-router.get('/performTransformForMultiLine', performTransformForMultiLine)
+router.get('/performTransformForMultiLine', performTransformForMultiLine);
+router.get("/getAllMultiLineClassAndLinesInfo", getAllMultiLineClassAndLinesInfo);
 //router.options('/batchLevelDataProgressiveWavelet',batchLevelDataProgressiveWaveletPostHandler)
 
 
@@ -550,6 +551,44 @@ function getSingleFlag(req, res) {
 function getAllMulitLineClassInfo(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     const sql = "select * from om3_setting.multi_line_class_info"
+    const query = req.query;
+    const userCookie = req.headers['authorization'];
+    let currentPool = pool
+    if (query.mode === 'Custom') {
+        if (userCookie === '' || userCookie === null || userCookie === undefined) {
+            res.send({ code: 400, msg: "cookie not found", data: { result: "fail" } })
+            return
+        }
+        if (!customDBPoolMap().has(userCookie)) {
+            res.send({ code: 400, msg: "custom db not create connection", data: { result: "fail" } })
+            return
+        }
+        currentPool = customDBPoolMap().get(userCookie);
+    }
+    try {
+        currentPool.query(sql, (err, result) => {
+            if (err) {
+                throw err;
+            }
+            res.send({
+                code: 200,
+                msg: "success",
+                data: result.rows
+            })
+        })
+    } catch (err) {
+        console.log(err)
+        res.send({
+            code: 400,
+            msg: err,
+        })
+    }
+
+}
+
+function getAllMultiLineClassAndLinesInfo(req, res){
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    const sql = `select table_schema||'.'||table_name as table_fullname from information_schema."tables" where table_type = 'BASE TABLE' and table_schema not in ('pg_catalog', 'information_schema') and table_schema||'.'||table_name  like '%om3_multi.bao%';`
     const query = req.query;
     const userCookie = req.headers['authorization'];
     let currentPool = pool

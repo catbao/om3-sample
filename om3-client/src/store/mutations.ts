@@ -264,12 +264,32 @@ function updateMultiLineClassInfo(state: GlobalState, info: { info: any }) {
     }else{
         state.allCustomMultiLineClassInfoMap=multiClassInfoMap;
     }
-    
+    // console.log("allCustomMultiLineClassInfoMap:", state.allCustomMultiLineClassInfoMap);
+}
+
+function updateMultiLineClassAndLinesInfo(state: GlobalState, info: { info: any }){
+    const multiClassAndLinesInfoMap = new Map<string, any>();
+    let tableArray : Array<string> = [];
+    for (let i = 0; i < info.info['data'].length; i++) {
+        tableArray.push(info.info['data'][i]['table_fullname']);
+        // console.log(info.info['data'][i]['table_fullname']);
+    }
+    multiClassAndLinesInfoMap.set("bao", tableArray);
+    if(state.controlParams.currentMode==='Default'){
+        state.allMultiLineClassAndLinesMap = multiClassAndLinesInfoMap;
+    }else{
+        state.allMultiLineClassAndLinesMap = multiClassAndLinesInfoMap;
+    }
+    // console.log("allCustomMultiLineClassAndLinesInfoMap:", state.allMultiLineClassAndLinesMap);
 }
 
 function alterCurrentMulitLineClass(state: GlobalState, className: string) {
     state.controlParams.currentMultiLineClass = className
     //console.log("load flags finish");
+}
+
+function alterCurrentMulitLineClassALine(state: GlobalState, lineName: string) {
+    state.controlParams.currentMultiLineClassALine = lineName
 }
 
 function updateCustomTableAndInfo(state: GlobalState, info: { customTables: Array<string>,customTableInfo:Array<any> }){
@@ -298,8 +318,9 @@ function alterProgressive(state: GlobalState, progresive: boolean){
     state.controlParams.progressive=progresive;
 }
 
-function setAllMultiLineClassAndLinesMap(state: GlobalState, linesMap: Map<string, Array<any>>){
-    state.allMultiLineClassAndLinesMap=linesMap;
+function setAllMultiLineClassAndLinesMap(state: GlobalState, linesMap: any){
+    console.log("lineMap:", linesMap);
+    state.allMultiLineClassAndLinesMap = linesMap;
 }
 
 export {
@@ -319,7 +340,9 @@ export {
     updateMultiTimeSeriesM4Obj,
     updateAllFlags,
     updateMultiLineClassInfo,
+    updateMultiLineClassAndLinesInfo,
     alterCurrentMulitLineClass,
+    alterCurrentMulitLineClassALine,
     alterCustomTable,
     updateCustomTableAndInfo,
     updateDefaultTableAndInfo,

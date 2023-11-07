@@ -269,7 +269,17 @@ const getAllMultiLineClassInfo: ActionHandler<GlobalState, GlobalState> = (conte
     const combinedUrl = `/line_chart/getAllMultiLineClassInfo?mode=${store.state.controlParams.currentMode}`;
     const data = get(context.state, combinedUrl);
     data.then(res => {
+        // console.log("getAllMultiLineClassInfo", res);
         context.commit("updateMultiLineClassInfo", { info: res });
+    });
+}
+
+const getAllMultiLineClassAndLinesInfo: ActionHandler<GlobalState, GlobalState> = (context: ActionContext<GlobalState, GlobalState>) => {
+    const combinedUrl = `/line_chart/getAllMultiLineClassAndLinesInfo?mode=${store.state.controlParams.currentMode}`;
+    const data = get(context.state, combinedUrl);
+    data.then(res => {
+        // console.log("getAllMultiLineClassAndLinesInfo", res);
+        context.commit("updateMultiLineClassAndLinesInfo", { info: res });
     });
 }
 
@@ -344,6 +354,7 @@ export {
     loadMultiTimeSeriesInitData,
     loadViewChangeQueryWSMinMaxMissDataInitData,//final method
     getAllMultiLineClassInfo,
+    getAllMultiLineClassAndLinesInfo,
     testCustomDBConn,
     createCustomDBConn,
     initOM3DB,
