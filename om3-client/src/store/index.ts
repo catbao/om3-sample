@@ -282,6 +282,7 @@ export interface GlobalState {
   simpleBrushLineChartObjs: Map<string, SimpleBrushChartObj>;
   allMultiLineClassInfoMap: Map<string, any>;
   allCustomMultiLineClassInfoMap: Map<string, any>;
+  allMultiLineClassAndLinesMap: Map<string, any>;
   controlParams: {
     currentMode: 'Default' | 'Custom';
     currentLineType: 'Single' | 'Multi'
@@ -318,6 +319,7 @@ export default createStore<GlobalState>({
     allFlags: {},
     allMultiLineClassInfoMap: new Map(),
     allCustomMultiLineClassInfoMap: new Map(),
+    allMultiLineClassAndLinesMap: new Map(),
     tableMaxLevels: { '1m': 20, '2m': 21, '4m': 22, '8m': 23, '1k': 24, '16m': 24, '32m': 25, '64m': 26, '1b': 27, '3b': 28, '10b': 30, 'sensor8': 23, 'test': 4 },
     lineChartObjs: new Map(),
     simpleLineChartObjs: new Map(),
