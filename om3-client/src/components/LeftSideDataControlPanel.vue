@@ -161,7 +161,7 @@
     </div>
 
     <div class="compute-line-container mt-2 ms-1" v-if="chooseLineType == 'Multi'">
-      <el-select v-model="currentMultiT" placeholder="Select" size="medium" @change="handleMultiLineClassChange"
+      <el-select v-model="currentMultiClass" placeholder="Select" size="medium" @change="handleMultiLineClassChange"
         v-if="chooseMode === 'Custom'">
         <el-option v-for="(item, idx) in Array.from(allCustomMultiLineClass.keys())" :key="idx" :label="item"
           :value="item">
@@ -360,7 +360,12 @@ export default defineComponent({
         }
         this.closeFullScreenLoading()
         this.multiLineTransformDialogVisible = false;
-      })
+      });
+      store.commit("setAllMultiLineClassAndLinesMap",{
+        key: 'this.customMultiLineClassName',
+        value: Array.from(this.multiLineTableNames.values())
+      });
+      console.log("setAllMultiLineClassAndLinesMap:", store.state.controlParams.allMultiLineClassAndLinesMap)
       console.log(startFullTime, endFullTime, this.customMultiLineClassName, Array.from(this.multiLineTableNames.values()))
     }
 
@@ -406,7 +411,7 @@ export default defineComponent({
 
     const currentCustomTable = ref(store.state.controlParams.currentCustomTable)
     const currentMultiClass = ref(store.state.controlParams.currentMultiLineClass);
-
+    
 
 
     const allSampleAlgoritem = store.state.controlParams.sampleMethods;

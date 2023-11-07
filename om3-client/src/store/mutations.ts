@@ -298,6 +298,10 @@ function alterProgressive(state: GlobalState, progresive: boolean){
     state.controlParams.progressive=progresive;
 }
 
+function setAllMultiLineClassAndLinesMap(state: GlobalState, linesMap: Map<string, Array<any>>){
+    state.allMultiLineClassAndLinesMap=linesMap;
+}
+
 export {
     alterAlgorithm,
     alterMode,
@@ -320,5 +324,6 @@ export {
     updateCustomTableAndInfo,
     updateDefaultTableAndInfo,
     alterProgressive,
+    setAllMultiLineClassAndLinesMap,
 }
 
