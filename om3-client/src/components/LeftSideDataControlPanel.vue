@@ -377,9 +377,9 @@ export default defineComponent({
       console.log(startFullTime, endFullTime, this.customMultiLineClassName, Array.from(this.multiLineTableNames.values()))
     }
     
-    handleComputePanel() {
-      store.dispatch("computeLineTransform");
-    }
+    // handleComputePanel() {
+    //   store.dispatch("computeLineTransform");
+    // }
 
   },
 

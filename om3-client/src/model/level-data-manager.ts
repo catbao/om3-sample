@@ -2025,7 +2025,19 @@ export default class LevelDataManager {
     }
 
     async viewTransformFinal(currentLevel: number, width: number, timeRange: Array<number>, yScale: any, drawer: any){
+        const currentFlagInfo = getFlag(this.dataName);
+        // const currentFlagInfo = getFlag("mock_guassian_sin_8m_om3_8m");
+        if (currentFlagInfo === undefined) {
+            throw new Error(this.dataName + " get flag faild")
+        } else {
+            console.log("flag length:", currentFlagInfo.length)
+        }
 
+        allTimes = []
+        const nonUniformColObjs = computeTimeSE(currentLevel, width, timeRange, this.realDataRowNum, this.maxLevel);
+        let needLoadDifNode: Array<TrendTree> = [];
+        let colIndex = 0;
+        
     }
 
 }

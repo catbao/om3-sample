@@ -220,10 +220,10 @@ const computeLineTransform: ActionHandler<GlobalState, GlobalState> = (context: 
     } else {
         lineClassInfo = context.state.allCustomMultiLineClassInfoMap.get(currentMulitLineClass);
     }
-
     if (lineClassInfo === undefined) {
         throw new Error("cannot get class info");
     }
+
     maxLevel = lineClassInfo['level'];
     const combinedUrl = `/line_chart/init_transform_timeseries?width=${2 ** currentLevel}&class_name=${currentMulitLineClass}&dataset1=${dataset1}&dataset2=${dataset2}&mode=${context.state.controlParams.currentMode}`;
     const data = get(context.state, combinedUrl);
@@ -245,11 +245,12 @@ const computeLineTransform: ActionHandler<GlobalState, GlobalState> = (context: 
             dataManagers.push(dataManager);
         }
         let columnsInfoArray: Array<NoUniformColObj>;
-        dataManagers.viewTransformFinal(currentLevel, payload.width, [0, dataManagers[0].realDataRowNum - 1], null, null).then((noUniformColObjs: Array<NoUniformColObj>) => {
+        dataManagers[0].viewTransformFinal(currentLevel, payload.width, [0, dataManagers[0].realDataRowNum - 1], null, null).then((noUniformColObjs: Array<NoUniformColObj>) => {
             columnsInfoArray = noUniformColObjs;
             //?drawer(res)
-        }
-    })
+        });
+    });
+    
 }
 
 const getAllTables: ActionHandler<GlobalState, GlobalState> = (context: ActionContext<GlobalState, GlobalState>) => {
