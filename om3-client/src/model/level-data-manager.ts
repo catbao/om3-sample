@@ -363,8 +363,6 @@ export default class LevelDataManager {
         }
     }
 
-
-
     checkMonotonicity(nonUniformColObjs: Array<NoUniformColObj>, preIndexArray: Array<number>, needLoadDifNodes: Array<TrendTree>) {
         for (let i = 0; i < needLoadDifNodes.length; i++) {
             const first = needLoadDifNodes[i].yArray[0];
@@ -738,8 +736,6 @@ export default class LevelDataManager {
         return nonUniformColObjs;
     }
 
-
-
     async viewChangeInteraction1(currentLevel: number, width: number, timeRange: Array<number>, yScale: any) {
         allTimes = []
         // console.time("v_c")
@@ -935,7 +931,6 @@ export default class LevelDataManager {
         }
         return currentLevelLosedRange
     }
-
 
 
     getIndexTime(l: number, index: number, maxLevel: number) {
@@ -2027,6 +2022,10 @@ export default class LevelDataManager {
         }
 
         return nonUniformColObjs;
+    }
+
+    async viewTransformFinal(currentLevel: number, width: number, timeRange: Array<number>, yScale: any, drawer: any){
+
     }
 
 }

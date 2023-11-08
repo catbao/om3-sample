@@ -178,6 +178,11 @@
       </el-select>
     </div>
 
+    <div v-if="chooseLineType == 'Multi'">
+      <button id="create_panel_btn" type="button" class="btn btn-secondary ms-2 mt-2 ml-4" style="width: 100px; height: 40px;" @click.prevent="handleComputePanel">
+        compute
+      </button>
+    </div>
 
 
   </div>
@@ -371,7 +376,10 @@ export default defineComponent({
       // console.log("computeAllMultiLineClassAndLinesMap:", store.state.allMultiLineClassAndLinesMap['bao'])
       console.log(startFullTime, endFullTime, this.customMultiLineClassName, Array.from(this.multiLineTableNames.values()))
     }
-
+    
+    handleComputePanel() {
+      store.dispatch("computeLineTransform");
+    }
 
   },
 
@@ -513,6 +521,7 @@ export default defineComponent({
       handleLineTypeChange,
       allMultLineClass,
       currentMultiClass,
+      currentMultiClassALine,
       handleMultiLineClassChange,
       handleMultiLineClassALineChange,
       dialogFormVisible,

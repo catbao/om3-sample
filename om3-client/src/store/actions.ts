@@ -25,8 +25,6 @@ async function get(state: GlobalState, url: string) {
     return data;
 }
 
-
-
 async function getBuffer(state: GlobalState, url: string) {
 
     url = 'postgres' + url;
@@ -210,6 +208,50 @@ const loadMultiTimeSeriesInitData: ActionHandler<GlobalState, GlobalState> = (co
     });
 }
 
+const computeLineTransform: ActionHandler<GlobalState, GlobalState> = (context: ActionContext<GlobalState, GlobalState>, payload: { width: 600, height: 600 }) =>{
+    const dataset1 = 1;
+    const dataset2 = 1;
+    const currentLevel = Math.ceil(Math.log2(payload.width));
+    let maxLevel = 0
+    const currentMulitLineClass = context.state.controlParams.currentMultiLineClass;
+    let lineClassInfo: any = null
+    if (context.state.controlParams.currentMode === 'Default') {
+        lineClassInfo = context.state.allMultiLineClassInfoMap.get(currentMulitLineClass);
+    } else {
+        lineClassInfo = context.state.allCustomMultiLineClassInfoMap.get(currentMulitLineClass);
+    }
+
+    if (lineClassInfo === undefined) {
+        throw new Error("cannot get class info");
+    }
+    maxLevel = lineClassInfo['level'];
+    const combinedUrl = `/line_chart/init_transform_timeseries?width=${2 ** currentLevel}&class_name=${currentMulitLineClass}&dataset1=${dataset1}&dataset2=${dataset2}&mode=${context.state.controlParams.currentMode}`;
+    const data = get(context.state, combinedUrl);
+
+    data.then(res => {
+        let dataManagers: Array<LevelDataManager> = [];
+        let globalMaxV = -Infinity;
+        let globalMinV = Infinity;
+        for (let i = 0; i < res.length; i++) {
+            const { dataManager } = constructMinMaxMissTrendTree(res[i].d, payload.width, res[i].tn);
+
+            dataManager.maxLevel = maxLevel;
+            dataManager.realDataRowNum = lineClassInfo['max_len'];
+
+            const { minv, maxv } = getGlobalMinMaxInfo(getLevelData(dataManager.levelIndexObjs[dataManager.levelIndexObjs.length - 1].firstNodes[0]));
+            globalMaxV = Math.max(maxv!, globalMaxV);
+            globalMinV = Math.min(minv!, globalMinV);
+            dataManager.md5Num = parseInt("0x" + md5(dataManager.dataName).slice(0, 8))
+            dataManagers.push(dataManager);
+        }
+        let columnsInfoArray: Array<NoUniformColObj>;
+        dataManagers.viewTransformFinal(currentLevel, payload.width, [0, dataManagers[0].realDataRowNum - 1], null, null).then((noUniformColObjs: Array<NoUniformColObj>) => {
+            columnsInfoArray = noUniformColObjs;
+            //?drawer(res)
+        }
+    })
+}
+
 const getAllTables: ActionHandler<GlobalState, GlobalState> = (context: ActionContext<GlobalState, GlobalState>) => {
     const combinedUrl = `/line_chart/getAllTables`;
     const data = get(context.state, combinedUrl);
@@ -218,8 +260,6 @@ const getAllTables: ActionHandler<GlobalState, GlobalState> = (context: ActionCo
         context.commit("updateAllTables", { tables: allTables });
     })
 }
-
-
 
 async function getAllFlagsFunc(context: ActionContext<GlobalState, GlobalState>, lineType: string, isLoading: boolean) {
 
@@ -262,9 +302,6 @@ const getAllFlags: ActionHandler<GlobalState, GlobalState> = (context: ActionCon
 
 }
 
-
-
-
 const getAllMultiLineClassInfo: ActionHandler<GlobalState, GlobalState> = (context: ActionContext<GlobalState, GlobalState>) => {
     const combinedUrl = `/line_chart/getAllMultiLineClassInfo?mode=${store.state.controlParams.currentMode}`;
     const data = get(context.state, combinedUrl);
@@ -282,7 +319,6 @@ const getAllMultiLineClassAndLinesInfo: ActionHandler<GlobalState, GlobalState> 
         context.commit("updateMultiLineClassAndLinesInfo", { info: res });
     });
 }
-
 
 const testCustomDBConn: ActionHandler<GlobalState, GlobalState> = (context: ActionContext<GlobalState, GlobalState>, payload: { hostName: string, possword: string, dbName: string, userName: string }) => {
     return axios.post("postgres/line_chart/testDBConnection", {

@@ -7,6 +7,8 @@ const { generateSingalLevelSQLWithSubQueryMinMaxMiss, generateSingalLevelSQLMinM
 const { getTableLevel, generateOM3TableName, customDBPoolMap, computeLevelFromT, getPool } = require('../helper/util');
 const { randomUUID } = require('crypto');
 const { nonuniformMinMaxEncode } = require('../compute/om_compute');
+const { resolve } = require('path');
+const { rejects } = require('assert');
 
 const stockTableMap = [];
 const mockTableMap = [];
@@ -68,6 +70,7 @@ router.get('/init_wavelet_bench_min_max_miss', initWaveletBenchMinMaxMissHandler
 //
 router.post("/batchLevelDataProgressiveWaveletMinMaxMiss", batchLevelDataProgressiveWaveletMinMaxMissPostHandler)
 router.get('/init_multi_timeseries', init_multi_timeseries);
+router.get('/init_transform_timeseries', init_transform_timeseries);
 router.get("/getAllFlags", getAllFlags);
 
 router.get('/getAllTables', getAllTables);
@@ -221,7 +224,6 @@ function initWaveletBenchMinMaxMissHandler(req, res) {
 }
 
 
-
 function batchLevelDataProgressiveWaveletMinMaxMissPostHandler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
@@ -304,9 +306,6 @@ function batchLevelDataProgressiveWaveletMinMaxMissPostHandler(req, res) {
 }
 
 
-
-
-
 let allWaveletTables = []
 function getAllTables(req, res) {
     res.setHeader("Access-Control-Allow-Origin", "*");
@@ -382,7 +381,6 @@ function init_multi_timeseries(req, res) {
         const allPromises = new Array();
         let amout = allMultiSeriesTables.length
 
-
         for (let i = 0; i < amout; i++) {
             allPromises.push(new Promise((resolve, reject) => {
                 const curTableLevel = getTableLevel(allMultiSeriesTables[i]);
@@ -427,6 +425,77 @@ function init_multi_timeseries(req, res) {
             //console.log(finalRes)
             res.send(retureRes);
         });
+    });
+}
+
+function init_transform_timeseries(req, res){
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    const query = req.query;
+    const lineClassName = query['class_name'];
+    const line1 = query['dataset1'];
+    const line2 = query['dataset2'];
+    const allMultiSeriesTables = [line1, line2];
+    const retureRes = [];
+    const userCookie = req.headers['authorization'];
+    let currentPool = pool
+    if (query.mode === 'Custom') {
+        if (userCookie === '' || userCookie === null || userCookie === undefined) {
+            res.send({ code: 400, msg: "cookie not found", data: { result: "fail" } })
+            return
+        }
+        if (!customDBPoolMap().has(userCookie)) {
+            res.send({ code: 400, msg: "custom db not create connection", data: { result: "fail" } })
+            return
+        }
+        currentPool = customDBPoolMap().get(userCookie);
+    }
+    const splitArray = line1.split("_");
+    let maxLevel = levelMap[splitArray[splitArray.length - 1]];
+    console.log(maxLevel)
+
+    const allPromises = new Array();
+    let amount = allMultiSeriesTables.length;
+    for(let i=0; i<amount; ++i){
+        allPromises.push(new Promise((resolve, reject) => {
+            const curTableLevel = getTableLevel(allMultiSeriesTables[i]);
+            const timeSeriresRes = {
+                tn: allMultiSeriesTables[i],
+                d: [],
+                l: curTableLevel,
+            }
+
+            const sqlStr = `select i,minvd,maxvd,avevd from ${allMultiSeriesTables[i]} where i<$1 order by i asc`;
+            const params = [];
+            params.push(2 ** Math.ceil(Math.log2(query.width)));
+            const sqlQuery = {
+                text: sqlStr,
+                values: params
+            }
+            currentPool.query(sqlQuery,(err, result) => {
+                if(err){
+                    console.log(sqlStr);
+                    currentPool.end();
+                    throw err;
+                }
+                const finalRes = [];
+                for(let i=1; i<result.rows.length; ++i){
+                    const tempVal = result.rows[i];
+                        const tempL = Math.floor(Math.log2(tempVal['i']));
+                        const tempI = tempVal['i'] - 2 ** tempL;
+                        finalRes.push({ l: curTableLevel - tempL, i: tempI, minvd: tempVal['minvd'], maxvd: tempVal['maxvd'], avevd: tempVal['avevd'] });
+                }
+                if (result.rows.length > 0) {
+                    finalRes.push({ l: -1, i: 0, minvd: result.rows[0]['minvd'], maxvd: result.rows[0]['maxvd'] });
+                }
+                timeSeriresRes.d = finalRes;
+                //console.log(timeSeriresRes)
+                retureRes.push(timeSeriresRes)
+                resolve();
+            });
+        }));
+    }
+    Promise.all(allPromises).then(() => {
+        res.send(retureRes);
     });
 }
 
@@ -531,6 +600,7 @@ function getAllFlags(req, res) {
     }
     res.send(resData);
 }
+
 function getSingleFlag(req, res) {
     let curName = req.query['name'];
     let lineType = req.query['line_type'];
