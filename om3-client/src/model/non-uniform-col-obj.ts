@@ -303,6 +303,20 @@ export class NoUniformColObj {
         return;
     }
 
+    computeTransform(p: TrendTree, p2:TrendTree, type: number) {
+        if (p.nodeType === "NULL") {
+            return
+        }
+        if ( p.yArray[1] === undefined || p.yArray[2] === undefined) {
+            debugger
+            throw new Error("error val")
+        }
+        const pL = p.level;
+        const pTRange = (2 ** this.maxLevel) / (2 ** pL);
+        const pTimeS = p.index * pTRange;
+        const pTimeE = pTRange + pTimeS - 1;
+        
+    }
 
     addLastVal(v: number, p?: any) {
         if (v === undefined) {

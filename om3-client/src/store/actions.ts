@@ -244,9 +244,9 @@ const computeLineTransform: ActionHandler<GlobalState, GlobalState> = (context: 
             dataManager.md5Num = parseInt("0x" + md5(dataManager.dataName).slice(0, 8))
             dataManagers.push(dataManager);
         }
-        let columnsInfoArray: Array<NoUniformColObj>;
-        dataManagers[0].viewTransformFinal(currentLevel, payload.width, [0, dataManagers[0].realDataRowNum - 1], null, null).then((noUniformColObjs: Array<NoUniformColObj>) => {
-            columnsInfoArray = noUniformColObjs;
+        let columnsInfoArray: any;
+        dataManagers[0].viewTransformFinal(currentLevel, payload.width, [0, dataManagers[0].realDataRowNum - 1], null, null).then(res => {
+            columnsInfoArray = res;
             //?drawer(res)
         });
     });

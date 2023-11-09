@@ -2038,6 +2038,24 @@ export default class LevelDataManager {
         let needLoadDifNode: Array<TrendTree> = [];
         let colIndex = 0;
         
+        //假设对于dataset1
+        for(let i=0; i<this.levelIndexObjs[currentLevel].firstNodes.length; ++i){
+            const firstIndexTimeRange = this.getIndexTime(currentLevel, this.levelIndexObjs[currentLevel].loadedDataRange[i][0], this.maxLevel);
+            const lastIndexTimeRange = this.getIndexTime(currentLevel, this.levelIndexObjs[currentLevel].loadedDataRange[i][1], this.maxLevel);
+            let p = this.levelIndexObjs[currentLevel].firstNodes[i];
+            let p2 = this.levelIndexObjs[currentLevel].firstNodes[i];//测试
+
+            if (firstIndexTimeRange.startT <= timeRange[0] && lastIndexTimeRange.endT >= timeRange[1]) {
+                while(p != null){
+                    if(colIndex >= nonUniformColObjs.length){
+                        break;
+                    }
+                    const type = nonUniformColObjs[colIndex].isMissContain(p);
+                    nonUniformColObjs[colIndex].containColumnRange(p, type);
+                    nonUniformColObjs[colIndex].computeTransform(p, p2, type);
+                }
+            }
+        }
     }
 
 }
