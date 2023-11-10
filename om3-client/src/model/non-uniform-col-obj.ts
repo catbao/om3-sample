@@ -39,6 +39,8 @@ export class NoUniformColObj {
     maxNodes: Array<TrendTree>;
     realStart: number;
     sementicInterval: number;
+    addMin: number;
+
     constructor(col: number, tStart: number, tEnd: number, level: number, width: number, globalDataLen: number, maxLevel: number, dataName?: string) {
         this.isMis = false;
         this.startV = undefined;
@@ -79,6 +81,7 @@ export class NoUniformColObj {
         this.maxNodes = [];
         this.realStart = 0;
         this.sementicInterval = 0;
+        this.addMin = 0;
     }
     rebuild(col: number, tStart: number, tEnd: number, level: number, width: number, globalDataLen: number, maxLevel: number, dataName?: string) {
         this.width = width;
@@ -109,7 +112,7 @@ export class NoUniformColObj {
         this.maxVTimeRange[0] = 0;
         this.maxVTimeRange[1] = 0;
         this.dataName = dataName;
-
+        this.addMin = 0;
     }
     setRealStartAndInterval(start: number, interval: number) {
         this.realStart = start;
@@ -316,7 +319,67 @@ export class NoUniformColObj {
         const pTimeS = p.index * pTRange;
         const pTimeE = pTRange + pTimeS - 1;
         
+        if(type === 1 || type === 7 || type ===8 || type === 9){
+            let min1 = p.yArray[1];
+            let max1 = p.yArray[2];
+            let min2 = p2.yArray[1];   
+            let max2 = p2.yArray[2];
+            let min = (min1 + min2) / 2;
+            let max = (max1 + max2) / 2;
+            let alternativeNodes = [];
+            while(1){
+                let temp_minL:number = min, temp_minR:number = min;
+                if(p._leftChild && p2._leftChild){
+                    temp_minL = (p._leftChild.yArray[1] + p2._leftChild.yArray[1]) / 2;
+                }
+                if(p._rightChild && p2._rightChild){
+                    temp_minR = (p._rightChild.yArray[1] + p2._rightChild.yArray[1]) / 2;
+                }
+                if(temp_minL <= temp_minR && p._leftChild){
+                    p = p._leftChild;
+                    min = temp_minL;
+                    alternativeNodes.push([p._rightChild, temp_minR]);
+                }
+                else if(temp_minL > temp_minR && p._rightChild){
+                    p = p._rightChild;
+                    min = temp_minR;
+                    alternativeNodes.push([p._leftChild, temp_minL]);
+                }
+            }
+            console.log("The bottom min(+):", min);
+            while(alternativeNodes.length > 0){
+                let [p, m] = alternativeNodes.pop();
+                if(m > min) continue;
+                // min = this.updateMinValue(p![0], min, alternativeNodes);
+                let temp_minL:number = min, temp_minR:number = min;
+                if(p._leftChild && p2._leftChild){
+                    temp_minL = (p._leftChild.yArray[1] + p2._leftChild.yArray[1]) / 2;
+                }
+                if(p._rightChild && p2._rightChild){
+                    temp_minR = (p._rightChild.yArray[1] + p2._rightChild.yArray[1]) / 2;
+                }
+                if(temp_minL <= temp_minR && p._leftChild){
+                    p = p._leftChild;
+                    min = temp_minL;
+                    alternativeNodes.push([p._rightChild, temp_minR]);
+                }
+                else if(temp_minL > temp_minR && p._rightChild){
+                    p = p._rightChild;
+                    min = temp_minR;
+                    alternativeNodes.push([p._leftChild, temp_minL]);
+                }
+            }
+            console.log("The final min(+):", min);
+            this.addMin = Math.min(min, this.addMin);
+        }
     }
+
+    // updateMinValue(p: any, min: number, alternativeNodes: any[]) {
+    //     while(1){
+
+    //     }
+    //     return min;
+    // }
 
     addLastVal(v: number, p?: any) {
         if (v === undefined) {
