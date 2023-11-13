@@ -353,11 +353,13 @@ export class NoUniformColObj {
             }
             console.log("The bottom min(+):", min);
             while(alternativeNodes.length > 0){
-                let p = alternativeNodes.pop();
+                let p:any = alternativeNodes.pop();
+                if(p === undefined ) continue;
+                // let p:[TrendTree, number] = alternativeNodes.pop();
                 console.log("p:", p);
                 console.log("p[0]:", p![0]);
                 console.log("p[1]:", p![1]);
-                if(m > min) continue;
+                if(Number(p[1]) > min) continue;
                 // min = this.updateMinValue(p![0], min, alternativeNodes);
                 let temp_minL:number = min, temp_minR:number = min;
                 if(p._leftChild && p2._leftChild){
