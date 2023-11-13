@@ -203,7 +203,8 @@ async function nonuniformMinMaxEncode(pool,rawTableName,om3TableName,mode) {
             try {
                 await pool.query(sql)
             } catch (err) {
-                console.log(sql)
+                console.log(sql);
+                console.log(err);
                // pool.end();
                 throw err
             }

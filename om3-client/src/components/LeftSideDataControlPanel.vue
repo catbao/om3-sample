@@ -160,13 +160,13 @@
       </el-select>
     </div>
 
-    <div class="class-choose-container2 mt-2 ms-1" v-if="chooseLineType == 'Multi'">
+    <!-- <div class="class-choose-container2 mt-2 ms-1" v-if="chooseLineType == 'Multi'">
       <el-select v-model="currentMultiClassALine" placeholder="Select" size="medium" @change="handleMultiLineClassALineChange"
         v-if="chooseMode === 'Custom'">
         <el-option v-for="(item, idx) in multiLineClassAndLinesMap.get('bao')" :key="idx" :label="item" :value="item">
         </el-option>
       </el-select>   
-    </div>
+    </div> -->
 
     <div class="compute-line-container mt-2 ms-1" v-if="chooseLineType == 'Multi'">
       <el-select v-model="selectedOption" placeholder="Operator">

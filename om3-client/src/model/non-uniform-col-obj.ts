@@ -324,31 +324,31 @@ export class NoUniformColObj {
             let max1 = p.yArray[2];
             let min2 = p2.yArray[1];   
             let max2 = p2.yArray[2];
-            let min = (min1 + min2) / 2;
-            let max = (max1 + max2) / 2;
+            let min = (min1 + min2);
+            let max = (max1 + max2);
             let alternativeNodes = [];
-            while(1){
+            while(max > 0){
                 let temp_minL:number = min, temp_minR:number = min;
                 if(!p._leftChild && !p._rightChild){
                     break;
                 }
                 if(p._leftChild && p2._leftChild){
-                    temp_minL = (p._leftChild.yArray[1] + p2._leftChild.yArray[1]) / 2;
+                    temp_minL = (p._leftChild.yArray[1] + p2._leftChild.yArray[1]);
                 }
                 if(p._rightChild && p2._rightChild){
-                    temp_minR = (p._rightChild.yArray[1] + p2._rightChild.yArray[1]) / 2;
+                    temp_minR = (p._rightChild.yArray[1] + p2._rightChild.yArray[1]);
                 }
                 if(temp_minL <= temp_minR && p._leftChild && p2._leftChild){
                     p = p._leftChild;
                     p2 = p2._leftChild;
                     min = temp_minL;
-                    alternativeNodes.push([p._rightChild, temp_minR]);
+                    alternativeNodes.push([p._rightChild, temp_minR, p2._rightChild]);
                 }
                 else if(temp_minL > temp_minR && p._rightChild && p2._rightChild){
                     p = p._rightChild;
                     p2 = p2._rightChild;
                     min = temp_minR;
-                    alternativeNodes.push([p._leftChild, temp_minL]);
+                    alternativeNodes.push([p._leftChild, temp_minL, p2._leftChild]);
                 }
             }
             console.log("The bottom min(+):", min);
@@ -368,15 +368,17 @@ export class NoUniformColObj {
                 if(p._rightChild && p2._rightChild){
                     temp_minR = (p._rightChild.yArray[1] + p2._rightChild.yArray[1]) / 2;
                 }
-                if(temp_minL <= temp_minR && p._leftChild){
+                if(temp_minL <= temp_minR && p._leftChild && p2._leftChild){
                     p = p._leftChild;
+                    p2 = p2._leftChild;
                     min = temp_minL;
-                    alternativeNodes.push([p._rightChild, temp_minR]);
+                    alternativeNodes.push([p._rightChild, temp_minR, p2._rightChild]);
                 }
-                else if(temp_minL > temp_minR && p._rightChild){
+                else if(temp_minL > temp_minR && p._rightChild && p2._rightChild){
                     p = p._rightChild;
+                    p2 = p2._rightChild;
                     min = temp_minR;
-                    alternativeNodes.push([p._leftChild, temp_minL]);
+                    alternativeNodes.push([p._leftChild, temp_minL, p2._leftChild]);
                 }
             }
             console.log("The final min(+):", min);

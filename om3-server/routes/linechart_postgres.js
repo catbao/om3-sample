@@ -56,7 +56,8 @@ const levelMap = {
     "1b": 27,
     "3b": 28,
     "10b": 30,
-    "test": 4,
+    // "test": 4,
+    "test": 3,
 }
 //const customDBPoolMap() = new Map();
 
@@ -435,7 +436,7 @@ function init_transform_timeseries(req, res){
     const line1 = query['dataset1'];
     const line2 = query['dataset2'];
     // const allMultiSeriesTables = [line1, line2];
-    const allMultiSeriesTables = ["om3_multi.bao_test1_om3_test"];
+    const allMultiSeriesTables = ["om3_multi.number8_test1_om3_test", "om3_multi.number8_test2_om3_test"];
     const retureRes = [];
     const userCookie = req.headers['authorization'];
     let currentPool = pool
@@ -971,7 +972,7 @@ async function performTransformForMultiLine(req, res) {
         // crate om3 table
         for (let i = 0; i < query.tableName.length; i++) {
             const newTableName = generateOM3TableName(query.tableName[i], maxTArray[i], query.lineClass);
-            const createOm3TableSql = `DROP TABLE IF EXISTS ${newTableName};create table ${newTableName}(i integer primary key,minvd double precision,maxvd double precision)`;
+            const createOm3TableSql = `DROP TABLE IF EXISTS ${newTableName};create table ${newTableName}(i integer primary key,minvd double precision,maxvd double precision,avevd double precision)`;
             await new Promise((resolve, reject) => {
                 tempPool.query(createOm3TableSql, (err, result) => {
                     if (err) {
