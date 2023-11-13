@@ -377,9 +377,7 @@ export default defineComponent({
       console.log(startFullTime, endFullTime, this.customMultiLineClassName, Array.from(this.multiLineTableNames.values()))
     }
     
-    // handleComputePanel() {
-    //   store.dispatch("computeLineTransform");
-    // }
+    
 
   },
 
@@ -461,6 +459,9 @@ export default defineComponent({
       store.commit("alterSampleMethod", currentSampleAlgorithm.value);
     };
 
+    const handleComputePanel = () => {
+      store.dispatch("computeLineTransform");
+    }
 
     const handleModeChange = () => {
       store.commit("alterMode", chooseMode.value);
@@ -533,8 +534,8 @@ export default defineComponent({
       multiLineTransformDialogVisible,
       progressive,
       handleProgressiveChange,
-      clearIndexFlag
-  
+      clearIndexFlag,
+      handleComputePanel
     };
   },
 });

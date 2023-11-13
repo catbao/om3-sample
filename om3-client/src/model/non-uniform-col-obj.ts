@@ -319,7 +319,7 @@ export class NoUniformColObj {
         const pTimeS = p.index * pTRange;
         const pTimeE = pTRange + pTimeS - 1;
         
-        if(type === 1 || type === 7 || type ===8 || type === 9){
+        if(type === 1 || type === 7 || type ===8 || type === 9 || type === 2){
             let min1 = p.yArray[1];
             let max1 = p.yArray[2];
             let min2 = p2.yArray[1];   
@@ -329,26 +329,34 @@ export class NoUniformColObj {
             let alternativeNodes = [];
             while(1){
                 let temp_minL:number = min, temp_minR:number = min;
+                if(!p._leftChild && !p._rightChild){
+                    break;
+                }
                 if(p._leftChild && p2._leftChild){
                     temp_minL = (p._leftChild.yArray[1] + p2._leftChild.yArray[1]) / 2;
                 }
                 if(p._rightChild && p2._rightChild){
                     temp_minR = (p._rightChild.yArray[1] + p2._rightChild.yArray[1]) / 2;
                 }
-                if(temp_minL <= temp_minR && p._leftChild){
+                if(temp_minL <= temp_minR && p._leftChild && p2._leftChild){
                     p = p._leftChild;
+                    p2 = p2._leftChild;
                     min = temp_minL;
                     alternativeNodes.push([p._rightChild, temp_minR]);
                 }
-                else if(temp_minL > temp_minR && p._rightChild){
+                else if(temp_minL > temp_minR && p._rightChild && p2._rightChild){
                     p = p._rightChild;
+                    p2 = p2._rightChild;
                     min = temp_minR;
                     alternativeNodes.push([p._leftChild, temp_minL]);
                 }
             }
             console.log("The bottom min(+):", min);
             while(alternativeNodes.length > 0){
-                let [p, m] = alternativeNodes.pop();
+                let p = alternativeNodes.pop();
+                console.log("p:", p);
+                console.log("p[0]:", p![0]);
+                console.log("p[1]:", p![1]);
                 if(m > min) continue;
                 // min = this.updateMinValue(p![0], min, alternativeNodes);
                 let temp_minL:number = min, temp_minR:number = min;

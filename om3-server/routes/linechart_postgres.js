@@ -434,7 +434,8 @@ function init_transform_timeseries(req, res){
     const lineClassName = query['class_name'];
     const line1 = query['dataset1'];
     const line2 = query['dataset2'];
-    const allMultiSeriesTables = [line1, line2];
+    // const allMultiSeriesTables = [line1, line2];
+    const allMultiSeriesTables = ["om3_multi.bao_test1_om3_test"];
     const retureRes = [];
     const userCookie = req.headers['authorization'];
     let currentPool = pool
@@ -451,7 +452,7 @@ function init_transform_timeseries(req, res){
     }
     const splitArray = line1.split("_");
     let maxLevel = levelMap[splitArray[splitArray.length - 1]];
-    console.log(maxLevel)
+    console.log("maxLevel:", maxLevel)
 
     const allPromises = new Array();
     let amount = allMultiSeriesTables.length;
@@ -464,14 +465,15 @@ function init_transform_timeseries(req, res){
                 l: curTableLevel,
             }
 
-            const sqlStr = `select i,minvd,maxvd,avevd from ${allMultiSeriesTables[i]} where i<$1 order by i asc`;
+            // const sqlStr = `select i,minvd,maxvd,avevd from ${allMultiSeriesTables[i]} where i<$1 order by i asc`;
+            const sqlStr = `select i,minvd,maxvd,avevd from ${allMultiSeriesTables[i]} order by i asc`;
             const params = [];
             params.push(2 ** Math.ceil(Math.log2(query.width)));
             const sqlQuery = {
                 text: sqlStr,
                 values: params
             }
-            currentPool.query(sqlQuery,(err, result) => {
+            currentPool.query(sqlStr,(err, result) => {
                 if(err){
                     console.log(sqlStr);
                     currentPool.end();
@@ -485,7 +487,7 @@ function init_transform_timeseries(req, res){
                         finalRes.push({ l: curTableLevel - tempL, i: tempI, minvd: tempVal['minvd'], maxvd: tempVal['maxvd'], avevd: tempVal['avevd'] });
                 }
                 if (result.rows.length > 0) {
-                    finalRes.push({ l: -1, i: 0, minvd: result.rows[0]['minvd'], maxvd: result.rows[0]['maxvd'] });
+                    finalRes.push({ l: -1, i: 0, minvd: result.rows[0]['minvd'], maxvd: result.rows[0]['maxvd'], avevd: result.rows[0]['avevd'] });
                 }
                 timeSeriresRes.d = finalRes;
                 //console.log(timeSeriresRes)

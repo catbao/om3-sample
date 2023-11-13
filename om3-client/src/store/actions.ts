@@ -211,20 +211,22 @@ const loadMultiTimeSeriesInitData: ActionHandler<GlobalState, GlobalState> = (co
 const computeLineTransform: ActionHandler<GlobalState, GlobalState> = (context: ActionContext<GlobalState, GlobalState>, payload: { width: 600, height: 600 }) =>{
     const dataset1 = 1;
     const dataset2 = 1;
-    const currentLevel = Math.ceil(Math.log2(payload.width));
-    let maxLevel = 0
-    const currentMulitLineClass = context.state.controlParams.currentMultiLineClass;
-    let lineClassInfo: any = null
-    if (context.state.controlParams.currentMode === 'Default') {
-        lineClassInfo = context.state.allMultiLineClassInfoMap.get(currentMulitLineClass);
-    } else {
-        lineClassInfo = context.state.allCustomMultiLineClassInfoMap.get(currentMulitLineClass);
-    }
-    if (lineClassInfo === undefined) {
-        throw new Error("cannot get class info");
-    }
+    // const currentLevel = Math.ceil(Math.log2(payload.width));
+    // let maxLevel = 0
+    // const currentMulitLineClass = context.state.controlParams.currentMultiLineClass;
+    // let lineClassInfo: any = null
+    // if (context.state.controlParams.currentMode === 'Default') {
+    //     lineClassInfo = context.state.allMultiLineClassInfoMap.get(currentMulitLineClass);
+    // } else {
+    //     lineClassInfo = context.state.allCustomMultiLineClassInfoMap.get(currentMulitLineClass);
+    // }
+    // if (lineClassInfo === undefined) {
+    //     throw new Error("cannot get class info");
+    // }
 
-    maxLevel = lineClassInfo['level'];
+    // maxLevel = lineClassInfo['level'];
+    let currentLevel = 0;
+    let currentMulitLineClass = 'bao';
     const combinedUrl = `/line_chart/init_transform_timeseries?width=${2 ** currentLevel}&class_name=${currentMulitLineClass}&dataset1=${dataset1}&dataset2=${dataset2}&mode=${context.state.controlParams.currentMode}`;
     const data = get(context.state, combinedUrl);
 
@@ -233,22 +235,62 @@ const computeLineTransform: ActionHandler<GlobalState, GlobalState> = (context: 
         let globalMaxV = -Infinity;
         let globalMinV = Infinity;
         for (let i = 0; i < res.length; i++) {
-            const { dataManager } = constructMinMaxMissTrendTree(res[i].d, payload.width, res[i].tn);
+            const { trendTree, dataManager } = constructMinMaxMissTrendTree(res[i].d, 600, res[i].tn);
 
-            dataManager.maxLevel = maxLevel;
-            dataManager.realDataRowNum = lineClassInfo['max_len'];
+            // dataManager.maxLevel = maxLevel;
+            // dataManager.realDataRowNum = lineClassInfo['max_len'];
+            dataManager.maxLevel = 4;
+            dataManager.realDataRowNum = 16;
 
             const { minv, maxv } = getGlobalMinMaxInfo(getLevelData(dataManager.levelIndexObjs[dataManager.levelIndexObjs.length - 1].firstNodes[0]));
             globalMaxV = Math.max(maxv!, globalMaxV);
             globalMinV = Math.min(minv!, globalMinV);
             dataManager.md5Num = parseInt("0x" + md5(dataManager.dataName).slice(0, 8))
             dataManagers.push(dataManager);
+            const viewChangeQueryObj: ViewChangeLineChartObj = {
+                id: uuidv4(),
+                // width: payload.width,
+                width: 600,
+                // height: payload.height,
+                height: 600,
+                x: Math.random() * 60,
+                y: Math.random() * 60,
+                root: trendTree,
+                data: { powRenderData: [], noPowRenderData: [], minv: minv!, maxv: maxv! },
+                // timeRange: [0, lineInfo['max_len']],
+                timeRange: [0, 15],
+                // startTime: startTimeStamp,
+                startTime: 0,
+                // endTime: endTimeStamp,
+                endTime: 15,
+                algorithm: "",
+                dataManager: dataManager,
+                params: [0, 0],
+                // currentLevel: Math.ceil(Math.log2(payload.width)),
+                currentLevel: 0,
+                isPow: false,
+                nonUniformColObjs: [],
+                // maxLen: lineInfo['max_len']
+                maxLen: 16
+            }
+            const drawer = drawViewChangeLineChart(viewChangeQueryObj)
+            dataManager.getDataMinMaxMiss(currentLevel + 1, 0, 2 ** (currentLevel + 1) - 1).then(() => {
+                const minV = dataManager.levelIndexObjs[0].firstNodes[0].yArray[1];
+                const maxV = dataManager.levelIndexObjs[0].firstNodes[0].yArray[2];
+                // const yScale = d3.scaleLinear().domain([minV, maxV]).range([payload.height, 0]);
+                const yScale = d3.scaleLinear().domain([minV, maxV]).range([600, 0]);
+
+                dataManager.viewTransformFinal(0, 600, [0, 16 - 1], yScale, drawer).then(res => {
+                    // drawer(res)
+                    //context.commit("addViewChangeQueryNoPowLineChartObj", { trendTree, dataManager, data: res, startTime: payload.startTime, endTime: payload.endTime, algorithm: "trendtree", width: payload.width, height: payload.height });
+                });
+            });
         }
-        let columnsInfoArray: any;
-        dataManagers[0].viewTransformFinal(currentLevel, payload.width, [0, dataManagers[0].realDataRowNum - 1], null, null).then(res => {
-            columnsInfoArray = res;
-            //?drawer(res)
-        });
+        // let columnsInfoArray: any;
+        // dataManagers[0].viewTransformFinal(currentLevel, payload.width, [0, dataManagers[0].realDataRowNum - 1], null, null).then(res => {
+        //     columnsInfoArray = res;
+        //     //?drawer(res)
+        // });
     });
     
 }
@@ -400,6 +442,7 @@ export {
     loadCustomTableAndInfo,
     performTransformForMultiLine,
     loadDefaultTableAndInfo,
+    computeLineTransform,
 }
 
 
