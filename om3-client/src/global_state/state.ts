@@ -14,6 +14,7 @@ export function setFlagMap(curflagMap:any){
 
 export function getFlag(name:string){
     if(!isFlagSet){
+        console.log("flag unset")
         throw new Error("flag unset")
     }
     let finalName=name;

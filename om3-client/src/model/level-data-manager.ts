@@ -1806,7 +1806,7 @@ export default class LevelDataManager {
         if (currentFlagInfo === undefined) {
             throw new Error(this.dataName + " get flag faild")
         } else {
-            //console.log("flag length:", currentFlagInfo.length)
+            console.log("flag length:", currentFlagInfo.length)
         }
 
         allTimes = []
@@ -2024,14 +2024,24 @@ export default class LevelDataManager {
         return nonUniformColObjs;
     }
 
-    async viewTransformFinal(currentLevel: number, width: number, timeRange: Array<number>, yScale: any, drawer: any){
+    async viewTransformFinal(otherDataManager: LevelDataManager, currentLevel: number, width: number, timeRange: Array<number>, yScale: any, drawer: any){
         // const currentFlagInfo = getFlag(this.dataName);
-        // // const currentFlagInfo = getFlag("mock_guassian_sin_8m_om3_8m");
+        // const currentFlagInfo = getFlag("custom_number8_test2_om3_test.flagz");
         // if (currentFlagInfo === undefined) {
         //     throw new Error(this.dataName + " get flag faild")
         // } else {
+        //     console.log("flag info:", currentFlagInfo);
         //     console.log("flag length:", currentFlagInfo.length)
         // }
+        // const currentFlagInfo2 = getFlag("custom_number8_test1_om3_test.flagz");
+        // if (currentFlagInfo2 === undefined) {
+        //     throw new Error(this.dataName + " get flag faild")
+        // } else {
+        //     console.log("flag2 info:", currentFlagInfo2);
+        //     console.log("flag2 length:", currentFlagInfo2.length)
+        // }
+        const currentFlagInfo = [0,1,1,0,1,0,0,1];
+        const currentFlagInfo2 = [0,1,0,1,0,1,0,1];
 
         allTimes = []
         const nonUniformColObjs = computeTimeSE(currentLevel, width, timeRange, this.realDataRowNum, this.maxLevel);
@@ -2043,7 +2053,7 @@ export default class LevelDataManager {
             const firstIndexTimeRange = this.getIndexTime(currentLevel, this.levelIndexObjs[currentLevel].loadedDataRange[i][0], this.maxLevel);
             const lastIndexTimeRange = this.getIndexTime(currentLevel, this.levelIndexObjs[currentLevel].loadedDataRange[i][1], this.maxLevel);
             let p = this.levelIndexObjs[currentLevel].firstNodes[i];
-            let p2 = this.levelIndexObjs[currentLevel].firstNodes[i];//测试
+            let p2 = otherDataManager.levelIndexObjs[currentLevel].firstNodes[i];//测试
 
             if (firstIndexTimeRange.startT <= timeRange[0] && lastIndexTimeRange.endT >= timeRange[1]) {
                 while(p != null){
@@ -2052,7 +2062,7 @@ export default class LevelDataManager {
                     }
                     const type = nonUniformColObjs[colIndex].isMissContain(p);
                     nonUniformColObjs[colIndex].containColumnRange(p, type);
-                    nonUniformColObjs[colIndex].computeTransform(p, p2, type);
+                    nonUniformColObjs[colIndex].computeTransform(p, p2, type, currentFlagInfo, currentFlagInfo2);
                 }
             }
         }

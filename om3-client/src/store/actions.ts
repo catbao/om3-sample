@@ -226,7 +226,7 @@ const computeLineTransform: ActionHandler<GlobalState, GlobalState> = (context: 
 
     // maxLevel = lineClassInfo['level'];
     let currentLevel = 0;
-    let currentMulitLineClass = 'bao';
+    let currentMulitLineClass = 'number8';
     const combinedUrl = `/line_chart/init_transform_timeseries?width=${2 ** currentLevel}&class_name=${currentMulitLineClass}&dataset1=${dataset1}&dataset2=${dataset2}&mode=${context.state.controlParams.currentMode}`;
     const data = get(context.state, combinedUrl);
 
@@ -235,12 +235,17 @@ const computeLineTransform: ActionHandler<GlobalState, GlobalState> = (context: 
         let globalMaxV = -Infinity;
         let globalMinV = Infinity;
         for (let i = 0; i < res.length; i++) {
+            if(i === 0){
+                const { trendTree, dataManager } = constructMinMaxMissTrendTree(res[i].d, 600, res[i].tn);
+                dataManagers.push(dataManager);
+                continue;
+            }
             const { trendTree, dataManager } = constructMinMaxMissTrendTree(res[i].d, 600, res[i].tn);
 
             // dataManager.maxLevel = maxLevel;
             // dataManager.realDataRowNum = lineClassInfo['max_len'];
-            dataManager.maxLevel = 4;
-            dataManager.realDataRowNum = 16;
+            dataManager.maxLevel = 3;
+            dataManager.realDataRowNum = 8;
 
             const { minv, maxv } = getGlobalMinMaxInfo(getLevelData(dataManager.levelIndexObjs[dataManager.levelIndexObjs.length - 1].firstNodes[0]));
             globalMaxV = Math.max(maxv!, globalMaxV);
@@ -258,11 +263,11 @@ const computeLineTransform: ActionHandler<GlobalState, GlobalState> = (context: 
                 root: trendTree,
                 data: { powRenderData: [], noPowRenderData: [], minv: minv!, maxv: maxv! },
                 // timeRange: [0, lineInfo['max_len']],
-                timeRange: [0, 15],
+                timeRange: [0, 7],
                 // startTime: startTimeStamp,
                 startTime: 0,
                 // endTime: endTimeStamp,
-                endTime: 15,
+                endTime: 7,
                 algorithm: "",
                 dataManager: dataManager,
                 params: [0, 0],
@@ -271,7 +276,7 @@ const computeLineTransform: ActionHandler<GlobalState, GlobalState> = (context: 
                 isPow: false,
                 nonUniformColObjs: [],
                 // maxLen: lineInfo['max_len']
-                maxLen: 16
+                maxLen: 8
             }
             const drawer = drawViewChangeLineChart(viewChangeQueryObj)
             dataManager.getDataMinMaxMiss(currentLevel + 1, 0, 2 ** (currentLevel + 1) - 1).then(() => {
@@ -280,7 +285,7 @@ const computeLineTransform: ActionHandler<GlobalState, GlobalState> = (context: 
                 // const yScale = d3.scaleLinear().domain([minV, maxV]).range([payload.height, 0]);
                 const yScale = d3.scaleLinear().domain([minV, maxV]).range([600, 0]);
 
-                dataManager.viewTransformFinal(0, 600, [0, 16 - 1], yScale, drawer).then(res => {
+                dataManager.viewTransformFinal(dataManagers[0], 0, 600, [0, 8 - 1], yScale, drawer).then(res => {
                     // drawer(res)
                     //context.commit("addViewChangeQueryNoPowLineChartObj", { trendTree, dataManager, data: res, startTime: payload.startTime, endTime: payload.endTime, algorithm: "trendtree", width: payload.width, height: payload.height });
                 });

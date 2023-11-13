@@ -306,7 +306,7 @@ export class NoUniformColObj {
         return;
     }
 
-    computeTransform(p: TrendTree, p2:TrendTree, type: number) {
+    computeTransform(p: TrendTree, p2:TrendTree, type: number, currentFlagInfo: any, currentFlagInfo2: any) {
         if (p.nodeType === "NULL") {
             return
         }
@@ -330,6 +330,17 @@ export class NoUniformColObj {
             while(max > 0){
                 let temp_minL:number = min, temp_minR:number = min;
                 if(!p._leftChild && !p._rightChild){
+                    let nodeFlagInfo1 = currentFlagInfo[p.index * 2 + 1];
+                    let nodeFlagInfo2 = currentFlagInfo2[p.index * 2 + 1];
+                    if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 0){
+                        min = p.yArray[1] + p2.yArray[1];
+                    }
+                    else if(nodeFlagInfo1 === 1 && nodeFlagInfo2 === 1){
+                        min = p.yArray[1] + p2.yArray[1];
+                    }
+                    else{
+                        min = Math.min(p.yArray[1] + p2.yArray[2], p.yArray[2] + p2.yArray[1]);
+                    }
                     break;
                 }
                 if(p._leftChild && p2._leftChild){
@@ -342,26 +353,40 @@ export class NoUniformColObj {
                     p = p._leftChild;
                     p2 = p2._leftChild;
                     min = temp_minL;
-                    alternativeNodes.push([p._rightChild, temp_minR, p2._rightChild]);
+                    alternativeNodes.push([p, p2, p._rightChild, p2._rightChild, temp_minR]);
                 }
                 else if(temp_minL > temp_minR && p._rightChild && p2._rightChild){
                     p = p._rightChild;
                     p2 = p2._rightChild;
                     min = temp_minR;
-                    alternativeNodes.push([p._leftChild, temp_minL, p2._leftChild]);
+                    alternativeNodes.push([p, p2, p._leftChild, p2._leftChild, temp_minL]);
                 }
             }
             console.log("The bottom min(+):", min);
             while(alternativeNodes.length > 0){
-                let p:any = alternativeNodes.pop();
-                if(p === undefined ) continue;
+                let pop:any = alternativeNodes.pop();
+                if(pop === undefined ) continue;
                 // let p:[TrendTree, number] = alternativeNodes.pop();
-                console.log("p:", p);
-                console.log("p[0]:", p![0]);
-                console.log("p[1]:", p![1]);
-                if(Number(p[1]) > min) continue;
+                console.log("pop:", pop);
+                console.log("pop[0]:", pop![0]);
+                console.log("pop[4]:", pop![1]);
+                if(Number(pop[3]) > min) continue;
                 // min = this.updateMinValue(p![0], min, alternativeNodes);
                 let temp_minL:number = min, temp_minR:number = min;
+                if(pop[2] === null && pop[3] === null){
+                    let nodeFlagInfo1 = currentFlagInfo[(pop[0].index+1) * 2 + 1];
+                    let nodeFlagInfo2 = currentFlagInfo2[(pop[0].index+1) * 2 + 1];
+                    if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 0){
+                        min = pop[2].yArray[1] + pop[3].yArray[1];
+                    }
+                    else if(nodeFlagInfo1 === 1 && nodeFlagInfo2 === 1){
+                        min = pop[2].yArray[1] + pop[3].yArray[1];
+                    }
+                    else{
+                        min = Math.min(pop[2].yArray[1] + pop[3].yArray[2], pop[2].yArray[2] + pop[3].yArray[1]);
+                    }
+                    continue;
+                }
                 if(p._leftChild && p2._leftChild){
                     temp_minL = (p._leftChild.yArray[1] + p2._leftChild.yArray[1]) / 2;
                 }
@@ -372,13 +397,13 @@ export class NoUniformColObj {
                     p = p._leftChild;
                     p2 = p2._leftChild;
                     min = temp_minL;
-                    alternativeNodes.push([p._rightChild, temp_minR, p2._rightChild]);
+                    alternativeNodes.push([p, p2, p._rightChild, p2._rightChild, temp_minR]);
                 }
                 else if(temp_minL > temp_minR && p._rightChild && p2._rightChild){
                     p = p._rightChild;
                     p2 = p2._rightChild;
                     min = temp_minR;
-                    alternativeNodes.push([p._leftChild, temp_minL, p2._leftChild]);
+                    alternativeNodes.push([p, p2, p._leftChild, p2._leftChild, temp_minL]);
                 }
             }
             console.log("The final min(+):", min);
