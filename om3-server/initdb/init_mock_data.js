@@ -2,7 +2,7 @@ const gaussian = require("gaussian");
 const fs=require("fs")
 const { Pool } = require('pg');
 
-const dbConfig=JSON.parse(fs.readFileSync("./dbconfig.json").toString());
+const dbConfig=JSON.parse(fs.readFileSync("./om3-server/initdb/dbconfig.json").toString());
 console.log(dbConfig)
 if(!dbConfig['username']||!dbConfig['hostname']||!dbConfig['password']||!dbConfig['db']){
     throw new Error("db config error");
@@ -17,13 +17,13 @@ const pool = new Pool({
 function x_plus_sinx() {
     const distribution = gaussian(0, 1);
     return (x) => {
-        return x / 2000 + 500 * Math.sin(x / 240000) + 50 * distribution.ppf(Math.random());
+        return x / 2000 + 500 * Math.sin(x / 5000) + 50 * distribution.ppf(Math.random());
     }
 }
 async function generateAndInsertMockData() {
-    const maxPow = 23;
-    await pool.query("create table raw_data.mock_guassian_sin_8m(t integer,v double precision)")
-    const tableNames = ["raw_data.mock_guassian_sin_8m"];
+    const maxPow = 16;
+    await pool.query("create table om3_raw_data.mock_guassian_sin2_6ht(t integer,v double precision)")
+    const tableNames = ["om3_raw_data.mock_guassian_sin2_6ht"];
     let fun = null;
     for (let i = 0; i < tableNames.length; i++) {
         let data = [];

@@ -435,8 +435,8 @@ function init_transform_timeseries(req, res){
     const lineClassName = query['class_name'];
     const line1 = query['dataset1'];
     const line2 = query['dataset2'];
-    // const allMultiSeriesTables = [line1, line2];
-    const allMultiSeriesTables = ["om3_multi.number8_test1_om3_test", "om3_multi.number8_test2_om3_test"];
+    const allMultiSeriesTables = [line1, line2];
+    // const allMultiSeriesTables = ["om3_multi.number8_test1_om3_test", "om3_multi.number8_test2_om3_test"];
     const retureRes = [];
     const userCookie = req.headers['authorization'];
     let currentPool = pool
@@ -579,7 +579,7 @@ function queryMinMaxMissData(req, res) {
 
 function getAllFlags(req, res) {
     const allSingleFlagNames = fs.readdirSync("./flags/single_line");
-    const allMultiFlagNames = fs.readFileSync("./flags/single_line");
+    const allMultiFlagNames = fs.readFileSync("./flags/multi_line");
     const allFlagNames = [];
     allSingleFlagNames.map((v => {
         allFlagNames.push("sing_" + v);

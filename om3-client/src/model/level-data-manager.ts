@@ -2025,23 +2025,24 @@ export default class LevelDataManager {
     }
 
     async viewTransformFinal(otherDataManager: LevelDataManager, currentLevel: number, width: number, timeRange: Array<number>, yScale: any, drawer: any){
-        // const currentFlagInfo = getFlag(this.dataName);
+        const currentFlagInfo = getFlag(this.dataName);
         // const currentFlagInfo = getFlag("custom_number8_test2_om3_test.flagz");
-        // if (currentFlagInfo === undefined) {
-        //     throw new Error(this.dataName + " get flag faild")
-        // } else {
-        //     console.log("flag info:", currentFlagInfo);
-        //     console.log("flag length:", currentFlagInfo.length)
-        // }
+        if (currentFlagInfo === undefined) {
+            throw new Error(this.dataName + " get flag faild")
+        } else {
+            console.log("flag info:", currentFlagInfo);
+            console.log("flag length:", currentFlagInfo.length)
+        }
+        const currentFlagInfo2 = getFlag(otherDataManager.dataName);
         // const currentFlagInfo2 = getFlag("custom_number8_test1_om3_test.flagz");
-        // if (currentFlagInfo2 === undefined) {
-        //     throw new Error(this.dataName + " get flag faild")
-        // } else {
-        //     console.log("flag2 info:", currentFlagInfo2);
-        //     console.log("flag2 length:", currentFlagInfo2.length)
-        // }
-        const currentFlagInfo = [0,1,1,0,1,0,0,1];
-        const currentFlagInfo2 = [0,1,0,1,0,1,0,1];
+        if (currentFlagInfo2 === undefined) {
+            throw new Error(this.dataName + " get flag faild")
+        } else {
+            console.log("flag2 info:", currentFlagInfo2);
+            console.log("flag2 length:", currentFlagInfo2.length)
+        }
+        // const currentFlagInfo = [0,1,1,0,1,0,0,1];
+        // const currentFlagInfo2 = [0,1,0,1,0,1,0,1];
 
         allTimes = []
         const nonUniformColObjs = computeTimeSE(currentLevel, width, timeRange, this.realDataRowNum, this.maxLevel);

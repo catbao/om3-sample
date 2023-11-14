@@ -251,6 +251,7 @@ function updateAllTables(state: GlobalState, info: { tables: Array<string> }) {
 function updateAllFlags(state: GlobalState, info: { flags: any }) {
     // state.allFlags = info.flags;
     setFlagMap(info.flags)
+    console.log(info.flags);
     console.log("load flags finish");
 }
 

@@ -533,8 +533,8 @@ function constructTrendTree(data: Array<any>, tableName?: string) {
 // }
 
 function constructMinMaxMissTrendTree(data: Array<any>, width: number, tableName?: string) {
-    // const initLevel = Math.ceil(Math.log2(width));
-    const initLevel = 2;
+    const initLevel = Math.ceil(Math.log2(65536))-1;
+    // const initLevel = 2;
     //debugger
     const levelIndex = new Array<LevelIndexObj>(Math.ceil(Math.log2(data.length)) + 1);
 

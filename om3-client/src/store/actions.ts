@@ -208,25 +208,26 @@ const loadMultiTimeSeriesInitData: ActionHandler<GlobalState, GlobalState> = (co
     });
 }
 
-const computeLineTransform: ActionHandler<GlobalState, GlobalState> = (context: ActionContext<GlobalState, GlobalState>, payload: { width: 600, height: 600 }) =>{
-    const dataset1 = 1;
-    const dataset2 = 1;
-    // const currentLevel = Math.ceil(Math.log2(payload.width));
-    // let maxLevel = 0
-    // const currentMulitLineClass = context.state.controlParams.currentMultiLineClass;
-    // let lineClassInfo: any = null
-    // if (context.state.controlParams.currentMode === 'Default') {
-    //     lineClassInfo = context.state.allMultiLineClassInfoMap.get(currentMulitLineClass);
-    // } else {
-    //     lineClassInfo = context.state.allCustomMultiLineClassInfoMap.get(currentMulitLineClass);
-    // }
-    // if (lineClassInfo === undefined) {
-    //     throw new Error("cannot get class info");
-    // }
+const computeLineTransform: ActionHandler<GlobalState, GlobalState> = (context: ActionContext<GlobalState, GlobalState>) =>{
+    const dataset1 = "om3_multi.mock_mock_guassian_sin1_6ht_om3_6ht";
+    const dataset2 = "om3_multi.mock_mock_guassian_sin2_6ht_om3_6ht";
+    const payload = {width: 600, height: 600};
+    const currentLevel = Math.ceil(Math.log2(payload.width));
+    let maxLevel = 0
+    const currentMulitLineClass = context.state.controlParams.currentMultiLineClass;
+    let lineClassInfo: any = null
+    if (context.state.controlParams.currentMode === 'Default') {
+        lineClassInfo = context.state.allMultiLineClassInfoMap.get(currentMulitLineClass);
+    } else {
+        lineClassInfo = context.state.allCustomMultiLineClassInfoMap.get(currentMulitLineClass);
+    }
+    if (lineClassInfo === undefined) {
+        throw new Error("cannot get class info");
+    }
 
-    // maxLevel = lineClassInfo['level'];
-    let currentLevel = 0;
-    let currentMulitLineClass = 'number8';
+    maxLevel = lineClassInfo['level'];
+    // let currentLevel = 0;
+    // let currentMulitLineClass = 'number8';
     const combinedUrl = `/line_chart/init_transform_timeseries?width=${2 ** currentLevel}&class_name=${currentMulitLineClass}&dataset1=${dataset1}&dataset2=${dataset2}&mode=${context.state.controlParams.currentMode}`;
     const data = get(context.state, combinedUrl);
 
@@ -242,10 +243,10 @@ const computeLineTransform: ActionHandler<GlobalState, GlobalState> = (context: 
             }
             const { trendTree, dataManager } = constructMinMaxMissTrendTree(res[i].d, 600, res[i].tn);
 
-            // dataManager.maxLevel = maxLevel;
-            // dataManager.realDataRowNum = lineClassInfo['max_len'];
-            dataManager.maxLevel = 3;
-            dataManager.realDataRowNum = 8;
+            dataManager.maxLevel = maxLevel;
+            dataManager.realDataRowNum = lineClassInfo['max_len'];
+            // dataManager.maxLevel = 3;
+            // dataManager.realDataRowNum = 8;
 
             const { minv, maxv } = getGlobalMinMaxInfo(getLevelData(dataManager.levelIndexObjs[dataManager.levelIndexObjs.length - 1].firstNodes[0]));
             globalMaxV = Math.max(maxv!, globalMaxV);
@@ -254,29 +255,29 @@ const computeLineTransform: ActionHandler<GlobalState, GlobalState> = (context: 
             dataManagers.push(dataManager);
             const viewChangeQueryObj: ViewChangeLineChartObj = {
                 id: uuidv4(),
-                // width: payload.width,
-                width: 600,
-                // height: payload.height,
-                height: 600,
+                width: payload.width,
+                // width: 600,
+                height: payload.height,
+                // height: 600,
                 x: Math.random() * 60,
                 y: Math.random() * 60,
                 root: trendTree,
                 data: { powRenderData: [], noPowRenderData: [], minv: minv!, maxv: maxv! },
                 // timeRange: [0, lineInfo['max_len']],
-                timeRange: [0, 7],
+                timeRange: [0, 65530],
                 // startTime: startTimeStamp,
                 startTime: 0,
                 // endTime: endTimeStamp,
-                endTime: 7,
+                endTime: 65536,
                 algorithm: "",
                 dataManager: dataManager,
                 params: [0, 0],
-                // currentLevel: Math.ceil(Math.log2(payload.width)),
-                currentLevel: 0,
+                currentLevel: Math.ceil(Math.log2(payload.width)),
+                // currentLevel: 0,
                 isPow: false,
                 nonUniformColObjs: [],
                 // maxLen: lineInfo['max_len']
-                maxLen: 8
+                maxLen: 65536
             }
             const drawer = drawViewChangeLineChart(viewChangeQueryObj)
             dataManager.getDataMinMaxMiss(currentLevel + 1, 0, 2 ** (currentLevel + 1) - 1).then(() => {
@@ -285,7 +286,7 @@ const computeLineTransform: ActionHandler<GlobalState, GlobalState> = (context: 
                 // const yScale = d3.scaleLinear().domain([minV, maxV]).range([payload.height, 0]);
                 const yScale = d3.scaleLinear().domain([minV, maxV]).range([600, 0]);
 
-                dataManager.viewTransformFinal(dataManagers[0], 0, 600, [0, 8 - 1], yScale, drawer).then(res => {
+                dataManager.viewTransformFinal(dataManagers[0], currentLevel, 600, [0, 65536 - 1], yScale, drawer).then(res => {
                     // drawer(res)
                     //context.commit("addViewChangeQueryNoPowLineChartObj", { trendTree, dataManager, data: res, startTime: payload.startTime, endTime: payload.endTime, algorithm: "trendtree", width: payload.width, height: payload.height });
                 });
@@ -322,7 +323,6 @@ async function getAllFlagsFunc(context: ActionContext<GlobalState, GlobalState>,
     for (let i = 0; i < allFlagNames['data'].length; i++) {
         const combinedUrl2 = `/line_chart/getSingleFlag?name=${allFlagNames['data'][i]}&line_type=${lineType}`
         const tempFlagInfo = await getBuffer(context.state, combinedUrl2);
-
         //@ts-ignore
         flagMap[allFlagNames['data'][i].split(".")[0]] = Buffer.from(tempFlagInfo)
     }
