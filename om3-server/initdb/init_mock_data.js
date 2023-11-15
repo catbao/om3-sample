@@ -22,8 +22,8 @@ function x_plus_sinx() {
 }
 async function generateAndInsertMockData() {
     const maxPow = 16;
-    await pool.query("create table om3_raw_data.mock_guassian_sin2_6ht(t integer,v double precision)")
-    const tableNames = ["om3_raw_data.mock_guassian_sin2_6ht"];
+    await pool.query("create table om3_raw_data.mock_guassian_sin1_6ht(t integer,v double precision)")
+    const tableNames = ["om3_raw_data.mock_guassian_sin1_6ht"];
     let fun = null;
     for (let i = 0; i < tableNames.length; i++) {
         let data = [];

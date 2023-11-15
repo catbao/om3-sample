@@ -528,8 +528,6 @@ export async function batchLoadDataForRangeLevel1MinMaxMiss(losedRange: Array<Ar
                 const yArray1: [any, any, any, any, any] = [undefined, undefined, undefined, undefined, undefined]
                 const yArray2: [any, any, any, any, any] = [undefined, undefined, undefined, undefined, undefined]
                 if (curNodeType === 'O') {
-                    
-                   
                     if (p.difference![1] < 0) {
                         yArray1[1] = p.yArray[1];
                         yArray2[1] = p.yArray[1] - p.difference![1];

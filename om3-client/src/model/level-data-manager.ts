@@ -2047,8 +2047,10 @@ export default class LevelDataManager {
         allTimes = []
         const nonUniformColObjs = computeTimeSE(currentLevel, width, timeRange, this.realDataRowNum, this.maxLevel);
         let needLoadDifNode: Array<TrendTree> = [];
+        let needLoadDifNode2: Array<TrendTree> = [];
         let colIndex = 0;
 
+        let startT = new Date().getTime();
         //假设对于dataset1
         for(let i=0; i<this.levelIndexObjs[currentLevel].firstNodes.length; ++i){
             const firstIndexTimeRange = this.getIndexTime(currentLevel, this.levelIndexObjs[currentLevel].loadedDataRange[i][0], this.maxLevel);
@@ -2061,12 +2063,172 @@ export default class LevelDataManager {
                     if(colIndex >= nonUniformColObjs.length){
                         break;
                     }
+                    if(colIndex === 12) console.log("colIndex equals to 12!");
                     const type = nonUniformColObjs[colIndex].isMissContain(p);
                     nonUniformColObjs[colIndex].containColumnRange(p, type);
                     nonUniformColObjs[colIndex].computeTransform(p, p2, type, currentFlagInfo, currentFlagInfo2);
+                    if(type === 1){
+                        p = p.nextSibling!;
+                        p2 = p2.nextSibling!;
+                    }
+                    else if(type === 2){
+                        needLoadDifNode.push(p);
+                        needLoadDifNode2.push(p2);
+                        p = p.nextSibling!;
+                        p2 = p2.nextSibling!;
+                    }
+                    else if (type === 3) {
+                        colIndex++;
+                    } else if (type === 5) {
+                        p = p.nextSibling!;
+                        p2 = p2.nextSibling!;
+                    } else if (type === 6) {
+                        // throw new Error("error in viewchange")
+                        break;
+                    } else {
+                        p = p.nextSibling!;
+                        p2 = p2.nextSibling!;
+                        //throw new Error("node time is little than col");
+                    }
                 }
             }
         }
+        
+        if(needLoadDifNode.length === 0){
+             return nonUniformColObjs;
+        }
+        let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
+        if (losedDataInfo.length > 0) {
+            await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);  //取得系数
+            await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, otherDataManager);
+        }
+
+        while (needLoadDifNode.length > 0) { //如果需要继续向下获取系数，则一直向下查询，直到最后一层
+            colIndex = 0;
+            const tempNeedLoadDifNodes = [];
+            const tempQue: Array<TrendTree> = [];
+            const tempNeedLoadDifNodes2 = [];
+            const tempQue2: Array<TrendTree> = [];
+
+            needLoadDifNode.forEach(v => {
+                // if (v._leftChild === null || v._rightChild === null) {
+                //     console.log(v)
+                //     console.log(this)
+                //     // debugger
+                //     // throw new Error("cannot find next level node");
+                // }
+                if(v._leftChild != null && v._rightChild != null){
+                    this.lruCache.has(v._leftChild.level + "_" + v._leftChild.index);
+                    this.lruCache.has(v._rightChild.level + "_" + v._rightChild.index);
+                    if (v._leftChild.nodeType !== 'NULL') {
+                        tempQue.push(v._leftChild!);
+                    }
+                    if (v._rightChild.nodeType !== 'NULL') {
+                        tempQue.push(v._rightChild!);
+                    }
+                }
+            });
+            needLoadDifNode2.forEach(v => {
+                if(v._leftChild != null && v._rightChild != null){
+                    this.lruCache.has(v._leftChild.level + "_" + v._leftChild.index);
+                    this.lruCache.has(v._rightChild.level + "_" + v._rightChild.index);
+                    if (v._leftChild.nodeType !== 'NULL') {
+                        tempQue2.push(v._leftChild!);
+                    }
+                    if (v._rightChild.nodeType !== 'NULL') {
+                        tempQue2.push(v._rightChild!);
+                    }
+                }
+            });
+
+            const preColIndex = [];
+            for (let i = 0; i < tempQue.length; i++) {
+                if (colIndex >= nonUniformColObjs.length) {
+                    break;
+                    //throw new Error("col index out range");
+                }
+                const type = nonUniformColObjs[colIndex].isMissContain(tempQue[i]);
+                nonUniformColObjs[colIndex].containColumnRange(tempQue[i], type);
+                nonUniformColObjs[colIndex].computeTransform(tempQue[i], tempQue2[i], type, currentFlagInfo, currentFlagInfo2);
+                if (type === 1) {
+                    continue;
+                } else if (type === 2) {
+                    tempNeedLoadDifNodes.push(tempQue[i]);
+                    tempNeedLoadDifNodes2.push(tempQue2[i]);
+                    preColIndex.push(colIndex);
+                } else if (type === 3) {
+                    colIndex++;
+                    i--;
+                } else if (type === 6) {
+                    break;
+                } else {
+                    continue;
+                    // throw new Error("node time is little than col");
+                }
+            }
+            if (preColIndex.length != tempNeedLoadDifNodes.length) {
+                throw new Error("cannot memory index");
+            }
+
+            // for (let i = 0; i < tempNeedLoadDifNodes.length; i++) {
+            //     if (preColIndex[i] + 1 < nonUniformColObjs.length) {
+            //         //判断是否可以剪枝
+            //         const con1 = canCut(tempNeedLoadDifNodes[i], nonUniformColObjs[preColIndex[i]], nonUniformColObjs[preColIndex[i] + 1], yScale);
+            //         if (con1) {
+            //             tempNeedLoadDifNodes.splice(i, 1)
+            //             preColIndex.splice(i, 1);
+            //         }
+            //     }
+
+            // }
+            ////this.checkMonotonicity(nonUniformColObjs,preColIndex,tempNeedLoadDifNodes);
+            needLoadDifNode = tempNeedLoadDifNodes;
+            if (needLoadDifNode.length > 0 && needLoadDifNode[0].level === this.maxLevel - 1) {
+
+                console.log("last level:", needLoadDifNode.length);
+
+                // for (let i = 0; i < needLoadDifNode.length; i++) {
+                //     const nodeFlag1 = currentFlagInfo[2 * needLoadDifNode[i].index];  //其实就是order,一个比特数组。处理最后一层
+                //     if(nodeFlag1===1){
+                //         throw new Error("flag error")
+                //     }
+                //     const nodeFlag2 = currentFlagInfo[2 * needLoadDifNode[i].index + 1]
+                //     if (nodeFlag2 === 0) {
+                //         nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[1]);
+                //         nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[1]);
+                //         if (preColIndex[i] + 1 < nonUniformColObjs.length) {
+                //             nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[2]);
+                //             nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[2]);
+                //         }
+                //     } else {
+                //         nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[2]);
+                //         nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[2]);
+                //         if (preColIndex[i] + 1 < nonUniformColObjs.length) {
+                //             nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[1]);
+                //             nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[1]);
+                //         }
+                //     }
+
+                // }
+                break;
+            }
+            if (needLoadDifNode.length === 0) {
+                break;
+            }
+            let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
+            if (losedDataInfo.length > 0) {
+                await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this); //每一层都需要判断子节点是否需要获取，需要的话要从数据库获取系数
+                await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, otherDataManager); 
+            }
+
+        }
+
+        console.log("The time to get all coefficients:" + (new Date().getTime() - startT));
+
+        for (let i = 0; i < nonUniformColObjs.length; i++) {
+            nonUniformColObjs[i].checkIsMis();
+        }
+        return nonUniformColObjs;
     }
 
 }
