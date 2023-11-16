@@ -264,7 +264,7 @@ const computeLineTransform: ActionHandler<GlobalState, GlobalState> = (context: 
                 root: trendTree,
                 data: { powRenderData: [], noPowRenderData: [], minv: minv!, maxv: maxv! },
                 // timeRange: [0, lineInfo['max_len']],
-                timeRange: [0, 65530],
+                timeRange: [0, 65536],
                 // startTime: startTimeStamp,
                 startTime: 0,
                 // endTime: endTimeStamp,

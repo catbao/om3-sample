@@ -495,17 +495,13 @@ export async function batchLoadDataForRangeLevel1MinMaxMiss(losedRange: Array<Ar
         difVals= await batchLoadMinMaxMissWithPostForMultiLineType(losedRange, manager.dataName, "level_load_data_min_max_miss", manager.maxLevel, tagName)
     }
 
-    
     let count = 0;
     for (let i = 0; i < losedRange.length; i++) {
         const levelRange = losedRange[i];
-
         const startNode = manager.levelIndexObjs[losedRange[i][0]].getTreeNodeStartIndex(losedRange[i][1]);
         let p: TrendTree = startNode;
         const newTreeNode = [];
         for (let j = losedRange[i][1]; j <= losedRange[i][2];j++) {
-        
-           
             if (p?.index === j && j === difVals[count].i && p.level === difVals[count].l) {
                 let dif = difVals[count].dif!;
                 let curNodeType: "O" | "NULL" | "LEFTNULL" | "RIGHTNULL" = 'O';

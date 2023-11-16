@@ -335,7 +335,7 @@ export default createStore<GlobalState>({
       currentTimeBoxType: 'stock46r',
       currentMultiLineClass: '',
       currentMultiLineClassALine: '',
-      tableMaxLevel: 20,
+      tableMaxLevel: 16,
       sampleMethods: ['ViewChangeQueryFinal'],
       displayChanel: ['All', 'MinT', 'MinV', 'MaxV', 'MaxT'],
       currentChanel: 'All',
