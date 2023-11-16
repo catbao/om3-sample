@@ -209,8 +209,8 @@ const loadMultiTimeSeriesInitData: ActionHandler<GlobalState, GlobalState> = (co
 }
 
 const computeLineTransform: ActionHandler<GlobalState, GlobalState> = (context: ActionContext<GlobalState, GlobalState>) =>{
-    const dataset1 = "om3_multi.mock_mock_guassian_sin3_6ht_om3_6ht";
-    const dataset2 = "om3_multi.mock_mock_guassian_sin4_6ht_om3_6ht";
+    const dataset1 = "om3_multi.mock_mock_guassian_sin1_6ht_om3_6ht";
+    const dataset2 = "om3_multi.mock_mock_guassian_sin2_6ht_om3_6ht";
     const payload = {width: 600, height: 600};
     const currentLevel = Math.ceil(Math.log2(payload.width));
     let maxLevel = 0
