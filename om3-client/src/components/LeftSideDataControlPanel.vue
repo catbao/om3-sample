@@ -317,7 +317,7 @@ export default defineComponent({
       this.openFullScreenLoading();
       store.dispatch("performTransformForSingeLine", { startTime: startFullTime, endTime: endFullTime, tableName: this.singleLineTableName }).then((res) => {
         console.log("res:"+res.data);
-        if (res.data['code'] === 200) {
+        if (res['code'] === 200) {
           console.log("single line transform success")
           //  add tishi
         } else {

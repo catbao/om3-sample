@@ -82,15 +82,17 @@ const loadViewChangeQueryWSMinMaxMissDataInitData: ActionHandler<GlobalState, Gl
     if (lineInfo.interval !== 0) {
         timeInterval = lineInfo.interval;
     }
+    let test_width = 10;
     //@ts-ignore
-    const combinedUrl = `/line_chart/init_wavelet_bench_min_max_miss?width=${2 ** (Math.ceil(Math.log2(payload.width)))}&table_name=${context.state.controlParams.currentTable}&mode=${context.state.controlParams.currentMode}`;
+    const combinedUrl = `/line_chart/init_wavelet_bench_min_max_miss?width=${2 ** (Math.ceil(Math.log2(test_width)))}&table_name=${context.state.controlParams.currentTable}&mode=${context.state.controlParams.currentMode}`;
     const data = get(context.state, combinedUrl);
     data.then(tempRes => {
         if (tempRes['code'] === 200) {
             const finalRes = tempRes['data']['result'];
             const currentLevel = Math.ceil(Math.log2(payload.width));
 
-            const { trendTree, dataManager } = constructMinMaxMissTrendTree(finalRes, payload.width);
+            // const { trendTree, dataManager } = constructMinMaxMissTrendTree(finalRes, payload.width);
+            const { trendTree, dataManager } = constructMinMaxMissTrendTree(finalRes, test_width);
             dataManager.maxLevel = maxLevel
             dataManager.realDataRowNum = lineInfo['max_len']
             const { minv, maxv } = getGlobalMinMaxInfo(getLevelData(dataManager.levelIndexObjs[dataManager.levelIndexObjs.length - 1].firstNodes[0]));
@@ -120,7 +122,7 @@ const loadViewChangeQueryWSMinMaxMissDataInitData: ActionHandler<GlobalState, Gl
                 const maxV = dataManager.levelIndexObjs[0].firstNodes[0].yArray[2];
                 const yScale = d3.scaleLinear().domain([minV, maxV]).range([payload.height, 0]);
 
-                dataManager.viewChangeInteractionFinal1(Math.ceil(Math.log2(payload.width)), payload.width, [0, lineInfo['max_len'] - 1], yScale, drawer).then(res => {
+                dataManager.viewChangeInteractionFinal1(Math.ceil(Math.log2(test_width)), test_width, [0, lineInfo['max_len'] - 1], yScale, drawer).then(res => {
                     drawer(res)
                     //context.commit("addViewChangeQueryNoPowLineChartObj", { trendTree, dataManager, data: res, startTime: payload.startTime, endTime: payload.endTime, algorithm: "trendtree", width: payload.width, height: payload.height });
                 });

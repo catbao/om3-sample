@@ -23,7 +23,7 @@ const levelMap = {
     "1b": 27,
     "3b": 28,
     "10b": 30,
-    "test": 5,
+    "test": 6,
 }
 
 const levelNameMap = {
@@ -47,7 +47,7 @@ const levelNameMap = {
     27: "1b",
     28: "3b",
     30: "10b",
-    5: "test",
+    6: "test",
 }
 
 function getTableLevel(tableName) {

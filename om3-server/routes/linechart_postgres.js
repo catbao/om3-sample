@@ -54,7 +54,7 @@ const levelMap = {
     "1b": 27,
     "3b": 28,
     "10b": 30,
-    "test": 5,
+    "test": 6,
 }
 //const customDBPoolMap() = new Map();
 
@@ -768,8 +768,8 @@ async function performTransformForSingeLine(req, res) {
         console.log(maxT)
         console.log(query.tableName)
         console.log(newTableName)
-        // const createOm3TableSql = `DROP TABLE IF EXISTS ${newTableName};create table ${newTableName}(i integer primary key,minvd double precision,maxvd double precision)`;
-        const createOm3TableSql = `create table ${newTableName}(i integer,minvd double precision,maxvd double precision,avevd double precision)`;
+        const createOm3TableSql = `DROP TABLE IF EXISTS ${newTableName};create table ${newTableName}(i integer primary key,minvd double precision,maxvd double precision,avevd double precision)`;
+        // const createOm3TableSql = `create table ${newTableName}(i integer,minvd double precision,maxvd double precision,avevd double precision)`;
         await new Promise((resolve, reject) => {
             tempPool.query(createOm3TableSql, (err, result) => {
                 if (err) {
