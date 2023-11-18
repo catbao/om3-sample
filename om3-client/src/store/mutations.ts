@@ -275,7 +275,7 @@ function updateMultiLineClassAndLinesInfo(state: GlobalState, info: { info: any 
         tableArray.push(info.info['data'][i]['table_fullname']);
         // console.log(info.info['data'][i]['table_fullname']);
     }
-    multiClassAndLinesInfoMap.set("bao", tableArray);
+    multiClassAndLinesInfoMap.set("mock", tableArray);
     if(state.controlParams.currentMode==='Default'){
         state.allMultiLineClassAndLinesMap = multiClassAndLinesInfoMap;
     }else{
@@ -291,6 +291,10 @@ function alterCurrentMulitLineClass(state: GlobalState, className: string) {
 
 function alterCurrentMulitLineClassALine(state: GlobalState, lineName: string) {
     state.controlParams.currentMultiLineClassALine = lineName
+}
+
+function alterCurrentMulitLineClassLines(state: GlobalState, lineName: string) {
+    state.controlParams.currentMultiLineClassLines = lineName
 }
 
 function updateCustomTableAndInfo(state: GlobalState, info: { customTables: Array<string>,customTableInfo:Array<any> }){
@@ -344,6 +348,7 @@ export {
     updateMultiLineClassAndLinesInfo,
     alterCurrentMulitLineClass,
     alterCurrentMulitLineClassALine,
+    alterCurrentMulitLineClassLines,
     alterCustomTable,
     updateCustomTableAndInfo,
     updateDefaultTableAndInfo,

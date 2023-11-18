@@ -67,7 +67,8 @@ export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
     const indexToTimeStampScale = d3.scaleLinear().domain([nodeIndexRange[0], nodeIndexRange[1]]).range([realTimeStampRange[0], realTimeStampRange[1]]);
     const xScale: any = d3.scaleLinear().domain([0, lineChartObj.width]).range([0, lineChartObj.width]);
     let showTimeXScale: any = d3.scaleTime().domain([new Date(realTimeStampRange[0]), new Date(realTimeStampRange[1])]).range([0, lineChartObj.width]);
-    let yScale: any = d3.scaleLinear().domain([lineChartObj.data.minv, lineChartObj.data.maxv]).range([lineChartObj.height, 0]);
+    // let yScale: any = d3.scaleLinear().domain([lineChartObj.data.minv, lineChartObj.data.maxv]).range([lineChartObj.height, 0]);
+    let yScale: any = d3.scaleLinear().domain([-1000, 1000]).range([lineChartObj.height, 0]);
     let xReScale = d3.scaleLinear().domain([0, lineChartObj.width]).range([0, lineChartObj.dataManager.realDataRowNum - 1]);
     let showXTimeScale: any = d3.scaleTime().domain([new Date(realTimeStampRange[0]), new Date(realTimeStampRange[1])]).range([0, lineChartObj.width]);
 
@@ -117,7 +118,8 @@ export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
 
     function draw(nonUniformColObjs?: Array<NoUniformColObj>,type?:string) {
         canvas.width = lineChartObj.width;
-        yScale = d3.scaleLinear().domain([lineChartObj.data.minv, lineChartObj.data.maxv]).range([lineChartObj.height, 0]);
+        // yScale = d3.scaleLinear().domain([lineChartObj.data.minv, lineChartObj.data.maxv]).range([lineChartObj.height, 0]);
+        yScale = d3.scaleLinear().domain([-1000, 1000]).range([lineChartObj.height, 0]);
         yAxis = d3.axisLeft(yScale)
         if (yAxisG !== null && yAxisG !== undefined) {
             yAxisG.remove();
@@ -202,9 +204,21 @@ export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
             ctx.beginPath();
 
             ctx.strokeStyle = 'red';
-            for(let i=0; i<nonUniformColObjs.length-1; i++){
-                ctx.moveTo(nonUniformColObjs[i].positionInfo.startX, yScale(nonUniformColObjs[i].average));
-                ctx.lineTo(nonUniformColObjs[i+1].positionInfo.startX, yScale(nonUniformColObjs[i+1].average));
+            for(let i=0; i<nonUniformColObjs.length; i++){
+                if(nonUniformColObjs[i].addMin[0] < nonUniformColObjs[i].addMin[1]){
+                    ctx.moveTo(nonUniformColObjs[i].positionInfo.minX, yScale(nonUniformColObjs[i].addMin[1]));
+                    ctx.lineTo(nonUniformColObjs[i].positionInfo.maxX, yScale(nonUniformColObjs[i].addMax[1]));
+                }
+                else{
+                    ctx.moveTo(nonUniformColObjs[i].positionInfo.minX, yScale(nonUniformColObjs[i].addMax[1]));
+                    ctx.lineTo(nonUniformColObjs[i].positionInfo.maxX, yScale(nonUniformColObjs[i].addMin[1]));
+                }
+                if (i <= nonUniformColObjs.length - 2 && nonUniformColObjs[i].endV !== undefined && nonUniformColObjs[i + 1] !== undefined) {
+                    ctx.moveTo(nonUniformColObjs[i].positionInfo.endX, yScale(nonUniformColObjs[i].endV!));
+                    ctx.lineTo(nonUniformColObjs[i + 1].positionInfo.startX, yScale(nonUniformColObjs[i + 1].startV!));
+                }
+                // ctx.moveTo(nonUniformColObjs[i].positionInfo.startX, yScale(nonUniformColObjs[i].addMin));
+                // ctx.lineTo(nonUniformColObjs[i+1].positionInfo.startX, yScale(nonUniformColObjs[i+1].addMin));
             }
             ctx.stroke();
         } else {

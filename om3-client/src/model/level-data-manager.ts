@@ -2179,7 +2179,6 @@ export default class LevelDataManager {
             //             preColIndex.splice(i, 1);
             //         }
             //     }
-
             // }
             ////this.checkMonotonicity(nonUniformColObjs,preColIndex,tempNeedLoadDifNodes);
             needLoadDifNode = tempNeedLoadDifNodes;
@@ -2215,37 +2214,83 @@ export default class LevelDataManager {
             // }
             if (needLoadDifNode.length > 0 && needLoadDifNode[0].level === this.maxLevel - 1) {
                 for (let i = 0; i < needLoadDifNode.length; i++) {
-                    const nodeFlag2 = currentFlagInfo[2 * needLoadDifNode[i].index + 1]
+                    const nodeFlag1 = currentFlagInfo[2 * needLoadDifNode[i].index + 1]
+                    const nodeFlag2 = currentFlagInfo2[2 * needLoadDifNode[i].index + 1]
                     if (needLoadDifNode[i].gapFlag === 'NO') {
-                        if (nodeFlag2 === 0) {
-                            nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[1], needLoadDifNode[i]);
-                            nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[1]);
+                        if (nodeFlag1 === 0 && nodeFlag2 === 0) {
+                            nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[1], needLoadDifNode[i]);
+                            nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[1]);
                             if (preColIndex[i] + 1 < nonUniformColObjs.length) {
-                                nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[2], needLoadDifNode[i]);
-                                nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[2]);
+                                nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[2], needLoadDifNode[i]);
+                                nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[2]);
                             }
-                        } else {
-                            nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[2], needLoadDifNode[i]);
-                            nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[2]);
+                        }
+                        else if(nodeFlag1 === 1 && nodeFlag2 === 1){
+                            nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[2], needLoadDifNode[i]);
+                            nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[2]);
                             if (preColIndex[i] + 1 < nonUniformColObjs.length) {
-                                nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[1], needLoadDifNode[i]);
-                                nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[1]);
+                                nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[1], needLoadDifNode[i]);
+                                nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[1]);
+                            }
+                        }
+                        else if(nodeFlag1 === 0 && nodeFlag2 === 1){
+                            nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[2], needLoadDifNode[i]);
+                            nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[2]);
+                            if (preColIndex[i] + 1 < nonUniformColObjs.length) {
+                                nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[1], needLoadDifNode[i]);
+                                nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[1]);
+                            }
+                        }
+                        else{
+                            nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[1], needLoadDifNode[i]);
+                            nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[1]);
+                            if (preColIndex[i] + 1 < nonUniformColObjs.length) {
+                                nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[2], needLoadDifNode[i]);
+                                nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[2]);
                             }
                         }
                     } else {
-                        if (nodeFlag2 === 0) {
-                            nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[1], needLoadDifNode[i]);
-                            nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[1]);
+                        // if (nodeFlag2 === 0) {
+                        //     nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[1], needLoadDifNode[i]);
+                        //     nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[1]);
 
-                            nonUniformColObjs[preColIndex[i]].addFirstVal(needLoadDifNode[i].yArray[2], needLoadDifNode[i]);
-                            nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[2]);
+                        //     nonUniformColObjs[preColIndex[i]].addFirstVal(needLoadDifNode[i].yArray[2], needLoadDifNode[i]);
+                        //     nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[2]);
 
-                        } else {
-                            nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[2], needLoadDifNode[i]);
-                            nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[2]);
+                        // } else {
+                        //     nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[2], needLoadDifNode[i]);
+                        //     nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[2]);
 
-                            nonUniformColObjs[preColIndex[i]].addFirstVal(needLoadDifNode[i].yArray[1], needLoadDifNode[i]);
-                            nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[1]);
+                        //     nonUniformColObjs[preColIndex[i]].addFirstVal(needLoadDifNode[i].yArray[1], needLoadDifNode[i]);
+                        //     nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[1]);
+                        // }
+                        if (nodeFlag1 === 0 && nodeFlag2 === 0) {
+                            nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[1], needLoadDifNode[i]);
+                            nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[1]);
+
+                            nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[2], needLoadDifNode[i]);
+                            nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[2]);
+                        }
+                        else if(nodeFlag1 === 1 && nodeFlag2 === 1){
+                            nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[2], needLoadDifNode[i]);
+                            nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[2]);
+                            
+                            nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[1], needLoadDifNode[i]);
+                            nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[1]);
+                        }
+                        else if(nodeFlag1 === 0 && nodeFlag2 === 1){
+                            nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[2], needLoadDifNode[i]);
+                            nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[2]);
+
+                            nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[1], needLoadDifNode[i]);
+                            nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[1]);
+                        }
+                        else{
+                            nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[1], needLoadDifNode[i]);
+                            nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[1]);
+
+                            nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[2], needLoadDifNode[i]);
+                            nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[2]);
                         }
                     }
 

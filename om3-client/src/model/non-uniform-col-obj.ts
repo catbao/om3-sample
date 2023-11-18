@@ -40,14 +40,14 @@ export class NoUniformColObj {
     maxNodes: Array<TrendTree>;
     realStart: number;
     sementicInterval: number;
-    addMin: number;
-    addMax: number;
-    subMin: number;
-    subMax: number;
-    multiMin: number;
-    multiMax: number;
-    divMin: number;
-    divMax: number;
+    addMin: [number, number];
+    addMax: [number, number];
+    subMin: [number, number];
+    subMax: [number, number];
+    multiMin: [number, number];
+    multiMax: [number, number];
+    divMin: [number, number];
+    divMax: [number, number];
     multiAve: number;
 
     constructor(col: number, tStart: number, tEnd: number, level: number, width: number, globalDataLen: number, maxLevel: number, dataName?: string) {
@@ -90,14 +90,14 @@ export class NoUniformColObj {
         this.maxNodes = [];
         this.realStart = 0;
         this.sementicInterval = 0;
-        this.addMin = Infinity;
-        this.addMax = -Infinity;
-        this.subMin = Infinity;
-        this.subMax = -Infinity;
-        this.multiMin = Infinity;
-        this.multiMax = -Infinity;
-        this.divMin = Infinity;
-        this.divMax = -Infinity;
+        this.addMin = [-1, Infinity];
+        this.addMax = [-1, -Infinity];
+        this.subMin = [-1, Infinity];
+        this.subMax = [-1, -Infinity];
+        this.multiMin = [-1, Infinity];
+        this.multiMax = [-1, -Infinity];
+        this.divMin = [-1, Infinity];
+        this.divMax = [-1, -Infinity];
         this.multiAve = 0;
     }
     rebuild(col: number, tStart: number, tEnd: number, level: number, width: number, globalDataLen: number, maxLevel: number, dataName?: string) {
@@ -129,14 +129,14 @@ export class NoUniformColObj {
         this.maxVTimeRange[0] = 0;
         this.maxVTimeRange[1] = 0;
         this.dataName = dataName;
-        this.addMin = Infinity;
-        this.addMax = -Infinity;
-        this.subMin = Infinity;
-        this.subMax = -Infinity;
-        this.multiMin = Infinity;
-        this.multiMax = -Infinity;
-        this.divMin = Infinity;
-        this.divMax = -Infinity;
+        this.addMin = [-1, Infinity];
+        this.addMax = [-1, -Infinity];
+        this.subMin = [-1, Infinity];
+        this.subMax = [-1, -Infinity];
+        this.multiMin = [-1, Infinity];
+        this.multiMax = [-1, -Infinity];
+        this.divMin = [-1, Infinity];
+        this.divMax = [-1, -Infinity];
         this.multiAve = 0;
     }
     setRealStartAndInterval(start: number, interval: number) {
@@ -332,6 +332,7 @@ export class NoUniformColObj {
     }
 
     computeTransform(p: TrendTree, p2:TrendTree, type: number, currentFlagInfo: any, currentFlagInfo2: any) {
+        // let p = pp, p2 = pp2;
         if (p.nodeType === "NULL") {
             return
         }
@@ -345,27 +346,57 @@ export class NoUniformColObj {
         const pTimeE = pTRange + pTimeS - 1;
         let symbol = 'add_min';
         if((type === 1 || type === 7 || type ===8 || type === 9) && symbol === 'add_min'){
+            // let p = pp, p2 = pp2;
             let min1 = p.yArray[1];
-            let min2 = p2.yArray[1];   
+            let min2 = p2.yArray[1]; 
+            let max1 = p.yArray[2];
+            let max2 = p2.yArray[2];
 
             let min = (min1 + min2);
-            let max = (p.yArray[2] + p2.yArray[2]);
+            let max = (max1 + max2);
             let tempMin;
+            let tempMax;
+            let minIndex: [number, number];
+            minIndex = [-1, Infinity];
+            let maxIndex: [number, number];
+            maxIndex = [-1, -Infinity];
 
             let alternativeNodes = [];
+            let alternativeNodes2 = [];
             while(max > 0){
+                // let p = pp, p2 = pp2;
                 let temp_minL:number = min, temp_minR:number = min;
                 if(!p._leftChild && !p._rightChild){
                     let nodeFlagInfo1 = currentFlagInfo[p.index * 2 + 1];
                     let nodeFlagInfo2 = currentFlagInfo2[p.index * 2 + 1];
                     if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 0){
                         min = p.yArray[1] + p2.yArray[1];
+                        minIndex = [p.index * 2, min];
                     }
                     else if(nodeFlagInfo1 === 1 && nodeFlagInfo2 === 1){
                         min = p.yArray[1] + p2.yArray[1];
+                        minIndex = [p.index * 2 + 1, min];
+                    }
+                    else if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 1){
+                        // min = Math.min(p.yArray[1] + p2.yArray[2], p.yArray[2] + p2.yArray[1]);
+                        if(p.yArray[1] + p2.yArray[2] < p.yArray[2] + p2.yArray[1]){
+                            min = p.yArray[1] + p2.yArray[2];
+                            minIndex = [p.index * 2, p.yArray[1] + p2.yArray[2]];
+                        }
+                        else{
+                            min = p.yArray[2] + p2.yArray[1];
+                            minIndex = [p.index * 2 + 1, p.yArray[2] + p2.yArray[1]];
+                        }
                     }
                     else{
-                        min = Math.min(p.yArray[1] + p2.yArray[2], p.yArray[2] + p2.yArray[1]);
+                        if(p.yArray[1] + p2.yArray[2] < p.yArray[2] + p2.yArray[1]){
+                            min = p.yArray[1] + p2.yArray[2];
+                            minIndex = [p.index * 2 + 1, p.yArray[1] + p2.yArray[2]];
+                        }
+                        else{
+                            min = p.yArray[2] + p2.yArray[1];
+                            minIndex = [p.index * 2, p.yArray[2] + p2.yArray[1]];
+                        }
                     }
                     break;
                 }
@@ -390,7 +421,75 @@ export class NoUniformColObj {
                     p2 = p2._rightChild;
                 }
             }
-            console.log("The bottom min(+):", min);
+            while(max > 0){
+                // let p = pp, p2 = pp2;
+                let temp_maxL:number = max, temp_maxR:number = max;
+                if(!p._leftChild && !p._rightChild){
+                    let nodeFlagInfo1 = currentFlagInfo[p.index * 2 + 1];
+                    let nodeFlagInfo2 = currentFlagInfo2[p.index * 2 + 1];
+                    // if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 0){
+                    //     max = p.yArray[2] + p2.yArray[2];
+                    // }
+                    // else if(nodeFlagInfo1 === 1 && nodeFlagInfo2 === 1){
+                    //     max = p.yArray[2] + p2.yArray[2];
+                    // }
+                    // else{
+                    //     max = Math.max(p.yArray[1] + p2.yArray[2], p.yArray[2] + p2.yArray[1]);
+                    // }
+                    if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 0){
+                        max = p.yArray[2] + p2.yArray[2];
+                        maxIndex = [p.index * 2 + 1, max];
+                    }
+                    else if(nodeFlagInfo1 === 1 && nodeFlagInfo2 === 1){
+                        max = p.yArray[2] + p2.yArray[2];
+                        maxIndex = [p.index * 2, max];
+                    }
+                    else if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 1){
+                        // min = Math.min(p.yArray[1] + p2.yArray[2], p.yArray[2] + p2.yArray[1]);
+                        if(p.yArray[1] + p2.yArray[2] > p.yArray[2] + p2.yArray[1]){
+                            max = p.yArray[1] + p2.yArray[2];
+                            maxIndex = [p.index * 2, p.yArray[1] + p2.yArray[2]];
+                        }
+                        else{
+                            max = p.yArray[2] + p2.yArray[1];
+                            maxIndex = [p.index * 2 + 1, p.yArray[2] + p2.yArray[1]];
+                        }
+                    }
+                    else{
+                        if(p.yArray[1] + p2.yArray[2] > p.yArray[2] + p2.yArray[1]){
+                            max = p.yArray[1] + p2.yArray[2];
+                            maxIndex = [p.index * 2 + 1, p.yArray[1] + p2.yArray[2]];
+                        }
+                        else{
+                            max = p.yArray[2] + p2.yArray[1];
+                            maxIndex = [p.index * 2, p.yArray[2] + p2.yArray[1]];
+                        }
+                    }
+                    break;
+                }
+                if(p._leftChild && p2._leftChild){
+                    temp_maxL = (p._leftChild.yArray[2] + p2._leftChild.yArray[2]);
+                }
+                if(p._rightChild && p2._rightChild){
+                    temp_maxR = (p._rightChild.yArray[2] + p2._rightChild.yArray[2]);
+                }
+                if(temp_maxL <= temp_maxR && p._leftChild && p2._leftChild){
+                   
+                    tempMax = temp_maxR;
+                    alternativeNodes.push([p, p2, p._rightChild, p2._rightChild, temp_maxL]);
+                    p = p._leftChild;
+                    p2 = p2._leftChild;
+                }
+                else if(temp_maxL > temp_maxR && p._rightChild && p2._rightChild){
+                    
+                    tempMax = temp_maxL;
+                    alternativeNodes.push([p, p2, p._leftChild, p2._leftChild, temp_maxR]);
+                    p = p._rightChild;
+                    p2 = p2._rightChild;
+                }
+            }
+            console.log("The bottom min(+):", minIndex);
+            console.log("The bottom max(+):", maxIndex);
             while(alternativeNodes.length > 0){
                 let pop:any = alternativeNodes.pop();
                 if(pop === undefined ) continue;
@@ -404,13 +503,39 @@ export class NoUniformColObj {
                     let nodeFlagInfo1 = currentFlagInfo[(pop[2].index) * 2 + 1];
                     let nodeFlagInfo2 = currentFlagInfo2[(pop[2].index) * 2 + 1];
                     if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 0){
-                        min = Math.min(pop[2].yArray[1] + pop[3].yArray[1], min);
+                        // min = Math.min(pop[2].yArray[1] + pop[3].yArray[1], min);
+                        if(pop[2].yArray[1] + pop[3].yArray[1] < min){
+                            min = pop[2].yArray[1] + pop[3].yArray[1];
+                            minIndex = [pop[2].index * 2, min]
+                        }
                     }
                     else if(nodeFlagInfo1 === 1 && nodeFlagInfo2 === 1){
-                        min = Math.min(pop[2].yArray[1] + pop[3].yArray[1], min);
+                        // min = Math.min(pop[2].yArray[1] + pop[3].yArray[1], min);
+                        if(pop[2].yArray[1] + pop[3].yArray[1] < min){
+                            min = pop[2].yArray[1] + pop[3].yArray[1];
+                            minIndex = [pop[2].index * 2 + 1, min]
+                        }
+                    }
+                    else if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 1){
+                        // min = Math.min(Math.min(pop[2].yArray[1] + pop[3].yArray[2], pop[2].yArray[2] + pop[3].yArray[1]), min);
+                        if(pop[2].yArray[1] + pop[3].yArray[2] < min){
+                            min = pop[2].yArray[1] + pop[3].yArray[2];
+                            minIndex = [pop[2].index * 2, min]
+                        }
+                        else if(pop[2].yArray[2] + pop[3].yArray[1] < min){
+                            min = pop[2].yArray[2] + pop[3].yArray[1];
+                            minIndex = [pop[2].index * 2 + 1, min]
+                        }
                     }
                     else{
-                        min = Math.min(Math.min(pop[2].yArray[1] + pop[3].yArray[2], pop[2].yArray[2] + pop[3].yArray[1]), min);
+                        if(pop[2].yArray[1] + pop[3].yArray[2] < min){
+                            min = pop[2].yArray[1] + pop[3].yArray[2];
+                            minIndex = [pop[2].index * 2 + 1, min]
+                        }
+                        else if(pop[2].yArray[2] + pop[3].yArray[1] < min){
+                            min = pop[2].yArray[2] + pop[3].yArray[1];
+                            minIndex = [pop[2].index * 2, min]
+                        }
                     }
                     continue;
                 }
@@ -440,15 +565,94 @@ export class NoUniformColObj {
                 //     // p2 = p2._rightChild;
                 // }
             }
-            console.log("The final min(+):", min);
-            this.addMin = Math.min(min, this.addMin);
+            while(alternativeNodes.length > 0){
+                let pop:any = alternativeNodes.pop();
+                if(pop === undefined ) continue;
+                // let p:[TrendTree, number] = alternativeNodes.pop();
+                console.log("pop:", pop);
+                console.log("pop[0]:", pop![0]);
+                console.log("pop[4]:", pop![4]);
+                if(Number(pop[4]) < max) continue;
+            
+                let temp_maxL:number = max, temp_maxR:number = max;
+                if(!pop[2]._leftChild && !pop[3]._rightChild){
+                    let nodeFlagInfo1 = currentFlagInfo[(pop[2].index) * 2 + 1];
+                    let nodeFlagInfo2 = currentFlagInfo2[(pop[2].index) * 2 + 1];
+                    // if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 0){
+                    //     max = Math.max(pop[2].yArray[2] + pop[3].yArray[2], max);
+                    // }
+                    // else if(nodeFlagInfo1 === 1 && nodeFlagInfo2 === 1){
+                    //     max = Math.max(pop[2].yArray[2] + pop[3].yArray[2], max);
+                    // }
+                    // else{
+                    //     max = Math.max(Math.max(pop[2].yArray[1] + pop[3].yArray[2], pop[2].yArray[2] + pop[3].yArray[1]), max);
+                    // }
+                    if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 0){
+                        // min = Math.min(pop[2].yArray[1] + pop[3].yArray[1], min);
+                        if(pop[2].yArray[2] + pop[3].yArray[2] > max){
+                            max = pop[2].yArray[2] + pop[3].yArray[2];
+                            maxIndex = [pop[2].index * 2 + 1, max]
+                        }
+                    }
+                    else if(nodeFlagInfo1 === 1 && nodeFlagInfo2 === 1){
+                        // min = Math.min(pop[2].yArray[1] + pop[3].yArray[1], min);
+                        if(pop[2].yArray[1] + pop[3].yArray[1] > max){
+                            max = pop[2].yArray[2] + pop[3].yArray[2];
+                            maxIndex = [pop[2].index * 2, max]
+                        }
+                    }
+                    else if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 1){
+                        // min = Math.min(Math.min(pop[2].yArray[1] + pop[3].yArray[2], pop[2].yArray[2] + pop[3].yArray[1]), min);
+                        if(pop[2].yArray[1] + pop[3].yArray[2] > max){
+                            max = pop[2].yArray[1] + pop[3].yArray[2];
+                            maxIndex = [pop[2].index * 2, max]
+                        }
+                        else if(pop[2].yArray[2] + pop[3].yArray[1] > max){
+                            max = pop[2].yArray[2] + pop[3].yArray[1];
+                            maxIndex = [pop[2].index * 2 + 1, max]
+                        }
+                    }
+                    else{
+                        if(pop[2].yArray[1] + pop[3].yArray[2] > max){
+                            max = pop[2].yArray[1] + pop[3].yArray[2];
+                            maxIndex = [pop[2].index * 2 + 1, max]
+                        }
+                        else if(pop[2].yArray[2] + pop[3].yArray[1] > max){
+                            max = pop[2].yArray[2] + pop[3].yArray[1];
+                            maxIndex = [pop[2].index * 2, max]
+                        }
+                    }
+                    continue;
+                }
+                if(pop[2]._leftChild && pop[2]._leftChild){
+                    temp_maxL = (pop[2]._leftChild.yArray[2] + pop[3]._leftChild.yArray[2]);
+                    if(temp_maxL > max)
+                        alternativeNodes.push([pop[2], pop[3], pop[2]._leftChild, pop[3]._leftChild, temp_maxL]);
+                }
+                if(pop[2]._rightChild && pop[2]._rightChild){
+                    temp_maxR = (pop[2]._rightChild.yArray[2] + pop[3]._rightChild.yArray[2]);
+                    if(temp_maxR > max)
+                        alternativeNodes.push([pop[2], pop[3], pop[2]._rightChild, pop[3]._rightChild, temp_maxR]);
+                }
+            }
+            // console.log("The final max(+):", maxIndex);          
+            // console.log("The final min(+):", minIndex);
+            if(min < this.addMin[1]){
+                this.addMin = minIndex;
+            }
+            if(max > this.addMax[1]){
+                this.addMax = maxIndex;
+            }
         }
         if((type === 1 || type === 7 || type ===8 || type === 9) && symbol === 'add_max'){
+            // let p = pp, p2 = pp2;
             let max1 = p.yArray[2];
             let max2 = p2.yArray[2];
 
             let max = (max1 + max2);
             let tempMax;
+            let maxIndex: [number, number];
+            maxIndex = [-1, -Infinity]
 
             let alternativeNodes = [];
             while(max > 0){
@@ -456,14 +660,43 @@ export class NoUniformColObj {
                 if(!p._leftChild && !p._rightChild){
                     let nodeFlagInfo1 = currentFlagInfo[p.index * 2 + 1];
                     let nodeFlagInfo2 = currentFlagInfo2[p.index * 2 + 1];
+                    // if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 0){
+                    //     max = p.yArray[2] + p2.yArray[2];
+                    // }
+                    // else if(nodeFlagInfo1 === 1 && nodeFlagInfo2 === 1){
+                    //     max = p.yArray[2] + p2.yArray[2];
+                    // }
+                    // else{
+                    //     max = Math.max(p.yArray[1] + p2.yArray[2], p.yArray[2] + p2.yArray[1]);
+                    // }
                     if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 0){
                         max = p.yArray[2] + p2.yArray[2];
+                        maxIndex = [p.index * 2 + 1, max];
                     }
                     else if(nodeFlagInfo1 === 1 && nodeFlagInfo2 === 1){
                         max = p.yArray[2] + p2.yArray[2];
+                        maxIndex = [p.index * 2, max];
+                    }
+                    else if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 1){
+                        // min = Math.min(p.yArray[1] + p2.yArray[2], p.yArray[2] + p2.yArray[1]);
+                        if(p.yArray[1] + p2.yArray[2] > p.yArray[2] + p2.yArray[1]){
+                            max = p.yArray[1] + p2.yArray[2];
+                            maxIndex = [p.index * 2, p.yArray[1] + p2.yArray[2]];
+                        }
+                        else{
+                            max = p.yArray[2] + p2.yArray[1];
+                            maxIndex = [p.index * 2 + 1, p.yArray[2] + p2.yArray[1]];
+                        }
                     }
                     else{
-                        max = Math.max(p.yArray[1] + p2.yArray[2], p.yArray[2] + p2.yArray[1]);
+                        if(p.yArray[1] + p2.yArray[2] > p.yArray[2] + p2.yArray[1]){
+                            max = p.yArray[1] + p2.yArray[2];
+                            maxIndex = [p.index * 2 + 1, p.yArray[1] + p2.yArray[2]];
+                        }
+                        else{
+                            max = p.yArray[2] + p2.yArray[1];
+                            maxIndex = [p.index * 2, p.yArray[2] + p2.yArray[1]];
+                        }
                     }
                     break;
                 }
@@ -488,7 +721,7 @@ export class NoUniformColObj {
                     p2 = p2._rightChild;
                 }
             }
-            console.log("The bottom max(+):", max);
+            // console.log("The bottom max(+):", maxIndex);
             while(alternativeNodes.length > 0){
                 let pop:any = alternativeNodes.pop();
                 if(pop === undefined ) continue;
@@ -502,14 +735,49 @@ export class NoUniformColObj {
                 if(!pop[2]._leftChild && !pop[3]._rightChild){
                     let nodeFlagInfo1 = currentFlagInfo[(pop[2].index) * 2 + 1];
                     let nodeFlagInfo2 = currentFlagInfo2[(pop[2].index) * 2 + 1];
+                    // if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 0){
+                    //     max = Math.max(pop[2].yArray[2] + pop[3].yArray[2], max);
+                    // }
+                    // else if(nodeFlagInfo1 === 1 && nodeFlagInfo2 === 1){
+                    //     max = Math.max(pop[2].yArray[2] + pop[3].yArray[2], max);
+                    // }
+                    // else{
+                    //     max = Math.max(Math.max(pop[2].yArray[1] + pop[3].yArray[2], pop[2].yArray[2] + pop[3].yArray[1]), max);
+                    // }
                     if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 0){
-                        max = Math.max(pop[2].yArray[2] + pop[3].yArray[2], max);
+                        // min = Math.min(pop[2].yArray[1] + pop[3].yArray[1], min);
+                        if(pop[2].yArray[2] + pop[3].yArray[2] > max){
+                            max = pop[2].yArray[2] + pop[3].yArray[2];
+                            maxIndex = [pop[2].index * 2 + 1, max]
+                        }
                     }
                     else if(nodeFlagInfo1 === 1 && nodeFlagInfo2 === 1){
-                        max = Math.max(pop[2].yArray[2] + pop[3].yArray[2], max);
+                        // min = Math.min(pop[2].yArray[1] + pop[3].yArray[1], min);
+                        if(pop[2].yArray[1] + pop[3].yArray[1] > max){
+                            max = pop[2].yArray[2] + pop[3].yArray[2];
+                            maxIndex = [pop[2].index * 2, max]
+                        }
+                    }
+                    else if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 1){
+                        // min = Math.min(Math.min(pop[2].yArray[1] + pop[3].yArray[2], pop[2].yArray[2] + pop[3].yArray[1]), min);
+                        if(pop[2].yArray[1] + pop[3].yArray[2] > max){
+                            max = pop[2].yArray[1] + pop[3].yArray[2];
+                            maxIndex = [pop[2].index * 2, max]
+                        }
+                        else if(pop[2].yArray[2] + pop[3].yArray[1] > max){
+                            max = pop[2].yArray[2] + pop[3].yArray[1];
+                            maxIndex = [pop[2].index * 2 + 1, max]
+                        }
                     }
                     else{
-                        max = Math.max(Math.max(pop[2].yArray[1] + pop[3].yArray[2], pop[2].yArray[2] + pop[3].yArray[1]), max);
+                        if(pop[2].yArray[1] + pop[3].yArray[2] > max){
+                            max = pop[2].yArray[1] + pop[3].yArray[2];
+                            maxIndex = [pop[2].index * 2 + 1, max]
+                        }
+                        else if(pop[2].yArray[2] + pop[3].yArray[1] > max){
+                            max = pop[2].yArray[2] + pop[3].yArray[1];
+                            maxIndex = [pop[2].index * 2, max]
+                        }
                     }
                     continue;
                 }
@@ -524,10 +792,14 @@ export class NoUniformColObj {
                         alternativeNodes.push([pop[2], pop[3], pop[2]._rightChild, pop[3]._rightChild, temp_maxR]);
                 }
             }
-            console.log("The final max(+):", max);
-            this.addMax = Math.max(max, this.addMax);
+            // console.log("The final max(+):", maxIndex);
+            // this.addMax = Math.max(max, this.addMax);
+            if(max > this.addMax[1]){
+                this.addMax = maxIndex;
+            }
         }
         if((type === 1 || type === 7 || type ===8 || type === 9) && symbol === 'sub_min'){
+            // let p = pp, p2 = pp2;
             let min1 = p.yArray[1];
             let min2 = p2.yArray[1];  
             let max1 = p.yArray[2];
@@ -611,10 +883,11 @@ export class NoUniformColObj {
                         alternativeNodes.push([pop[2], pop[3], pop[2]._rightChild, pop[3]._rightChild, temp_minR]);
                 }
                 console.log("The final min(-):", min);
-                this.subMin = Math.min(min, this.subMin);
+                // this.subMin = Math.min(min, this.subMin);
             }
         }
         if((type === 1 || type === 7 || type ===8 || type === 9) && symbol === 'sub_max'){
+            // let p = pp, p2 = pp2;
             let min1 = p.yArray[1];
             let min2 = p2.yArray[2];
             let max1 = p.yArray[2];
@@ -699,9 +972,10 @@ export class NoUniformColObj {
                 }
             }
             console.log("The final max(-):", max);
-            this.subMax = Math.max(max, this.subMax);
+            // this.subMax = Math.max(max, this.subMax);
         }
         if((type === 1 || type === 7 || type ===8 || type === 9) && symbol === 'multi_min'){
+            // let p = pp, p2 = pp2;
             let min1 = p.yArray[1];
             let min2 = p2.yArray[1]; 
             let max1 = p.yArray[2];
@@ -785,7 +1059,7 @@ export class NoUniformColObj {
                 }
             }
             console.log("The final min(*):", min);
-            this.multiMin = Math.min(min, this.multiMin);
+            // this.multiMin = Math.min(min, this.multiMin);
         }
     }
 

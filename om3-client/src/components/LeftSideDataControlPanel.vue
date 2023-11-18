@@ -160,13 +160,13 @@
       </el-select>
     </div>
 
-    <!-- <div class="class-choose-container2 mt-2 ms-1" v-if="chooseLineType == 'Multi'">
+    <div class="class-choose-container2 mt-2 ms-1" v-if="chooseLineType == 'Multi'">
       <el-select v-model="currentMultiClassALine" placeholder="Select" size="medium" @change="handleMultiLineClassALineChange"
         v-if="chooseMode === 'Custom'">
-        <el-option v-for="(item, idx) in multiLineClassAndLinesMap.get('bao')" :key="idx" :label="item" :value="item">
+        <el-option v-for="(item, idx) in multiLineClassAndLinesMap.get('mock')" :key="idx" :label="item" :value="item">
         </el-option>
       </el-select>   
-    </div> -->
+    </div>
 
     <div class="compute-line-container mt-2 ms-1" v-if="chooseLineType == 'Multi'">
       <el-select v-model="selectedOption" placeholder="Operator">
@@ -176,6 +176,15 @@
         <el-option label="/" value="/"></el-option>
         <el-option label="avg" value="avg"></el-option>
       </el-select>
+    </div>
+
+    <div class="class-choose-container2 mt-2 ms-1" v-if="chooseLineType == 'Multi'">
+      <el-select v-model="currentMultiClassLines" multiple
+      placeholder="Select" size="medium" @change="handleMultiLineClassLinesChange"
+        v-if="chooseMode === 'Custom'">
+        <el-option v-for="(item, idx) in multiLineClassAndLinesMap.get('mock')" :key="idx" :label="item" :value="item">
+        </el-option>
+      </el-select>   
     </div>
 
     <div v-if="chooseLineType == 'Multi'">
@@ -377,8 +386,6 @@ export default defineComponent({
       console.log(startFullTime, endFullTime, this.customMultiLineClassName, Array.from(this.multiLineTableNames.values()))
     }
     
-    
-
   },
 
   watch: {
@@ -423,6 +430,7 @@ export default defineComponent({
     const currentCustomTable = ref(store.state.controlParams.currentCustomTable)
     const currentMultiClass = ref(store.state.controlParams.currentMultiLineClass);
     const currentMultiClassALine = ref(store.state.controlParams.currentMultiLineClassALine);
+    const currentMultiClassLines = ref(store.state.controlParams.currentMultiLineClassLines);
     // const multiLineClassAndLinesMap = ref(store.state.allMultiLineClassAndLinesMap);
 
 
@@ -460,7 +468,9 @@ export default defineComponent({
     };
 
     const handleComputePanel = () => {
-      store.dispatch("computeLineTransform");
+      console.log("currentMultiClassALine:",currentMultiClassALine._value);
+      console.log(currentMultiClassLines._value);
+      store.dispatch("computeLineTransform", [currentMultiClassALine._value, currentMultiClassLines._value]);
     }
 
     const handleModeChange = () => {
@@ -482,7 +492,9 @@ export default defineComponent({
     }
     const handleMultiLineClassALineChange = () => {
       store.commit("alterCurrentMulitLineClassALine", currentMultiClassALine.value)
-     
+    }
+    const handleMultiLineClassLinesChange = () => {
+      store.commit("alterCurrentMulitLineClassLines", currentMultiClassLines.value)
     }
 
     const handleTableChange = () => {
@@ -523,6 +535,7 @@ export default defineComponent({
       allMultLineClass,
       currentMultiClass,
       currentMultiClassALine,
+      currentMultiClassLines,
       handleMultiLineClassChange,
       handleMultiLineClassALineChange,
       dialogFormVisible,

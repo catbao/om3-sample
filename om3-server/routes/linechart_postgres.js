@@ -663,7 +663,7 @@ function getAllMulitLineClassInfo(req, res) {
 
 function getAllMultiLineClassAndLinesInfo(req, res){
     res.setHeader('Access-Control-Allow-Origin', '*');
-    const sql = `select table_schema||'.'||table_name as table_fullname from information_schema."tables" where table_type = 'BASE TABLE' and table_schema not in ('pg_catalog', 'information_schema') and table_schema||'.'||table_name  like '%om3_multi.bao%';`
+    const sql = `select table_schema||'.'||table_name as table_fullname from information_schema."tables" where table_type = 'BASE TABLE' and table_schema not in ('pg_catalog', 'information_schema') and table_schema||'.'||table_name  like '%om3_multi.mock%';`
     const query = req.query;
     const userCookie = req.headers['authorization'];
     let currentPool = pool
