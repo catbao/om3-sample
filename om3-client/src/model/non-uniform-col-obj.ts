@@ -207,7 +207,7 @@ export class NoUniformColObj {
         const pTimeS = p.index * pTRange;
         const pTimeE = pTRange + pTimeS - 1;
 
-        if (pTimeE >= this.globalDataLen) {
+        if (pTimeE > this.globalDataLen) {
             return 6;
         }
         if (pTimeS >= this.tStart && pTimeE <= this.tEnd) {

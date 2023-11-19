@@ -1838,6 +1838,9 @@ export default class LevelDataManager {
                         if (type === 2) {
                             needLoadDifNode.push(p);
                         }
+                        if(type === 7 || type === 9){
+                            colIndex++;
+                        }
                         // if (type === 7) {
                         //     needLoadDifNode.push(p);
                         //     colIndex++;
