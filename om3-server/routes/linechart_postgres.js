@@ -441,8 +441,8 @@ function init_transform_timeseries(req, res){
     // for(let i=0;i<line2.length;++i){
     //     allMultiSeriesTables.push(line2[i]);
     // }
-    allMultiSeriesTables.push("om3_multi.mock_mock_guassian_sin3_6ht_om3_6ht");
-    allMultiSeriesTables.push("om3_multi.mock_mock_guassian_sin4_6ht_om3_6ht");
+    allMultiSeriesTables.push("om3_multi.mock_mock_guassian_sin1_6ht_om3_6ht");
+    allMultiSeriesTables.push("om3_multi.mock_mock_guassian_sin2_6ht_om3_6ht");
     console.log("allMultiSeriesTables:", allMultiSeriesTables);
     // const allMultiSeriesTables = [line1, line2];
     // const allMultiSeriesTables = ["om3_multi.number8_test1_om3_test", "om3_multi.number8_test2_om3_test"];

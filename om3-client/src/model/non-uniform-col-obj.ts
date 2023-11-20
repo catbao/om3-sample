@@ -385,12 +385,12 @@ export class NoUniformColObj {
                     }
                     for(let i=0; i<currentFlagInfo2.length;++i){
                         if(currentFlagInfo2[i][p.index * 2 + 1] === 0){
-                            minL += p.yArray[1];
-                            minR += p.yArray[2];
+                            minL += p2[i].yArray[1];
+                            minR += p2[i].yArray[2];
                         }
                         else{
-                            minL += p.yArray[2];
-                            minR += p.yArray[1];
+                            minL += p2[i].yArray[2];
+                            minR += p2[i].yArray[1];
                         }
                     }
                     if(minL < minR){
@@ -539,12 +539,12 @@ export class NoUniformColObj {
                     }
                     for(let i=0; i<currentFlagInfo2.length;++i){
                         if(currentFlagInfo2[i][p.index * 2 + 1] === 0){
-                            maxL += p.yArray[1];
-                            maxR += p.yArray[2];
+                            maxL += p2[i].yArray[1];
+                            maxR += p2[i].yArray[2];
                         }
                         else{
-                            maxL += p.yArray[2];
-                            maxR += p.yArray[1];
+                            maxL += p2[i].yArray[2];
+                            maxR += p2[i].yArray[1];
                         }
                     }
                     if(maxL > maxR){
