@@ -291,7 +291,7 @@ export interface GlobalState {
     currentChanel: string;
     currentMultiLineClass: string;
     currentMultiLineClassALine: string;
-    currentMultiLineClassLines: string;
+    currentMultiLineClassLines: Array<string>;
     currentTimeBoxType: string;
     isDenoise: boolean;
     currentTable: string;
@@ -336,7 +336,7 @@ export default createStore<GlobalState>({
       currentTimeBoxType: 'stock46r',
       currentMultiLineClass: '',
       currentMultiLineClassALine: '',
-      currentMultiLineClassLines: '',
+      currentMultiLineClassLines: [],
       tableMaxLevel: 16,
       sampleMethods: ['ViewChangeQueryFinal'],
       displayChanel: ['All', 'MinT', 'MinV', 'MaxV', 'MaxT'],

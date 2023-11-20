@@ -10,7 +10,7 @@ import { NoUniformColObj } from "@/model/non-uniform-col-obj";
 import { formatToRenderDataForTrend, getGlobalMinMaxInfo } from "@/helper/format-data";
 import md5 from "md5"
 import { arrayBufferToBase64, base64ToArrayBuffer, getLevelData, openLoading } from "@/helper/util";
-import { ElLoading } from 'element-plus'
+import { ElButtonGroup, ElLoading } from 'element-plus'
 import { drawViewChangeLineChart } from "@/application/line-interaction";
 import { indexGetData, indexPutData, initIndexDB } from "@/indexdb";
 
@@ -213,7 +213,7 @@ const computeLineTransform: ActionHandler<GlobalState, GlobalState> = (context: 
     // const dataset2 = "om3_multi.mock_mock_guassian_sin2_6ht_om3_6ht";
     const dataset1 = line1[0];
     const dataset2 = line1[1];
-    console.log("dataset1 && dataset2:", dataset1, dataset2);
+    console.log("dataset1 && dataset2:", dataset1, Array.from(dataset2));
     const payload = {width: 600, height: 600};
     const currentLevel = Math.ceil(Math.log2(payload.width));
     let maxLevel = 0
@@ -231,15 +231,15 @@ const computeLineTransform: ActionHandler<GlobalState, GlobalState> = (context: 
     maxLevel = lineClassInfo['level'];
     // let currentLevel = 0;
     // let currentMulitLineClass = 'number8';
-    const combinedUrl = `/line_chart/init_transform_timeseries?width=${2 ** currentLevel}&class_name=${currentMulitLineClass}&dataset1=${dataset1}&dataset2=${dataset2}&mode=${context.state.controlParams.currentMode}`;
+    const combinedUrl = `/line_chart/init_transform_timeseries?width=${2 ** currentLevel}&class_name=${currentMulitLineClass}&dataset1=${dataset1}&dataset2=${Array.from(dataset2)}&mode=${context.state.controlParams.currentMode}`;
     const data = get(context.state, combinedUrl);
 
     data.then(res => {
         let dataManagers: Array<LevelDataManager> = [];
         let globalMaxV = -Infinity;
         let globalMinV = Infinity;
-        for (let i = 0; i < res.length; i++) {
-            if(i === 0){
+        for (let i = res.length - 1; i >= 0; i--) {
+            if(i !== 0){
                 const { trendTree, dataManager } = constructMinMaxMissTrendTree(res[i].d, 600, res[i].tn);
                 dataManagers.push(dataManager);
                 continue;
@@ -255,7 +255,7 @@ const computeLineTransform: ActionHandler<GlobalState, GlobalState> = (context: 
             globalMaxV = Math.max(maxv!, globalMaxV);
             globalMinV = Math.min(minv!, globalMinV);
             dataManager.md5Num = parseInt("0x" + md5(dataManager.dataName).slice(0, 8))
-            dataManagers.push(dataManager);
+            // dataManagers.push(dataManager);
             const viewChangeQueryObj: ViewChangeLineChartObj = {
                 id: uuidv4(),
                 width: payload.width,
@@ -289,7 +289,7 @@ const computeLineTransform: ActionHandler<GlobalState, GlobalState> = (context: 
                 // const yScale = d3.scaleLinear().domain([minV, maxV]).range([payload.height, 0]);
                 const yScale = d3.scaleLinear().domain([-1000, 1000]).range([600, 0]);
 
-                dataManager.viewTransformFinal(dataManagers[0], currentLevel, 600, [0, 65536 - 1], yScale, drawer).then(res => {
+                dataManager.viewTransformFinal(dataManagers, currentLevel, 600, [0, 65536 - 1], yScale, drawer).then(res => {
                     drawer(res);
                     //context.commit("addViewChangeQueryNoPowLineChartObj", { trendTree, dataManager, data: res, startTime: payload.startTime, endTime: payload.endTime, algorithm: "trendtree", width: payload.width, height: payload.height });
                 });

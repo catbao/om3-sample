@@ -119,7 +119,7 @@ export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
     function draw(nonUniformColObjs?: Array<NoUniformColObj>,type?:string) {
         canvas.width = lineChartObj.width;
         // yScale = d3.scaleLinear().domain([lineChartObj.data.minv, lineChartObj.data.maxv]).range([lineChartObj.height, 0]);
-        yScale = d3.scaleLinear().domain([-1000, 1000]).range([lineChartObj.height, 0]);
+        yScale = d3.scaleLinear().domain([-2000, 2000]).range([lineChartObj.height, 0]);
         yAxis = d3.axisLeft(yScale)
         if (yAxisG !== null && yAxisG !== undefined) {
             yAxisG.remove();

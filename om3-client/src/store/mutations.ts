@@ -293,8 +293,8 @@ function alterCurrentMulitLineClassALine(state: GlobalState, lineName: string) {
     state.controlParams.currentMultiLineClassALine = lineName
 }
 
-function alterCurrentMulitLineClassLines(state: GlobalState, lineName: string) {
-    state.controlParams.currentMultiLineClassLines = lineName
+function alterCurrentMulitLineClassLines(state: GlobalState, lineNames: Array<string>) {
+    state.controlParams.currentMultiLineClassLines = lineNames
 }
 
 function updateCustomTableAndInfo(state: GlobalState, info: { customTables: Array<string>,customTableInfo:Array<any> }){

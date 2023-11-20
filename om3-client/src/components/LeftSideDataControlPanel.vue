@@ -468,9 +468,9 @@ export default defineComponent({
     };
 
     const handleComputePanel = () => {
-      console.log("currentMultiClassALine:",currentMultiClassALine._value);
-      console.log(currentMultiClassLines._value);
-      store.dispatch("computeLineTransform", [currentMultiClassALine._value, currentMultiClassLines._value]);
+      console.log("currentMultiClassALine:",currentMultiClassALine.value);
+      console.log(Array.from(currentMultiClassLines.value));
+      store.dispatch("computeLineTransform", [currentMultiClassALine.value, Array.from(currentMultiClassLines.value)]);
     }
 
     const handleModeChange = () => {

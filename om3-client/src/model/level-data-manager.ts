@@ -1833,6 +1833,9 @@ export default class LevelDataManager {
                         if (type === 2) {
                             needLoadDifNode.push(p);
                         }
+                        if(type === 7 || type === 9){
+                            colIndex++;
+                        }
                         // if (type === 7) {
                         //     needLoadDifNode.push(p);
                         //     colIndex++;
@@ -2024,7 +2027,7 @@ export default class LevelDataManager {
         return nonUniformColObjs;
     }
 
-    async viewTransformFinal(otherDataManager: LevelDataManager, currentLevel: number, width: number, timeRange: Array<number>, yScale: any, drawer: any){
+    async viewTransformFinal(otherDataManager: Array<LevelDataManager>, currentLevel: number, width: number, timeRange: Array<number>, yScale: any, drawer: any){
         const currentFlagInfo = getFlag(this.dataName);
         // const currentFlagInfo = getFlag("custom_number8_test2_om3_test.flagz");
         if (currentFlagInfo === undefined) {
@@ -2033,13 +2036,16 @@ export default class LevelDataManager {
             console.log("flag info:", currentFlagInfo);
             console.log("flag length:", currentFlagInfo.length)
         }
-        const currentFlagInfo2 = getFlag(otherDataManager.dataName);
-        // const currentFlagInfo2 = getFlag("custom_number8_test1_om3_test.flagz");
-        if (currentFlagInfo2 === undefined) {
-            throw new Error(this.dataName + " get flag faild")
-        } else {
-            console.log("flag2 info:", currentFlagInfo2);
-            console.log("flag2 length:", currentFlagInfo2.length)
+        const currentFlagInfo2 = [];
+        for(let i=0;i<otherDataManager.length;++i){
+            currentFlagInfo2.push(getFlag(otherDataManager[i].dataName));
+            // const currentFlagInfo2 = getFlag("custom_number8_test1_om3_test.flagz");
+            if (currentFlagInfo2[i] === undefined) {
+                throw new Error(otherDataManager[i].dataName + " get flag faild")
+            } else {
+                console.log("flag2 info:", currentFlagInfo2[i]);
+                console.log("flag2 length:", currentFlagInfo2[i].length)
+            }
         }
         // const currentFlagInfo = [0,1,1,0,1,0,0,1];
         // const currentFlagInfo2 = [0,1,0,1,0,1,0,1];
@@ -2056,38 +2062,49 @@ export default class LevelDataManager {
             const firstIndexTimeRange = this.getIndexTime(currentLevel, this.levelIndexObjs[currentLevel].loadedDataRange[i][0], this.maxLevel);
             const lastIndexTimeRange = this.getIndexTime(currentLevel, this.levelIndexObjs[currentLevel].loadedDataRange[i][1], this.maxLevel);
             let p = this.levelIndexObjs[currentLevel].firstNodes[i];
-            let p2 = otherDataManager.levelIndexObjs[currentLevel].firstNodes[i];//测试
+            let p2 = [];
+            for(let k=0;k<otherDataManager.length;++k){
+                p2.push(otherDataManager[k].levelIndexObjs[currentLevel].firstNodes[i])
+            }
+            // let p2 = otherDataManager.levelIndexObjs[currentLevel].firstNodes[i];//测试
 
             if (firstIndexTimeRange.startT <= timeRange[0] && lastIndexTimeRange.endT >= timeRange[1]) {
                 while(p != null){
                     if(colIndex >= nonUniformColObjs.length){
                         break;
-                    }
-                    if(colIndex === 12) console.log("colIndex equals to 12!");
+                    } 
                     const type = nonUniformColObjs[colIndex].isMissContain(p);
                     nonUniformColObjs[colIndex].containColumnRange(p, type);
                     nonUniformColObjs[colIndex].computeTransform(p, p2, type, currentFlagInfo, currentFlagInfo2);
                     if(type === 1){
                         p = p.nextSibling!;
-                        p2 = p2.nextSibling!;
+                        for(let i=0;i<otherDataManager.length;++i){
+                            p2[i] = p2[i].nextSibling!;
+                        }                        
                     }
                     else if(type === 2){
                         needLoadDifNode.push(p);
-                        needLoadDifNode2.push(p2);
+                        // needLoadDifNode2.push(p2);
                         p = p.nextSibling!;
-                        p2 = p2.nextSibling!;
+                        for(let i=0;i<otherDataManager.length;++i){
+                            p2[i] = p2[i].nextSibling!;
+                        } 
                     }
                     else if (type === 3) {
                         colIndex++;
                     } else if (type === 5) {
                         p = p.nextSibling!;
-                        p2 = p2.nextSibling!;
+                        for(let i=0;i<otherDataManager.length;++i){
+                            p2[i] = p2[i].nextSibling!;
+                        } 
                     } else if (type === 6) {
                         // throw new Error("error in viewchange")
                         break;
                     } else {
                         p = p.nextSibling!;
-                        p2 = p2.nextSibling!;
+                        for(let i=0;i<otherDataManager.length;++i){
+                            p2[i] = p2[i].nextSibling!;
+                        } 
                         //throw new Error("node time is little than col");
                     }
                 }
@@ -2103,210 +2120,209 @@ export default class LevelDataManager {
         //     await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, otherDataManager);
         // }
 
-        while (needLoadDifNode.length > 0) { //如果需要继续向下获取系数，则一直向下查询，直到最后一层
-            colIndex = 0;
-            const tempNeedLoadDifNodes = [];
-            const tempQue: Array<TrendTree> = [];
-            const tempNeedLoadDifNodes2 = [];
-            const tempQue2: Array<TrendTree> = [];
+        // while (needLoadDifNode.length > 0) { //如果需要继续向下获取系数，则一直向下查询，直到最后一层
+        //     colIndex = 0;
+        //     const tempNeedLoadDifNodes = [];
+        //     const tempQue: Array<TrendTree> = [];
+        //     const tempNeedLoadDifNodes2 = [];
+        //     const tempQue2: Array<TrendTree> = [];
 
-            needLoadDifNode.forEach(v => {
-                // if (v._leftChild === null || v._rightChild === null) {
-                //     console.log(v)
-                //     console.log(this)
-                //     // debugger
-                //     // throw new Error("cannot find next level node");
-                // }
-                if(v._leftChild != null && v._rightChild != null){
-                    this.lruCache.has(v._leftChild.level + "_" + v._leftChild.index);
-                    this.lruCache.has(v._rightChild.level + "_" + v._rightChild.index);
-                    if (v._leftChild.nodeType !== 'NULL') {
-                        tempQue.push(v._leftChild!);
-                    }
-                    if (v._rightChild.nodeType !== 'NULL') {
-                        tempQue.push(v._rightChild!);
-                    }
-                }
-            });
-            needLoadDifNode2.forEach(v => {
-                if(v._leftChild != null && v._rightChild != null){
-                    this.lruCache.has(v._leftChild.level + "_" + v._leftChild.index);
-                    this.lruCache.has(v._rightChild.level + "_" + v._rightChild.index);
-                    if (v._leftChild.nodeType !== 'NULL') {
-                        tempQue2.push(v._leftChild!);
-                    }
-                    if (v._rightChild.nodeType !== 'NULL') {
-                        tempQue2.push(v._rightChild!);
-                    }
-                }
-            });
+        //     needLoadDifNode.forEach(v => {
+        //         // if (v._leftChild === null || v._rightChild === null) {
+        //         //     console.log(v)
+        //         //     console.log(this)
+        //         //     // debugger
+        //         //     // throw new Error("cannot find next level node");
+        //         // }
+        //         if(v._leftChild != null && v._rightChild != null){
+        //             this.lruCache.has(v._leftChild.level + "_" + v._leftChild.index);
+        //             this.lruCache.has(v._rightChild.level + "_" + v._rightChild.index);
+        //             if (v._leftChild.nodeType !== 'NULL') {
+        //                 tempQue.push(v._leftChild!);
+        //             }
+        //             if (v._rightChild.nodeType !== 'NULL') {
+        //                 tempQue.push(v._rightChild!);
+        //             }
+        //         }
+        //     });
+        //     needLoadDifNode2.forEach(v => {
+        //         if(v._leftChild != null && v._rightChild != null){
+        //             this.lruCache.has(v._leftChild.level + "_" + v._leftChild.index);
+        //             this.lruCache.has(v._rightChild.level + "_" + v._rightChild.index);
+        //             if (v._leftChild.nodeType !== 'NULL') {
+        //                 tempQue2.push(v._leftChild!);
+        //             }
+        //             if (v._rightChild.nodeType !== 'NULL') {
+        //                 tempQue2.push(v._rightChild!);
+        //             }
+        //         }
+        //     });
 
-            const preColIndex = [];
-            for (let i = 0; i < tempQue.length; i++) {
-                if (colIndex >= nonUniformColObjs.length) {
-                    break;
-                    //throw new Error("col index out range");
-                }
-                const type = nonUniformColObjs[colIndex].isMissContain(tempQue[i]);
-                nonUniformColObjs[colIndex].containColumnRange(tempQue[i], type);
-                nonUniformColObjs[colIndex].computeTransform(tempQue[i], tempQue2[i], type, currentFlagInfo, currentFlagInfo2);
-                if (type === 1) {
-                    continue;
-                } else if (type === 2) {
-                    tempNeedLoadDifNodes.push(tempQue[i]);
-                    tempNeedLoadDifNodes2.push(tempQue2[i]);
-                    preColIndex.push(colIndex);
-                } else if (type === 3) {
-                    colIndex++;
-                    i--;
-                } else if (type === 6) {
-                    break;
-                } else {
-                    continue;
-                    // throw new Error("node time is little than col");
-                }
-            }
-            if (preColIndex.length != tempNeedLoadDifNodes.length) {
-                throw new Error("cannot memory index");
-            }
+        //     const preColIndex = [];
+        //     for (let i = 0; i < tempQue.length; i++) {
+        //         if (colIndex >= nonUniformColObjs.length) {
+        //             break;
+        //             //throw new Error("col index out range");
+        //         }
+        //         const type = nonUniformColObjs[colIndex].isMissContain(tempQue[i]);
+        //         nonUniformColObjs[colIndex].containColumnRange(tempQue[i], type);
+        //         nonUniformColObjs[colIndex].computeTransform(tempQue[i], tempQue2[i], type, currentFlagInfo, currentFlagInfo2);
+        //         if (type === 1) {
+        //             continue;
+        //         } else if (type === 2) {
+        //             tempNeedLoadDifNodes.push(tempQue[i]);
+        //             tempNeedLoadDifNodes2.push(tempQue2[i]);
+        //             preColIndex.push(colIndex);
+        //         } else if (type === 3) {
+        //             colIndex++;
+        //             i--;
+        //         } else if (type === 6) {
+        //             break;
+        //         } else {
+        //             continue;
+        //             // throw new Error("node time is little than col");
+        //         }
+        //     }
+        //     if (preColIndex.length != tempNeedLoadDifNodes.length) {
+        //         throw new Error("cannot memory index");
+        //     }
 
-            // for (let i = 0; i < tempNeedLoadDifNodes.length; i++) {
-            //     if (preColIndex[i] + 1 < nonUniformColObjs.length) {
-            //         //判断是否可以剪枝
-            //         const con1 = canCut(tempNeedLoadDifNodes[i], nonUniformColObjs[preColIndex[i]], nonUniformColObjs[preColIndex[i] + 1], yScale);
-            //         if (con1) {
-            //             tempNeedLoadDifNodes.splice(i, 1)
-            //             preColIndex.splice(i, 1);
-            //         }
-            //     }
-            // }
-            ////this.checkMonotonicity(nonUniformColObjs,preColIndex,tempNeedLoadDifNodes);
-            needLoadDifNode = tempNeedLoadDifNodes;
-            needLoadDifNode2 = tempNeedLoadDifNodes2;
-            // if (needLoadDifNode.length > 0 && needLoadDifNode[0].level === this.maxLevel - 1) {
+        //     // for (let i = 0; i < tempNeedLoadDifNodes.length; i++) {
+        //     //     if (preColIndex[i] + 1 < nonUniformColObjs.length) {
+        //     //         //判断是否可以剪枝
+        //     //         const con1 = canCut(tempNeedLoadDifNodes[i], nonUniformColObjs[preColIndex[i]], nonUniformColObjs[preColIndex[i] + 1], yScale);
+        //     //         if (con1) {
+        //     //             tempNeedLoadDifNodes.splice(i, 1)
+        //     //             preColIndex.splice(i, 1);
+        //     //         }
+        //     //     }
+        //     // }
+        //     ////this.checkMonotonicity(nonUniformColObjs,preColIndex,tempNeedLoadDifNodes);
+        //     needLoadDifNode = tempNeedLoadDifNodes;
+        //     needLoadDifNode2 = tempNeedLoadDifNodes2;
+        //     // if (needLoadDifNode.length > 0 && needLoadDifNode[0].level === this.maxLevel - 1) {
 
-            //     console.log("last level:", needLoadDifNode.length);
+        //     //     console.log("last level:", needLoadDifNode.length);
 
-            //     for (let i = 0; i < needLoadDifNode.length; i++) {
-            //         const nodeFlag1 = currentFlagInfo[2 * needLoadDifNode[i].index];  //其实就是order,一个比特数组。处理最后一层
-            //         if(nodeFlag1===1){
-            //             throw new Error("flag error")
-            //         }
-            //         const nodeFlag2 = currentFlagInfo[2 * needLoadDifNode[i].index + 1]
-            //         if (nodeFlag2 === 0) {
-            //             nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[1]);
-            //             nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[1]);
-            //             if (preColIndex[i] + 1 < nonUniformColObjs.length) {
-            //                 nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[2]);
-            //                 nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[2]);
-            //             }
-            //         } else {
-            //             nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[2]);
-            //             nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[2]);
-            //             if (preColIndex[i] + 1 < nonUniformColObjs.length) {
-            //                 nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[1]);
-            //                 nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[1]);
-            //             }
-            //         }
+        //     //     for (let i = 0; i < needLoadDifNode.length; i++) {
+        //     //         const nodeFlag1 = currentFlagInfo[2 * needLoadDifNode[i].index];  //其实就是order,一个比特数组。处理最后一层
+        //     //         if(nodeFlag1===1){
+        //     //             throw new Error("flag error")
+        //     //         }
+        //     //         const nodeFlag2 = currentFlagInfo[2 * needLoadDifNode[i].index + 1]
+        //     //         if (nodeFlag2 === 0) {
+        //     //             nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[1]);
+        //     //             nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[1]);
+        //     //             if (preColIndex[i] + 1 < nonUniformColObjs.length) {
+        //     //                 nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[2]);
+        //     //                 nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[2]);
+        //     //             }
+        //     //         } else {
+        //     //             nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[2]);
+        //     //             nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[2]);
+        //     //             if (preColIndex[i] + 1 < nonUniformColObjs.length) {
+        //     //                 nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[1]);
+        //     //                 nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[1]);
+        //     //             }
+        //     //         }
 
-            //     }
-            //     break;
-            // }
-            if (needLoadDifNode.length > 0 && needLoadDifNode[0].level === this.maxLevel - 1) {
-                for (let i = 0; i < needLoadDifNode.length; i++) {
-                    const nodeFlag1 = currentFlagInfo[2 * needLoadDifNode[i].index + 1]
-                    const nodeFlag2 = currentFlagInfo2[2 * needLoadDifNode[i].index + 1]
-                    if (needLoadDifNode[i].gapFlag === 'NO') {
-                        if (nodeFlag1 === 0 && nodeFlag2 === 0) {
-                            nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[1], needLoadDifNode[i]);
-                            nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[1]);
-                            if (preColIndex[i] + 1 < nonUniformColObjs.length) {
-                                nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[2], needLoadDifNode[i]);
-                                nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[2]);
-                            }
-                        }
-                        else if(nodeFlag1 === 1 && nodeFlag2 === 1){
-                            nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[2], needLoadDifNode[i]);
-                            nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[2]);
-                            if (preColIndex[i] + 1 < nonUniformColObjs.length) {
-                                nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[1], needLoadDifNode[i]);
-                                nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[1]);
-                            }
-                        }
-                        else if(nodeFlag1 === 0 && nodeFlag2 === 1){
-                            nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[2], needLoadDifNode[i]);
-                            nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[2]);
-                            if (preColIndex[i] + 1 < nonUniformColObjs.length) {
-                                nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[1], needLoadDifNode[i]);
-                                nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[1]);
-                            }
-                        }
-                        else{
-                            nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[1], needLoadDifNode[i]);
-                            nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[1]);
-                            if (preColIndex[i] + 1 < nonUniformColObjs.length) {
-                                nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[2], needLoadDifNode[i]);
-                                nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[2]);
-                            }
-                        }
-                    } else {
-                        // if (nodeFlag2 === 0) {
-                        //     nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[1], needLoadDifNode[i]);
-                        //     nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[1]);
+        //     //     }
+        //     //     break;
+        //     // }
+        //     if (needLoadDifNode.length > 0 && needLoadDifNode[0].level === this.maxLevel - 1) {
+        //         for (let i = 0; i < needLoadDifNode.length; i++) {
+        //             const nodeFlag1 = currentFlagInfo[2 * needLoadDifNode[i].index + 1]
+        //             const nodeFlag2 = currentFlagInfo2[2 * needLoadDifNode[i].index + 1]
+        //             if (needLoadDifNode[i].gapFlag === 'NO') {
+        //                 if (nodeFlag1 === 0 && nodeFlag2 === 0) {
+        //                     nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[1], needLoadDifNode[i]);
+        //                     nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[1]);
+        //                     if (preColIndex[i] + 1 < nonUniformColObjs.length) {
+        //                         nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[2], needLoadDifNode[i]);
+        //                         nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[2]);
+        //                     }
+        //                 }
+        //                 else if(nodeFlag1 === 1 && nodeFlag2 === 1){
+        //                     nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[2], needLoadDifNode[i]);
+        //                     nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[2]);
+        //                     if (preColIndex[i] + 1 < nonUniformColObjs.length) {
+        //                         nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[1], needLoadDifNode[i]);
+        //                         nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[1]);
+        //                     }
+        //                 }
+        //                 else if(nodeFlag1 === 0 && nodeFlag2 === 1){
+        //                     nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[2], needLoadDifNode[i]);
+        //                     nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[2]);
+        //                     if (preColIndex[i] + 1 < nonUniformColObjs.length) {
+        //                         nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[1], needLoadDifNode[i]);
+        //                         nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[1]);
+        //                     }
+        //                 }
+        //                 else{
+        //                     nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[1], needLoadDifNode[i]);
+        //                     nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[1]);
+        //                     if (preColIndex[i] + 1 < nonUniformColObjs.length) {
+        //                         nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[2], needLoadDifNode[i]);
+        //                         nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[2]);
+        //                     }
+        //                 }
+        //             } else {
+        //                 // if (nodeFlag2 === 0) {
+        //                 //     nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[1], needLoadDifNode[i]);
+        //                 //     nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[1]);
 
-                        //     nonUniformColObjs[preColIndex[i]].addFirstVal(needLoadDifNode[i].yArray[2], needLoadDifNode[i]);
-                        //     nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[2]);
+        //                 //     nonUniformColObjs[preColIndex[i]].addFirstVal(needLoadDifNode[i].yArray[2], needLoadDifNode[i]);
+        //                 //     nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[2]);
 
-                        // } else {
-                        //     nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[2], needLoadDifNode[i]);
-                        //     nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[2]);
+        //                 // } else {
+        //                 //     nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[2], needLoadDifNode[i]);
+        //                 //     nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[2]);
 
-                        //     nonUniformColObjs[preColIndex[i]].addFirstVal(needLoadDifNode[i].yArray[1], needLoadDifNode[i]);
-                        //     nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[1]);
-                        // }
-                        if (nodeFlag1 === 0 && nodeFlag2 === 0) {
-                            nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[1], needLoadDifNode[i]);
-                            nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[1]);
+        //                 //     nonUniformColObjs[preColIndex[i]].addFirstVal(needLoadDifNode[i].yArray[1], needLoadDifNode[i]);
+        //                 //     nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[1]);
+        //                 // }
+        //                 if (nodeFlag1 === 0 && nodeFlag2 === 0) {
+        //                     nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[1], needLoadDifNode[i]);
+        //                     nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[1]);
 
-                            nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[2], needLoadDifNode[i]);
-                            nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[2]);
-                        }
-                        else if(nodeFlag1 === 1 && nodeFlag2 === 1){
-                            nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[2], needLoadDifNode[i]);
-                            nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[2]);
+        //                     nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[2], needLoadDifNode[i]);
+        //                     nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[2]);
+        //                 }
+        //                 else if(nodeFlag1 === 1 && nodeFlag2 === 1){
+        //                     nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[2], needLoadDifNode[i]);
+        //                     nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[2]);
                             
-                            nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[1], needLoadDifNode[i]);
-                            nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[1]);
-                        }
-                        else if(nodeFlag1 === 0 && nodeFlag2 === 1){
-                            nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[2], needLoadDifNode[i]);
-                            nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[2]);
+        //                     nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[1], needLoadDifNode[i]);
+        //                     nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[1]);
+        //                 }
+        //                 else if(nodeFlag1 === 0 && nodeFlag2 === 1){
+        //                     nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[2], needLoadDifNode[i]);
+        //                     nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[2]);
 
-                            nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[1], needLoadDifNode[i]);
-                            nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[1]);
-                        }
-                        else{
-                            nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[1], needLoadDifNode[i]);
-                            nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[1]);
+        //                     nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[1], needLoadDifNode[i]);
+        //                     nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[1]);
+        //                 }
+        //                 else{
+        //                     nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[1], needLoadDifNode[i]);
+        //                     nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[2] + needLoadDifNode2[i].yArray[1]);
 
-                            nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[2], needLoadDifNode[i]);
-                            nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[2]);
-                        }
-                    }
+        //                     nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[2], needLoadDifNode[i]);
+        //                     nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[1] + needLoadDifNode2[i].yArray[2]);
+        //                 }
+        //             }
+        //         }
+        //         break;
+        //     }
+        //     if (needLoadDifNode.length === 0) {
+        //         break;
+        //     }
+        //     // let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
+        //     // if (losedDataInfo.length > 0) {
+        //     //     await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this); //每一层都需要判断子节点是否需要获取，需要的话要从数据库获取系数
+        //     //     await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, otherDataManager); 
+        //     // }
 
-                }
-                break;
-            }
-            if (needLoadDifNode.length === 0) {
-                break;
-            }
-            // let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
-            // if (losedDataInfo.length > 0) {
-            //     await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this); //每一层都需要判断子节点是否需要获取，需要的话要从数据库获取系数
-            //     await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, otherDataManager); 
-            // }
-
-        }
+        // }
 
         console.log("The time to get all coefficients:" + (new Date().getTime() - startT));
 
