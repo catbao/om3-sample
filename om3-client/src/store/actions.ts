@@ -82,7 +82,7 @@ const loadViewChangeQueryWSMinMaxMissDataInitData: ActionHandler<GlobalState, Gl
     if (lineInfo.interval !== 0) {
         timeInterval = lineInfo.interval;
     }
-    let test_width = 5;
+    let test_width = 10;
     //@ts-ignore
     const combinedUrl = `/line_chart/init_wavelet_bench_min_max_miss?width=${2 ** (Math.ceil(Math.log2(test_width)))}&table_name=${context.state.controlParams.currentTable}&mode=${context.state.controlParams.currentMode}`;
     const data = get(context.state, combinedUrl);
