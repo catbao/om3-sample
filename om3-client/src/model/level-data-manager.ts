@@ -2075,7 +2075,8 @@ export default class LevelDataManager {
                     } 
                     const type = nonUniformColObjs[colIndex].isMissContain(p);
                     nonUniformColObjs[colIndex].containColumnRange(p, type);
-                    nonUniformColObjs[colIndex].computeTransform(p, p2, type, currentFlagInfo, currentFlagInfo2);
+                    let p2_temp = p2.slice();
+                    nonUniformColObjs[colIndex].computeTransform(p, p2_temp, type, currentFlagInfo, currentFlagInfo2);
                     if(type === 1){
                         p = p.nextSibling!;
                         for(let i=0;i<otherDataManager.length;++i){
