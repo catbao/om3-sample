@@ -1806,8 +1806,8 @@ export default class LevelDataManager {
 
     async viewChangeInteractionFinal1(currentLevel: number, width: number, timeRange: Array<number>, yScale: any, drawer: any) {
         
-        const currentFlagInfo = getFlag(this.dataName);
-        // const currentFlagInfo = getFlag("mock_guassian_sin_8m_om3_8m");
+        // const currentFlagInfo = getFlag(this.dataName);
+        const currentFlagInfo = getFlag("mock_guassian_sin_8m_om3_8m");
         if (currentFlagInfo === undefined) {
             throw new Error(this.dataName + " get flag faild")
         } else {
