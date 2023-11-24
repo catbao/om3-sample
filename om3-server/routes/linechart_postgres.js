@@ -391,7 +391,7 @@ function init_multi_timeseries(req, res) {
                     l: curTableLevel,
                 }
 
-                const sqlStr = `select i,minvd,maxvd from ${allMultiSeriesTables[i]} where i<$1 order by i asc`;
+                const sqlStr = `select i,minvd,maxvd,avevd from ${allMultiSeriesTables[i]} where i<$1 order by i asc`;
                 const params = [];
                 params.push(2 ** Math.ceil(Math.log2(query.width)));
                 const sqlQuery = {
@@ -410,10 +410,10 @@ function init_multi_timeseries(req, res) {
                         const tempVal = result.rows[i];
                         const tempL = Math.floor(Math.log2(tempVal['i']));
                         const tempI = tempVal['i'] - 2 ** tempL;
-                        finalRes.push({ l: curTableLevel - tempL, i: tempI, minvd: tempVal['minvd'], maxvd: tempVal['maxvd'] });
+                        finalRes.push({ l: curTableLevel - tempL, i: tempI, minvd: tempVal['minvd'], maxvd: tempVal['maxvd'], avevd: tempVal['avevd'] });
                     }
                     if (result.rows.length > 0) {
-                        finalRes.push({ l: -1, i: 0, minvd: result.rows[0]['minvd'], maxvd: result.rows[0]['maxvd'] });
+                        finalRes.push({ l: -1, i: 0, minvd: result.rows[0]['minvd'], maxvd: result.rows[0]['maxvd'], avevd:result.rows[0]['avevd'] });
                     }
                     timeSeriresRes.d = finalRes;
                     //console.log(timeSeriresRes)
@@ -434,15 +434,16 @@ function init_transform_timeseries(req, res){
     const query = req.query;
     const lineClassName = query['class_name'];
     const line1 = query['dataset1'];
-    const line2 = query['dataset2'];
-    console.log(line2);
+    let line2 = query['dataset2'];
+    console.log("line2:",line2);
+    line2 = line2.split(",");
+    console.log("split_line2:",line2);
     const allMultiSeriesTables = [];
     allMultiSeriesTables.push(line1);
-    // for(let i=0;i<line2.length;++i){
-    //     allMultiSeriesTables.push(line2[i]);
-    // }
-    allMultiSeriesTables.push("om3_multi.mock_mock_guassian_sin1_6ht_om3_6ht");
-    allMultiSeriesTables.push("om3_multi.mock_mock_guassian_sin2_6ht_om3_6ht");
+    for(let i=0;i<line2.length;++i){
+        allMultiSeriesTables.push(line2[i]);
+    }
+    // allMultiSeriesTables.push("om3_multi.mock_mock_guassian_sin4_6ht_om3_6ht");
     console.log("allMultiSeriesTables:", allMultiSeriesTables);
     // const allMultiSeriesTables = [line1, line2];
     // const allMultiSeriesTables = ["om3_multi.number8_test1_om3_test", "om3_multi.number8_test2_om3_test"];

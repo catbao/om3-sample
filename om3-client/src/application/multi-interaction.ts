@@ -362,7 +362,8 @@ export function drawMultiTimeSeries(multiTimeSeriesObj: MultiTimeSeriesObj) {
         canvas.width = multiTimeSeriesObj.width;
 
         const curMinMax = computeMinMax(multiTimeSeriesObj);
-        yScale = d3.scaleLinear().domain([curMinMax.min, curMinMax.max]).range([multiTimeSeriesObj.height, 0]);
+        // yScale = d3.scaleLinear().domain([curMinMax.min, curMinMax.max]).range([multiTimeSeriesObj.height, 0]);
+        yScale = d3.scaleLinear().domain([-2000,2000]).range([multiTimeSeriesObj.height, 0]);
         yAxis = d3.axisLeft(yScale);
         if (store.state.controlParams.currentMode === 'Default') {
             yAxis = d3.axisLeft(yScale).tickFormat((val) => {

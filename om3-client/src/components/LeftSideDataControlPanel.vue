@@ -169,7 +169,7 @@
     </div>
 
     <div class="compute-line-container mt-2 ms-1" v-if="chooseLineType == 'Multi'">
-      <el-select v-model="selectedOption" placeholder="Operator">
+      <el-select v-model="selectedOption" placeholder="Operator" @change="handleSelectedOption">
         <el-option label="+" value="+"></el-option>
         <el-option label="-" value="-"></el-option>
         <el-option label="*" value="*"></el-option>
@@ -222,7 +222,6 @@ export default defineComponent({
       singleLineTableName: "",
       multiLineTableNames: [],
       customMultiLineClassName: "",
-      selectedOption: "",
     }
 
   },
@@ -431,6 +430,7 @@ export default defineComponent({
     const currentMultiClass = ref(store.state.controlParams.currentMultiLineClass);
     const currentMultiClassALine = ref(store.state.controlParams.currentMultiLineClassALine);
     const currentMultiClassLines = ref(store.state.controlParams.currentMultiLineClassLines);
+    const selectedOption = ref(store.state.controlParams.transform_symbol);
     // const multiLineClassAndLinesMap = ref(store.state.allMultiLineClassAndLinesMap);
 
 
@@ -470,7 +470,13 @@ export default defineComponent({
     const handleComputePanel = () => {
       console.log("currentMultiClassALine:",currentMultiClassALine.value);
       console.log(Array.from(currentMultiClassLines.value));
-      store.dispatch("computeLineTransform", [currentMultiClassALine.value, Array.from(currentMultiClassLines.value)]);
+      // console.log("Current Symbol:", selectedOption);
+      store.dispatch("computeLineTransform", [currentMultiClassALine.value, Array.from(currentMultiClassLines.value), selectedOption.value]);
+    }
+
+    const handleSelectedOption = () => {
+      console.log("Current Symbol:", selectedOption.value);
+      store.commit("alterSelectedOption", selectedOption.value);
     }
 
     const handleModeChange = () => {
@@ -548,7 +554,9 @@ export default defineComponent({
       progressive,
       handleProgressiveChange,
       clearIndexFlag,
-      handleComputePanel
+      handleComputePanel,
+      selectedOption,
+      handleSelectedOption,
     };
   },
 });

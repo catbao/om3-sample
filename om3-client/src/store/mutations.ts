@@ -297,6 +297,10 @@ function alterCurrentMulitLineClassLines(state: GlobalState, lineNames: Array<st
     state.controlParams.currentMultiLineClassLines = lineNames
 }
 
+function alterSelectedOption(state: GlobalState, option: string){
+    state.controlParams.transform_symbol = option;
+}
+
 function updateCustomTableAndInfo(state: GlobalState, info: { customTables: Array<string>,customTableInfo:Array<any> }){
     const tableInfoMap=new Map<string,any>()
     for(let i=0;i<info.customTableInfo.length;i++){
@@ -354,5 +358,6 @@ export {
     updateDefaultTableAndInfo,
     alterProgressive,
     setAllMultiLineClassAndLinesMap,
+    alterSelectedOption,
 }
 

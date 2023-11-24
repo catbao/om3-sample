@@ -2,7 +2,7 @@ import store, { emitter, getAvgTime, GlobalState, MultiTimeSeriesObj, ViewChange
 import { Commit, ActionContext, ActionHandler } from 'vuex'
 import axios from "axios";
 // import { constructMinMaxMissTrendTree, constructTrendTree } from '../helper/wavlet-decoder';
-import { constructMinMaxMissTrendTree} from '../helper/wavlet-decoder';
+import { constructMinMaxMissTrendTree, constructMinMaxMissTrendTreeMulti} from '../helper/wavlet-decoder';
 import { v4 as uuidv4 } from 'uuid';
 import * as d3 from "d3";
 import LevelDataManager from "@/model/level-data-manager";
@@ -154,7 +154,7 @@ const loadMultiTimeSeriesInitData: ActionHandler<GlobalState, GlobalState> = (co
         let globalMaxV = -Infinity;
         let globalMinV = Infinity;
         for (let i = 0; i < res.length; i++) {
-            const { dataManager } = constructMinMaxMissTrendTree(res[i].d, payload.width, res[i].tn);
+            const { dataManager } = constructMinMaxMissTrendTreeMulti(res[i].d, payload.width, res[i].tn);
 
             dataManager.maxLevel = maxLevel;
             dataManager.realDataRowNum = lineClassInfo['max_len'];
@@ -213,7 +213,8 @@ const computeLineTransform: ActionHandler<GlobalState, GlobalState> = (context: 
     // const dataset2 = "om3_multi.mock_mock_guassian_sin2_6ht_om3_6ht";
     const dataset1 = line1[0];
     const dataset2 = line1[1];
-    console.log("dataset1 && dataset2:", dataset1, Array.from(dataset2));
+    const transform_symbol = line1[2];
+    console.log("dataset1 && dataset2:", dataset1, transform_symbol, Array.from(dataset2));
     const payload = {width: 600, height: 600};
     const currentLevel = Math.ceil(Math.log2(payload.width));
     let maxLevel = 0
@@ -231,7 +232,7 @@ const computeLineTransform: ActionHandler<GlobalState, GlobalState> = (context: 
     maxLevel = lineClassInfo['level'];
     // let currentLevel = 0;
     // let currentMulitLineClass = 'number8';
-    const combinedUrl = `/line_chart/init_transform_timeseries?width=${2 ** currentLevel}&class_name=${currentMulitLineClass}&dataset1=${dataset1}&dataset2=${Array.from(dataset2)}&mode=${context.state.controlParams.currentMode}`;
+    const combinedUrl = `/line_chart/init_transform_timeseries?width=${2 ** currentLevel}&class_name=${currentMulitLineClass}&dataset1=${dataset1}&dataset2=${dataset2}&mode=${context.state.controlParams.currentMode}`;
     const data = get(context.state, combinedUrl);
 
     data.then(res => {
@@ -289,7 +290,7 @@ const computeLineTransform: ActionHandler<GlobalState, GlobalState> = (context: 
                 // const yScale = d3.scaleLinear().domain([minV, maxV]).range([payload.height, 0]);
                 const yScale = d3.scaleLinear().domain([-1000, 1000]).range([600, 0]);
 
-                dataManager.viewTransformFinal(dataManagers, currentLevel, 600, [0, 65536 - 1], yScale, drawer).then(res => {
+                dataManager.viewTransformFinal(dataManagers, currentLevel, 600, [0, 65536 - 1], yScale, drawer, transform_symbol).then(res => {
                     drawer(res);
                     //context.commit("addViewChangeQueryNoPowLineChartObj", { trendTree, dataManager, data: res, startTime: payload.startTime, endTime: payload.endTime, algorithm: "trendtree", width: payload.width, height: payload.height });
                 });

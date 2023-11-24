@@ -304,7 +304,8 @@ export interface GlobalState {
     denoiseThreshold: number;
     realStart: number;
     semanticInterval: number;
-    semanticType: 'ms' | 's' | 'm' | 'h' | 'd' | 'W' | 'M' | 'Y'
+    semanticType: 'ms' | 's' | 'm' | 'h' | 'd' | 'W' | 'M' | 'Y';
+    transform_symbol: string;
   },
 }
 
@@ -348,7 +349,8 @@ export default createStore<GlobalState>({
       denoiseThreshold: 10,
       realStart: 1354114150080,
       semanticInterval: 6000,
-      semanticType: 'h'
+      semanticType: 'h',
+      transform_symbol: "",
     }
   },
   mutations,
