@@ -345,8 +345,9 @@ export class NoUniformColObj {
         const pTRange = (2 ** this.maxLevel) / (2 ** pL);
         const pTimeS = p.index * pTRange;
         const pTimeE = pTRange + pTimeS - 1;
+        // console.log("transform_symbol:",transform_symbol);
         let symbol = transform_symbol;
-        if((type === 1 || type === 7 || type ===8 || type === 9) && symbol === 'add'){
+        if((type === 1 || type === 7 || type ===8 || type === 9) && symbol == '+'){
             // let p = pp, p2 = pp2;
             let min1 = p.yArray[1];
             let min2 = 0;
@@ -401,6 +402,9 @@ export class NoUniformColObj {
                     else{
                         min = minR;
                         minIndex = [p.index * 2 + 1, min];
+                    }
+                    if(min < this.addMin[1]){
+                        this.addMin = minIndex;
                     }
                     // let nodeFlagInfo2 = currentFlagInfo2[p.index * 2 + 1];
                     // if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 0){
@@ -555,6 +559,9 @@ export class NoUniformColObj {
                     else{
                         max = maxR;
                         maxIndex = [p.index * 2 + 1, max];
+                    }
+                    if(max > this.addMax[1]){
+                        this.addMax = maxIndex;
                     }
                     break;
                 }
@@ -879,8 +886,7 @@ export class NoUniformColObj {
                 this.addMax = maxIndex;
             }
         }
-
-        if((type === 1 || type === 7 || type ===8 || type === 9) && symbol === 'sub'){
+        else if((type === 1 || type === 7 || type ===8 || type === 9) && symbol == '-'){
             // let p = pp, p2 = pp2;
             let min1 = p.yArray[1];
             let min2 = 0;
@@ -904,7 +910,7 @@ export class NoUniformColObj {
 
             let alternativeNodes = [];
             let alternativeNodes2 = [];
-            while(max > -10000){
+            while(max > -100000){
                 let temp_minL = 0, temp_minR = 0;
                 if(!p._leftChild && !p._rightChild){
                     let minL = 0, minR = 0;
@@ -934,6 +940,9 @@ export class NoUniformColObj {
                     else{
                         min = minR;
                         minIndex = [p.index * 2 + 1, min];
+                    }
+                    if(min < this.subMin[1]){
+                        this.subMin = minIndex;
                     }
                     // let nodeFlagInfo1 = currentFlagInfo[p.index * 2 + 1];
                     // let nodeFlagInfo2 = currentFlagInfo2[p.index * 2 + 1];
@@ -1012,9 +1021,9 @@ export class NoUniformColObj {
                     alternativeNodes.push(tempNode);
                 }
             }
-            // console.log("The bottom min(-):", minIndex);
+            console.log("The bottom min(-):", minIndex);
             p = pp, p2 = pp2;
-            while(max > -10000){
+            while(max > -100000){
                 let temp_maxL = 0, temp_maxR = 0;
                 if(!p._leftChild && !p._rightChild){
                     let maxL = 0, maxR = 0;
@@ -1044,6 +1053,9 @@ export class NoUniformColObj {
                     else{
                         max = maxR;
                         maxIndex = [p.index * 2 + 1, max];
+                    }
+                    if(max > this.subMax[1]){
+                        this.subMax = maxIndex;
                     }
                     // let nodeFlagInfo1 = currentFlagInfo[p.index * 2 + 1];
                     // let nodeFlagInfo2 = currentFlagInfo2[p.index * 2 + 1];
@@ -1119,9 +1131,10 @@ export class NoUniformColObj {
                     }
                 }
             }
-            // console.log("The bottom max(-):", maxIndex);
+            console.log("The bottom max(-):", maxIndex);
             p = pp, p2 = pp2;
             while(alternativeNodes.length > 0){
+                // console.log("alternativeNodes:", alternativeNodes);
                 let pop:any = alternativeNodes.pop();
                 if(pop === undefined ) continue;
                 // let p:[TrendTree, number] = alternativeNodes.pop();
@@ -1132,7 +1145,7 @@ export class NoUniformColObj {
                 let len = pop.length;
                 if(!pop[Math.floor(len/2)]._leftChild && !pop[Math.floor(len/2)]._rightChild){
                     let minL = 0, minR = 0;
-                    let nodeFlagInfo1 = currentFlagInfo[p.index * 2 + 1];
+                    let nodeFlagInfo1 = currentFlagInfo[pop[Math.floor(len/2)].index * 2 + 1];
                     if(nodeFlagInfo1 === 0){
                         minL += pop[Math.floor(len/2)].yArray[1];
                         minR += pop[Math.floor(len/2)].yArray[2];
@@ -1224,6 +1237,7 @@ export class NoUniformColObj {
             }
             p = pp, p2 = pp2;
             while(alternativeNodes2.length > 0){
+                // console.log("alternativeNodes2:", alternativeNodes2);
                 let pop:any = alternativeNodes2.pop();
                 if(pop === undefined ) continue;
                 // console.log("pop:", pop);
@@ -1242,7 +1256,7 @@ export class NoUniformColObj {
                         maxR += pop[Math.floor(len/2)].yArray[1];
                     }
                     for(let i=0; i<currentFlagInfo2.length;++i){
-                        if(currentFlagInfo2[i][p.index * 2 + 1] === 0){
+                        if(currentFlagInfo2[i][pop[Math.floor(len/2)].index * 2 + 1] === 0){
                             maxL -= pop[Math.floor(len/2)+i+1].yArray[1];
                             maxR -= pop[Math.floor(len/2)+i+1].yArray[2];
                         }
@@ -1293,7 +1307,7 @@ export class NoUniformColObj {
                             tempNode.push(pop[i]._leftChild);
                         }
                         tempNode.push(temp_maxL);
-                        alternativeNodes.push(tempNode);
+                        alternativeNodes2.push(tempNode);
                     }
                 }
                 if(pop[Math.floor(len/2)]._rightChild){
@@ -1314,12 +1328,13 @@ export class NoUniformColObj {
                             tempNode.push(pop[i]._rightChild);
                         }
                         tempNode.push(temp_maxR);
-                        alternativeNodes.push(tempNode);
+                        alternativeNodes2.push(tempNode);
                     }
                 }
             }
-            // console.log("The final max(-):", maxIndex);          
-            // console.log("The final min(-):", minIndex);
+                     
+            console.log("The final min(-):", minIndex);
+            console.log("The final max(-):", maxIndex); 
             if(min < this.subMin[1]){
                 this.subMin = minIndex;
             }
@@ -1327,94 +1342,475 @@ export class NoUniformColObj {
                 this.subMax = maxIndex;
             }
         }
+        else if((type === 1 || type === 7 || type ===8 || type === 9) && symbol === '*'){
+            // let p = pp, p2 = pp2;
+            let min1 = p.yArray[1];
+            let min2 = 1;
+            for(let i=0;i<p2.length;i++){
+                min2 *= p2[i].yArray[1];
+            }   
+            let max1 = p.yArray[2];
+            let max2 = 1;
+            for(let i=0; i<p2.length; ++i){
+                max2 *= p2[i].yArray[2];
+            } 
+            let min = (min1 * min2);
+            let max = (max1 * max2);
+            let minIndex : [number, number];
+            minIndex = [-1, Infinity];
+            let maxIndex: [number, number];
+            maxIndex = [-1, -Infinity];
 
-        // if((type === 1 || type === 7 || type ===8 || type === 9) && symbol === 'multi_min'){
-        //     // let p = pp, p2 = pp2;
-        //     let min1 = p.yArray[1];
-        //     let min2 = p2.yArray[1]; 
-        //     let max1 = p.yArray[2];
-        //     let max2 = p2.yArray[2];  
+            let alternativeNodes = [];
+            let alternativeNodes2 = [];
+            while(max > -Infinity){
+                let temp_minL = 0, temp_minR = 0;
+                if(!p._leftChild && !p._rightChild){
+                    let minL = 0, minR = 0;
+                    let nodeFlagInfo1 = currentFlagInfo[p.index * 2 + 1];
+                    if(nodeFlagInfo1 === 0){
+                        minL += p.yArray[1];
+                        minR += p.yArray[2];
+                    } 
+                    else{
+                        minL += p.yArray[2];
+                        minR += p.yArray[1];
+                    }
+                    for(let i=0; i<currentFlagInfo2.length;++i){
+                        if(currentFlagInfo2[i][p.index * 2 + 1] === 0){
+                            minL *= p2[i].yArray[1];
+                            minR *= p2[i].yArray[2];
+                        }
+                        else{
+                            minL *= p2[i].yArray[2];
+                            minR *= p2[i].yArray[1];
+                        }
+                    }
+                    if(minL < minR){
+                        min = minL;
+                        minIndex = [p.index * 2, min];
+                    }
+                    else{
+                        min = minR;
+                        minIndex = [p.index * 2 + 1, min];
+                    }
+                    if(min < this.multiMin[1]){
+                        this.multiMin = minIndex;
+                    }
+                    break;
+                }
+                if(p._leftChild){
+                    // temp_minL = Math.min(p._leftChild.yArray[1] * p2[0]._leftChild!.yArray[1], p._leftChild.yArray[1] * p2[0]._leftChild!.yArray[2], p._leftChild.yArray[2] * p2[0]._leftChild!.yArray[1], p._leftChild.yArray[2] * p2[0]._leftChild!.yArray[2]);
+                    let tempArray = [];
+                    tempArray.push(p._leftChild.yArray[1]);
+                    tempArray.push(p._leftChild.yArray[2]);
+                    for(let i = 0; i<p2.length; ++i){
+                        let len = tempArray.length;
+                         for(let j = 0; j<len; ++j){
+                            tempArray.push(tempArray[j] * p2[i]._leftChild!.yArray[1]);
+                            tempArray.push(tempArray[j] * p2[i]._leftChild!.yArray[2]);
+                        }
+                        for(let j = 0; j<len; ++j){
+                            tempArray.shift();
+                        }   
+                    }
+                    // console.log(tempArray);
+                    temp_minL = Math.min(...tempArray);
+                }
+                if(p._rightChild){
+                    // temp_minR = Math.min(p._rightChild.yArray[1] * p2[0]._rightChild!.yArray[1], p._rightChild.yArray[1] * p2[0]._rightChild!.yArray[2], p._rightChild.yArray[2] * p2[0]._rightChild!.yArray[1], p._rightChild.yArray[2] * p2[0]._rightChild!.yArray[2]);
+                    let tempArray = [];
+                    tempArray.push(p._rightChild.yArray[1]);
+                    tempArray.push(p._rightChild.yArray[2]);
+                    for(let i = 0; i<p2.length; ++i){
+                        let len = tempArray.length;
+                         for(let j = 0; j<len; ++j){
+                            tempArray.push(tempArray[j] * p2[i]._rightChild!.yArray[1]);
+                            tempArray.push(tempArray[j] * p2[i]._rightChild!.yArray[2]);
+                        }   
+                        for(let j = 0; j<len; ++j){
+                            tempArray.shift();
+                        }   
+                    }
+                    // console.log(tempArray);
+                    temp_minR = Math.min(...tempArray);
+                }
+                if(temp_minL <= temp_minR && p._leftChild){
+                    let tempNode = [];
+                    tempNode.push(p);
+                    for(let i=0;i<p2.length;++i){
+                        tempNode.push(p2[i]);
+                    }
+                    tempNode.push(p._rightChild);
+                    for(let i=0;i<p2.length;++i){
+                        tempNode.push(p2[i]._rightChild);
+                    }
+                    tempNode.push(temp_minR);
+                    alternativeNodes.push(tempNode);
+                    p = p._leftChild;
+                    for(let i=0;i<p2.length;++i){
+                        p2[i] = p2[i]._leftChild!;
+                    }
+                }
+                else if(temp_minL > temp_minR && p._rightChild){
+                    let tempNode = [];
+                    // alternativeNodes.push([p, p2, p._leftChild, p2._leftChild, temp_minL]);
+                    tempNode.push(p);
+                    for(let i=0;i<p2.length;++i){
+                        tempNode.push(p2[i]);
+                    }
+                    tempNode.push(p._leftChild);
+                    for(let i=0;i<p2.length;++i){
+                        tempNode.push(p2[i]._leftChild);
+                    }
+                    tempNode.push(temp_minL);
+                    p = p._rightChild;
+                    for(let i=0;i<p2.length;++i){
+                        p2[i] = p2[i]._rightChild!;
+                    }
+                    alternativeNodes.push(tempNode);
+                }
+            }
+            console.log("The bottom min(*):", minIndex);
+            p = pp, p2 = pp2;
+            while(max > -Infinity){
+                let temp_maxL = 0, temp_maxR = 0;
+                if(!p._leftChild && !p._rightChild){
+                    let maxL = 0, maxR = 0;
+                    let nodeFlagInfo1 = currentFlagInfo[p.index * 2 + 1];
+                    if(nodeFlagInfo1 === 0){
+                        maxL += p.yArray[1];
+                        maxR += p.yArray[2];
+                    } 
+                    else{
+                        maxL += p.yArray[2];
+                        maxR += p.yArray[1];
+                    }
+                    for(let i=0; i<currentFlagInfo2.length;++i){
+                        if(currentFlagInfo2[i][p.index * 2 + 1] === 0){
+                            maxL *= p2[i].yArray[1];
+                            maxR *= p2[i].yArray[2];
+                        }
+                        else{
+                            maxL *= p2[i].yArray[2];
+                            maxR *= p2[i].yArray[1];
+                        }
+                    }
+                    if(maxL > maxR){
+                        max = maxL;
+                        maxIndex = [p.index * 2, max];
+                    }
+                    else{
+                        max = maxR;
+                        maxIndex = [p.index * 2 + 1, max];
+                    }
+                    if(max > this.multiMax[1]){
+                        this.multiMax = maxIndex;
+                    }
+                    break;
+                }
+                if(p._leftChild){
+                    // temp_minL = Math.min(p._leftChild.yArray[1] * p2[0]._leftChild!.yArray[1], p._leftChild.yArray[1] * p2[0]._leftChild!.yArray[2], p._leftChild.yArray[2] * p2[0]._leftChild!.yArray[1], p._leftChild.yArray[2] * p2[0]._leftChild!.yArray[2]);
+                    let tempArray = [];
+                    tempArray.push(p._leftChild.yArray[1]);
+                    tempArray.push(p._leftChild.yArray[2]);
+                    for(let i = 0; i<p2.length; ++i){
+                        let len = tempArray.length;
+                         for(let j = 0; j<len; ++j){
+                            tempArray.push(tempArray[j] * p2[i]._leftChild!.yArray[1]);
+                            tempArray.push(tempArray[j] * p2[i]._leftChild!.yArray[2]);
+                        }   
+                        for(let j = 0; j<len; ++j){
+                            tempArray.shift();
+                        }   
+                    }
+                    // console.log(tempArray);
+                    temp_maxL = Math.max(...tempArray);
+                }
+                if(p._rightChild){
+                    // temp_minR = Math.min(p._rightChild.yArray[1] * p2[0]._rightChild!.yArray[1], p._rightChild.yArray[1] * p2[0]._rightChild!.yArray[2], p._rightChild.yArray[2] * p2[0]._rightChild!.yArray[1], p._rightChild.yArray[2] * p2[0]._rightChild!.yArray[2]);
+                    let tempArray = [];
+                    tempArray.push(p._rightChild.yArray[1]);
+                    tempArray.push(p._rightChild.yArray[2]);
+                    for(let i = 0; i<p2.length; ++i){
+                        let len = tempArray.length;
+                         for(let j = 0; j<len; ++j){
+                            tempArray.push(tempArray[j] * p2[i]._rightChild!.yArray[1]);
+                            tempArray.push(tempArray[j] * p2[i]._rightChild!.yArray[2]);
+                        }   
+                        for(let j = 0; j<len; ++j){
+                            tempArray.shift();
+                        }   
+                    }
+                    // console.log(tempArray);
+                    temp_maxR = Math.max(...tempArray);
+                }
+                if(temp_maxL <= temp_maxR && p._rightChild){
+                    let tempNode = [];
+                    tempNode.push(p);
+                    for(let i=0;i<p2.length;++i){
+                        tempNode.push(p2[i]);
+                    }
+                    tempNode.push(p._leftChild);
+                    for(let i=0;i<p2.length;++i){
+                        tempNode.push(p2[i]._leftChild);
+                    }
+                    tempNode.push(temp_maxL);
+                    alternativeNodes2.push(tempNode);
+                    p = p._rightChild;
+                    for(let i=0;i<p2.length;++i){
+                        p2[i] = p2[i]._rightChild!;
+                    }
+                }
+                else if(temp_maxL > temp_maxR && p._leftChild){
+                    let tempNode = [];
+                    // alternativeNodes.push([p, p2, p._leftChild, p2._leftChild, temp_minL]);
+                    tempNode.push(p);
+                    for(let i=0;i<p2.length;++i){
+                        tempNode.push(p2[i]);
+                    }
+                    tempNode.push(p._rightChild);
+                    for(let i=0;i<p2.length;++i){
+                        tempNode.push(p2[i]._rightChild);
+                    }
+                    tempNode.push(temp_maxR);
+                    alternativeNodes2.push(tempNode);
+                    p = p._leftChild;
+                    for(let i=0;i<p2.length;++i){
+                        p2[i] = p2[i]._leftChild!;
+                    }
+                }
+            }
+            console.log("The bottom max(*):", maxIndex);
+            p = pp, p2 = pp2;
+            while(alternativeNodes.length > 0){
+                let pop:any = alternativeNodes.pop();
+                if(pop === undefined ) continue;
+                if(Number(pop[pop.length-1]) > min) continue;
+                let len = pop.length;
+                let temp_minL = 0, temp_minR = 0;
+                if(!pop[Math.floor(len/2)]._leftChild && !pop[Math.floor(len/2)]._rightChild){
+                    let minL = 0, minR = 0;
+                    let nodeFlagInfo1 = currentFlagInfo[pop[Math.floor(len/2)].index * 2 + 1];
+                    if(nodeFlagInfo1 === 0){
+                        minL += pop[Math.floor(len/2)].yArray[1];
+                        minR += pop[Math.floor(len/2)].yArray[2];
+                    } 
+                    else{
+                        minL += pop[Math.floor(len/2)].yArray[2];
+                        minR += pop[Math.floor(len/2)].yArray[1];
+                    }
+                    for(let i=0; i<currentFlagInfo2.length;++i){
+                        if(currentFlagInfo2[i][pop[Math.floor(len/2)].index * 2 + 1] === 0){
+                            minL *= pop[Math.floor(len/2)+i+1].yArray[1];
+                            minR *= pop[Math.floor(len/2)+i+1].yArray[2];
+                        }
+                        else{
+                            minL *= pop[Math.floor(len/2)+i+1].yArray[2];
+                            minR *= pop[Math.floor(len/2)+i+1].yArray[1];
+                        }
+                    }
+                    if(minL > minR){
+                        min = minL;
+                        minIndex = [pop[Math.floor(len/2)].index * 2, min];
+                    }
+                    else{
+                        min = minR;
+                        minIndex = [pop[Math.floor(len/2)].index * 2 + 1, min];
+                    }
+                    if(min < this.multiMin[1]){
+                        this.multiMin = minIndex;
+                    }
+                    continue;
+                }
+                if(pop[Math.floor(len/2)]._leftChild){
+                    let index = Math.floor(len / 2);
+                    let tempArray = [];
+                    tempArray.push(pop[index]._leftChild.yArray[1]);
+                    tempArray.push(pop[index]._leftChild.yArray[2]);
+                    for(let i = index+1; i<index*2; ++i){
+                        let len = tempArray.length;
+                         for(let j = 0; j<len; ++j){
+                            tempArray.push(tempArray[j] * pop[i]._leftChild!.yArray[1]);
+                            tempArray.push(tempArray[j] * pop[i]._leftChild!.yArray[2]);
+                        }   
+                        for(let j = 0; j<len; ++j){
+                            tempArray.shift();
+                        }   
+                    }
+                    // console.log(tempArray);
+                    temp_minL = Math.min(...tempArray);
 
-        //     let min = (min1 + min2);
-        //     let max = (p.yArray[2] + p2.yArray[2]);
-        //     let tempMin;
-
-        //     let alternativeNodes = [];
-        //     while(max > 0){
-        //         let temp_minL:number = min, temp_minR:number = min;
-        //         if(!p._leftChild && !p._rightChild){
-        //             let nodeFlagInfo1 = currentFlagInfo[p.index * 2 + 1];
-        //             let nodeFlagInfo2 = currentFlagInfo2[p.index * 2 + 1];
-        //             if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 0){
-        //                 min = Math.min(p.yArray[1] * p2.yArray[1], p.yArray[2] * p2.yArray[2]);
-        //             }
-        //             else if(nodeFlagInfo1 === 1 && nodeFlagInfo2 === 1){
-        //                 min = Math.min(p.yArray[1] * p2.yArray[1], p.yArray[2] * p2.yArray[2]);
-        //             }
-        //             else{
-        //                 min = Math.min(p.yArray[1] * p2.yArray[2], p.yArray[2] * p2.yArray[1]);
-        //             }
-        //             break;
-        //         }
-        //         if(p._leftChild && p2._leftChild){
-        //             temp_minL = Math.min(p._leftChild.yArray[1] * p2._leftChild.yArray[1], p._leftChild.yArray[1] * p2._leftChild.yArray[2], p._leftChild.yArray[2] * p2._leftChild.yArray[1], p._leftChild.yArray[2] * p2._leftChild.yArray[2]);
-        //         }
-        //         if(p._rightChild && p2._rightChild){
-        //             temp_minR = Math.min(p._rightChild.yArray[1] * p2._rightChild.yArray[1], p._rightChild.yArray[1] * p2._rightChild.yArray[2], p._rightChild.yArray[2] * p2._rightChild.yArray[1], p._rightChild.yArray[2] * p2._rightChild.yArray[2]);
-        //         }
-        //         if(temp_minL <= temp_minR && p._leftChild && p2._leftChild){
-                   
-        //             tempMin = temp_minL;
-        //             alternativeNodes.push([p, p2, p._rightChild, p2._rightChild, temp_minR]);
-        //             p = p._leftChild;
-        //             p2 = p2._leftChild;
-        //         }
-        //         else if(temp_minL > temp_minR && p._rightChild && p2._rightChild){
-                    
-        //             tempMin = temp_minR;
-        //             alternativeNodes.push([p, p2, p._leftChild, p2._leftChild, temp_minL]);
-        //             p = p._rightChild;
-        //             p2 = p2._rightChild;
-        //         }
-        //     }
-        //     console.log("The bottom min(*):", min);
-        //     while(alternativeNodes.length > 0){
-        //         let pop:any = alternativeNodes.pop();
-        //         if(pop === undefined ) continue;
-        //         // console.log("pop:", pop);
-        //         // console.log("pop[0]:", pop![0]);
-        //         // console.log("pop[4]:", pop![4]);
-        //         if(Number(pop[4]) > min) continue;
-        //         // min = this.updateMinValue(p![0], min, alternativeNodes);
-        //         let temp_minL:number = min, temp_minR:number = min;
-        //         if(!pop[2]._leftChild && !pop[3]._rightChild){
-        //             let nodeFlagInfo1 = currentFlagInfo[(pop[2].index) * 2 + 1];
-        //             let nodeFlagInfo2 = currentFlagInfo2[(pop[2].index) * 2 + 1];
-        //             if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 0){
-        //                 min = Math.min(pop[2].yArray[1] * pop[3].yArray[1], pop[2].yArray[2] * pop[3].yArray[2], min);
-        //             }
-        //             else if(nodeFlagInfo1 === 1 && nodeFlagInfo2 === 1){
-        //                 min = Math.min(pop[2].yArray[1] + pop[3].yArray[1], pop[2].yArray[2] * pop[3].yArray[2], min);
-        //             }
-        //             else{
-        //                 min = Math.min(pop[2].yArray[1] * pop[3].yArray[2], pop[2].yArray[2] * pop[3].yArray[1], min);
-        //             }
-        //             continue;
-        //         }
-        //         if(pop[2]._leftChild && pop[2]._leftChild){
-        //             temp_minL = Math.min(pop[2]._leftChild.yArray[1] * pop[3]._leftChild.yArray[1], pop[2]._leftChild.yArray[1] * pop[3]._leftChild.yArray[2], pop[2]._leftChild.yArray[2] * pop[3]._leftChild.yArray[1], pop[2]._leftChild.yArray[2] * pop[3]._leftChild.yArray[2]);
-        //             if(temp_minL < min)
-        //                 alternativeNodes.push([pop[2], pop[3], pop[2]._leftChild, pop[3]._leftChild, temp_minL]);
-        //         }
-        //         if(pop[2]._rightChild && pop[2]._rightChild){
-        //             temp_minR = Math.min(pop[2]._rightChild.yArray[1] * pop[3]._rightChild.yArray[1], pop[2]._rightChild.yArray[1] * pop[3]._rightChild.yArray[2], pop[2]._rightChild.yArray[2] * pop[3]._rightChild.yArray[1], pop[2]._rightChild.yArray[2] * pop[3]._rightChild.yArray[2]);
-        //             if(temp_minR < min)
-        //                 alternativeNodes.push([pop[2], pop[3], pop[2]._rightChild, pop[3]._rightChild, temp_minR]);
-        //         }
-        //     }
-        //     console.log("The final min(*):", min);
-        //     // this.multiMin = Math.min(min, this.multiMin);
-        // }
+                    if(temp_minL < min){
+                        let tempNode = [];
+                        for(let i = index; i < index * 2; ++i){
+                            tempNode.push(pop[i]);
+                        }
+                        for(let i = index; i < index * 2; ++i){
+                            tempNode.push(pop[i]._leftChild);
+                        }
+                        tempNode.push(temp_minL);
+                        alternativeNodes.push(tempNode);
+                    }
+                }
+                if(pop[Math.floor(len/2)]._rightChild){
+                    let index = Math.floor(len / 2);
+                    let tempArray = [];
+                    tempArray.push(pop[index]._rightChild.yArray[1]);
+                    tempArray.push(pop[index]._rightChild.yArray[2]);
+                    for(let i = index+1; i<index*2; ++i){
+                        let len = tempArray.length;
+                         for(let j = 0; j<len; ++j){
+                            tempArray.push(tempArray[j] * pop[i]._rightChild!.yArray[1]);
+                            tempArray.push(tempArray[j] * pop[i]._rightChild!.yArray[2]);
+                        }   
+                        for(let j = 0; j<len; ++j){
+                            tempArray.shift();
+                        }   
+                    }
+                    // console.log(tempArray);
+                    temp_minR = Math.min(...tempArray);
+                    if(temp_minR < min){
+                        let tempNode = [];
+                        for(let i = index; i < index * 2; ++i){
+                            tempNode.push(pop[i]);
+                        }
+                        for(let i = index; i < index * 2; ++i){
+                            tempNode.push(pop[i]._rightChild);
+                        }
+                        tempNode.push(temp_minR);
+                        alternativeNodes.push(tempNode);
+                    }
+                }
+            }
+            p = pp, p2 = pp2;
+            while(alternativeNodes2.length > 0){
+                // console.log("alternativeNodes2:", alternativeNodes2);
+                let pop:any = alternativeNodes2.pop();
+                if(pop === undefined ) continue;
+                // console.log("pop:", pop);
+                if(Number(pop[pop.length-1]) < max) continue;
+                let len = pop.length;
+                let temp_maxL = 0, temp_maxR = 0;
+                if(!pop[Math.floor(len/2)]._leftChild && !pop[Math.floor(len/2)]._rightChild){
+                    let maxL = 0, maxR = 0;
+                    let nodeFlagInfo1 = currentFlagInfo[pop[Math.floor(len/2)].index * 2 + 1];
+                    if(nodeFlagInfo1 === 0){
+                        maxL += pop[Math.floor(len/2)].yArray[1];
+                        maxR += pop[Math.floor(len/2)].yArray[2];
+                    } 
+                    else{
+                        maxL += pop[Math.floor(len/2)].yArray[2];
+                        maxR += pop[Math.floor(len/2)].yArray[1];
+                    }
+                    for(let i=0; i<currentFlagInfo2.length;++i){
+                        if(currentFlagInfo2[i][pop[Math.floor(len/2)].index * 2 + 1] === 0){
+                            maxL *= pop[Math.floor(len/2)+i+1].yArray[1];
+                            maxR *= pop[Math.floor(len/2)+i+1].yArray[2];
+                        }
+                        else{
+                            maxL *= pop[Math.floor(len/2)+i+1].yArray[2];
+                            maxR *= pop[Math.floor(len/2)+i+1].yArray[1];
+                        }
+                    }
+                    if(maxL > maxR){
+                        max = maxL;
+                        maxIndex = [pop[Math.floor(len/2)].index * 2, max];
+                    }
+                    else{
+                        max = maxR;
+                        maxIndex = [pop[Math.floor(len/2)].index * 2 + 1, max];
+                    }
+                    if(max > this.multiMax[1]){
+                        this.multiMax = maxIndex;
+                    }
+                    continue;
+                }
+                if(pop[Math.floor(len/2)]._leftChild){
+                    let index = Math.floor(len / 2);
+                    let tempArray = [];
+                    tempArray.push(pop[index]._leftChild.yArray[1]);
+                    tempArray.push(pop[index]._leftChild.yArray[2]);
+                    for(let i = index+1; i<index*2; ++i){
+                        let len = tempArray.length;
+                         for(let j = 0; j<len; ++j){
+                            tempArray.push(tempArray[j] * pop[i]._leftChild!.yArray[1]);
+                            tempArray.push(tempArray[j] * pop[i]._leftChild!.yArray[2]);
+                        }   
+                        for(let j = 0; j<len; ++j){
+                            tempArray.shift();
+                        }   
+                    }
+                    // console.log(tempArray);
+                    temp_maxL = Math.max(...tempArray);
+                    if(temp_maxL > max){
+                        let tempNode = [];
+                        for(let i = index; i < index * 2; ++i){
+                            tempNode.push(pop[i]);
+                        }
+                        for(let i = index; i < index * 2; ++i){
+                            tempNode.push(pop[i]._leftChild);
+                        }
+                        tempNode.push(temp_maxL);
+                        alternativeNodes2.push(tempNode);
+                    }
+                }
+                if(pop[Math.floor(len/2)]._rightChild){
+                    let index = Math.floor(len / 2);
+                    let tempArray = [];
+                    tempArray.push(pop[index]._rightChild.yArray[1]);
+                    tempArray.push(pop[index]._rightChild.yArray[2]);
+                    for(let i = index+1; i<index*2; ++i){
+                        let len = tempArray.length;
+                         for(let j = 0; j<len; ++j){
+                            tempArray.push(tempArray[j] * pop[i]._rightChild!.yArray[1]);
+                            tempArray.push(tempArray[j] * pop[i]._rightChild!.yArray[2]);
+                        }   
+                        for(let j = 0; j<len; ++j){
+                            tempArray.shift();
+                        }   
+                    }
+                    // console.log(tempArray);
+                    temp_maxR = Math.max(...tempArray);
+                    if(temp_maxR > max){
+                        let tempNode = [];
+                        for(let i = index; i < index * 2; ++i){
+                            tempNode.push(pop[i]);
+                        }
+                        for(let i = index; i < index * 2; ++i){
+                            tempNode.push(pop[i]._rightChild);
+                        }
+                        tempNode.push(temp_maxR);
+                        alternativeNodes2.push(tempNode);
+                    }
+                }
+            }
+            console.log("The final min(*):", minIndex);
+            console.log("The final max(*):", maxIndex);
+            if(min < this.multiMin[1]){
+                this.multiMin = minIndex;
+            }
+            if(max > this.multiMax[1]){
+                this.multiMax = maxIndex;
+            }
+        }
+        else if((type === 1 || type === 7 || type ===8 || type === 9) && symbol === 'avg'){
+            let avg1 = p.yArray[3];
+            let avg2 = 0;
+            for(let i=0;i<p2.length;i++){
+                avg2 += p2[i].yArray[3];
+            }
+            let avg = (avg1+avg2)/(1+p2.length);
+            let currentAvg = this.currentPointNum * this.multiAve;
+            if(this.ordinalLevelCount === 0){
+                this.multiAve = avg;
+            }
+            else{
+                let currentSum = this.multiAve * (this.currentPointNum - pTRange) + avg * pTRange;
+                let average = currentSum / this.currentPointNum;
+                this.multiAve = average;
+            }
+        }
     }
 
 

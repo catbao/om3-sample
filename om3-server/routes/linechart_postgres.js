@@ -508,6 +508,7 @@ function init_transform_timeseries(req, res){
             });
         }));
     }
+    retureRes.sort((a, b) => a.tn - b.tn);
     Promise.all(allPromises).then(() => {
         res.send(retureRes);
     });

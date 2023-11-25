@@ -291,7 +291,10 @@ const computeLineTransform: ActionHandler<GlobalState, GlobalState> = (context: 
                 const yScale = d3.scaleLinear().domain([-1000, 1000]).range([600, 0]);
 
                 dataManager.viewTransformFinal(dataManagers, currentLevel, 600, [0, 65536 - 1], yScale, drawer, transform_symbol).then(res => {
-                    drawer(res);
+                    console.log(res);
+                    // console.log(res['a']);
+                    const resultObject = res as { a: NoUniformColObj[]; b: number; };
+                    drawer(resultObject.a, resultObject.b, transform_symbol);
                     //context.commit("addViewChangeQueryNoPowLineChartObj", { trendTree, dataManager, data: res, startTime: payload.startTime, endTime: payload.endTime, algorithm: "trendtree", width: payload.width, height: payload.height });
                 });
             });
