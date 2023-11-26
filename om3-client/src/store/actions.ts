@@ -294,7 +294,7 @@ const computeLineTransform: ActionHandler<GlobalState, GlobalState> = (context: 
                     console.log(res);
                     // console.log(res['a']);
                     const resultObject = res as { a: NoUniformColObj[]; b: number; };
-                    drawer(resultObject.a, resultObject.b, transform_symbol);
+                    drawer(resultObject.a, resultObject.b, transform_symbol, dataManagers.length+1);
                     //context.commit("addViewChangeQueryNoPowLineChartObj", { trendTree, dataManager, data: res, startTime: payload.startTime, endTime: payload.endTime, algorithm: "trendtree", width: payload.width, height: payload.height });
                 });
             });

@@ -116,7 +116,7 @@ export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
 
 
 
-    function draw(nonUniformColObjs?: Array<NoUniformColObj>, finalValue?:any, transform_symbol?:string) {
+    function draw(nonUniformColObjs?: Array<NoUniformColObj>, finalValue?:any, transform_symbol?:string, lenOfLines?:number) {
         canvas.width = lineChartObj.width;
         // yScale = d3.scaleLinear().domain([lineChartObj.data.minv, lineChartObj.data.maxv]).range([lineChartObj.height, 0]);
         // yScale = d3.scaleLinear().domain([-2000, 2000]).range([lineChartObj.height, 0]);
@@ -260,14 +260,18 @@ export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
                 }
             }
             else if(transform_symbol === 'avg'){
+                // for(let i=0; i<nonUniformColObjs.length-1; i++){
+                //     ctx.moveTo(nonUniformColObjs[i].positionInfo.startX, yScale(nonUniformColObjs[i].multiAve));
+                //     ctx.lineTo(nonUniformColObjs[i+1].positionInfo.startX, yScale(nonUniformColObjs[i+1].multiAve));
+                // }
                 for(let i=0; i<nonUniformColObjs.length; i++){
                     if(nonUniformColObjs[i].addMin[0] < nonUniformColObjs[i].addMin[1]){
-                        ctx.moveTo(nonUniformColObjs[i].positionInfo.minX, yScale(nonUniformColObjs[i].multiMin[1]));
-                        ctx.lineTo(nonUniformColObjs[i].positionInfo.maxX, yScale(nonUniformColObjs[i].multiMax[1]));
+                        ctx.moveTo(nonUniformColObjs[i].positionInfo.minX, yScale(nonUniformColObjs[i].addMin[1]/lenOfLines!));
+                        ctx.lineTo(nonUniformColObjs[i].positionInfo.maxX, yScale(nonUniformColObjs[i].addMax[1]/lenOfLines!));
                     }
                     else{
-                        ctx.moveTo(nonUniformColObjs[i].positionInfo.minX, yScale(nonUniformColObjs[i].multiMax[1]));
-                        ctx.lineTo(nonUniformColObjs[i].positionInfo.maxX, yScale(nonUniformColObjs[i].multiMin[1]));
+                        ctx.moveTo(nonUniformColObjs[i].positionInfo.minX, yScale(nonUniformColObjs[i].addMax[1]/lenOfLines!));
+                        ctx.lineTo(nonUniformColObjs[i].positionInfo.maxX, yScale(nonUniformColObjs[i].addMin[1]/lenOfLines!));
                     }
                     if (i <= nonUniformColObjs.length - 2 && nonUniformColObjs[i].endV !== undefined && nonUniformColObjs[i + 1] !== undefined) {
                         ctx.moveTo(nonUniformColObjs[i].positionInfo.endX, yScale(nonUniformColObjs[i].endV!));

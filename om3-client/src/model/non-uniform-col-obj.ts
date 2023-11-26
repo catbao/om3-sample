@@ -347,7 +347,7 @@ export class NoUniformColObj {
         const pTimeE = pTRange + pTimeS - 1;
         // console.log("transform_symbol:",transform_symbol);
         let symbol = transform_symbol;
-        if((type === 1 || type === 7 || type ===8 || type === 9) && symbol == '+'){
+        if((type === 1 || type === 7 || type ===8 || type === 9) && (symbol == '+' || symbol == 'avg')){
             // let p = pp, p2 = pp2;
             let min1 = p.yArray[1];
             let min2 = 0;
@@ -1794,23 +1794,23 @@ export class NoUniformColObj {
                 this.multiMax = maxIndex;
             }
         }
-        else if((type === 1 || type === 7 || type ===8 || type === 9) && symbol === 'avg'){
-            let avg1 = p.yArray[3];
-            let avg2 = 0;
-            for(let i=0;i<p2.length;i++){
-                avg2 += p2[i].yArray[3];
-            }
-            let avg = (avg1+avg2)/(1+p2.length);
-            let currentAvg = this.currentPointNum * this.multiAve;
-            if(this.ordinalLevelCount === 0){
-                this.multiAve = avg;
-            }
-            else{
-                let currentSum = this.multiAve * (this.currentPointNum - pTRange) + avg * pTRange;
-                let average = currentSum / this.currentPointNum;
-                this.multiAve = average;
-            }
-        }
+        // else if((type === 1 || type === 7 || type ===8 || type === 9) && symbol === 'avg'){
+        //     let avg1 = p.yArray[3];
+        //     let avg2 = 0;
+        //     for(let i=0;i<p2.length;i++){
+        //         avg2 += p2[i].yArray[3];
+        //     }
+        //     let avg = (avg1+avg2)/(1+p2.length);
+        //     let currentAvg = this.currentPointNum * this.multiAve;
+        //     if(this.ordinalLevelCount === 0){
+        //         this.multiAve = avg;
+        //     }
+        //     else{
+        //         let currentSum = this.multiAve * (this.currentPointNum - pTRange) + avg * pTRange;
+        //         let average = currentSum / this.currentPointNum;
+        //         this.multiAve = average;
+        //     }
+        // }
     }
 
 
