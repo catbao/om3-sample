@@ -187,7 +187,7 @@
       </el-select>   
     </div>
 
-    <div class="mt-2 mb-1">
+    <div class="mt-2 mb-1" v-if="chooseLineType == 'Multi'">
         <el-switch v-model="isStopEarly" name="OM3 StopEarly" />
         <label>{{ "Stop Early" }}</label>
     </div>
