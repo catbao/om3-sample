@@ -87,6 +87,7 @@ router.get('/getAllDefaultTableAndInfo', getAllDefaultTableAndInfo);
 router.get('/performTransformForMultiLine', performTransformForMultiLine);
 //router.options('/batchLevelDataProgressiveWavelet',batchLevelDataProgressiveWaveletPostHandler)
 router.get('/getEqualData', getEqualData);
+router.get('/batchLoadMinMaxMissWithWs',batchLoadMinMaxMissWithWs);
 
 
 async function getEqualData(req,res){
@@ -105,7 +106,7 @@ async function getEqualData(req,res){
     array[maxL][0] = 2 ** (maxL-1) - 1;
     let tempStr1 = `${array[maxL][0]},`
     // console.log(tempStr1)
-    let width = 16;
+    let width = 10;
     for(let i = maxL - 1; i > Math.max(1,maxL-width); --i){ //maxL-1-width和maxL-width
         array[i] = new Array(2**(maxL - i));
         for(let j = 0; j < array[i+1].length; ++j){
@@ -144,6 +145,76 @@ async function getEqualData(req,res){
         console.log(finalRes.length);
         res.send(finalRes);
     });
+}
+
+async function batchLoadMinMaxMissWithWs(req,res){  //替代了websocket
+    let maxLevel = 15
+    const strObj = req.query.losedRange;
+    // console.log("strObj是", strObj)
+    const numArray = strObj.split(",").map(Number);
+    const needRangeArray = [];
+    for (let i = 0; i < numArray.length; i += 3) {
+        needRangeArray.push([numArray[i], numArray[i + 1], numArray[i + 2]]);
+    }
+    // console.log(needRangeArray);
+    // const needRangeArray = JSON.parse(strObj);
+    // console.log(needRangeArray)
+    // console.log("needRangeArray: "+needRangeArray[0])
+    const curLevel=needRangeArray[0][0];
+    if(curLevel===undefined){
+        console.log("curLevel is undefined");
+        // ws.send({ code: 400, msg: "level error" })
+        return
+    }
+    
+    // const tName="om3.mock_guassian_sin_om3_8m";
+    const tName="om3.mock_guassian_sin_om3_16";
+    const condition = generateSingalLevelSQLMinMaxMissQuery(needRangeArray, maxLevel, tName);
+    if (condition === null) {
+        console.log("condition is null");
+        // ws.send({ code: 400, msg: "level error" })
+        return
+    }
+    let sqlStr = condition + " order by i asc";
+    // console.log("/server/routes/ws_handler:")
+    // console.log(sqlStr);
+    // console.log(needRangeArray);
+    
+    const startT = new Date().getTime();
+    pool.query(sqlStr, function (err, result) {
+        if (err) {
+            console.log(sqlStr);
+            pool.end();
+            throw err;
+        }
+        console.log("The time of getting cof:");
+        console.log(new Date().getTime() - startT);
+        const minV = [];
+        const maxV = [];
+        const aveV = [];
+        const l = [];
+        const idx = [];
+        result.rows.forEach((v) => { //result是下一层的需要获取的系数，这个过程可能会一直向下查询到最后一层
+            const curI=v['i'];
+            
+            l.push(curLevel);
+            // idx.push(curI-2**curLevel);
+            minV.push(v['minvd']);
+            maxV.push(v['maxvd']);
+            aveV.push(v['avevd']);
+        });
+        // const result1 = [l, idx, minV, maxV];
+        const result1 = [l, minV, maxV, aveV];
+        const resultArray = [];
+        if (result1 && result1[0] && result1[0].length > 0) {
+            for (let i = 0; i < result1[0].length; i++) {
+                // resultArray.push({ l: result1[0][i], i: result1[1][i], dif: [0, result1[2][i], result1[3][i], 0] });
+                resultArray.push({ l: result1[0][i], dif: [0, result1[1][i], result1[2][i], result1[3][i], 0] });
+            }
+        }
+        res.send(resultArray);
+        // ws.send(JSON.stringify({ code: 200, msg: "success+++bao", data: [l, idx, minV, maxV] }));
+    });   
 }
 
 let queryTime = [];
@@ -214,7 +285,6 @@ function m4BenchmarkHandler(req, res) {
     });
 }
 
-
 function initWaveletBenchMinMaxMissHandler(req, res) {
     res.setHeader("Access-Control-Allow-Origin", "*");
 
@@ -275,8 +345,6 @@ function initWaveletBenchMinMaxMissHandler(req, res) {
     }
 
 }
-
-
 
 function batchLevelDataProgressiveWaveletMinMaxMissPostHandler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');

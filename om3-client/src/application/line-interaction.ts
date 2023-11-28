@@ -30,6 +30,11 @@ class InteractionInfo {
 let interactionStack: Array<InteractionInfo> = [];
 
 export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
+    const svgElement = document.getElementById('my_svg');
+    if(svgElement){
+        svgElement.remove();
+    }
+
     let realTimeStampRange: Array<number> = [];
     let nodeIndexRange: Array<number> = []
     realTimeStampRange = [lineChartObj.startTime,lineChartObj.endTime];
@@ -52,8 +57,9 @@ export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
     svg
         .attr("width", lineChartObj.width + pading.left + pading.right)
         .attr("height", lineChartObj.height + pading.top + pading.bottom)
-        .attr("transform", `translate(${lineChartObj.x},${lineChartObj.y})`)
-        .style("background-color", "#fff");
+        // .attr("transform", `translate(${lineChartObj.x},${lineChartObj.y})`)
+        .style("background-color", "#fff")
+        .attr("id","my_svg");
     const foreignId = `foreign${lineChartObj.width + Math.random()}`;
     const foreigG = svg.append("g").attr("transfrom", `translate(${pading.left},${pading.top})`)
     let foreignObj: any = foreigG.append("foreignObject").attr("id", foreignId).attr("x", pading.left).attr("y", pading.top).attr('width', lineChartObj.width).attr('height', lineChartObj.height);
@@ -85,7 +91,6 @@ export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
     let xAxisG = svg.append("g").attr('style', 'user-select:none').attr("transform", `translate(${pading.left},${lineChartObj.height + pading.top})`).attr("class", 'x axis').call(xAxis)
     let yAxisG = svg.append("g").attr('style', 'user-select:none').attr("transform", `translate(${pading.left},${pading.top})`).attr("class", 'y axis').call(yAxis);
 
-
     function updateCanvasWidth() {
 
         //@ts-ignore
@@ -112,12 +117,10 @@ export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
         ctx = canvas.getContext("2d");
     }
 
-
-
-
     function draw(nonUniformColObjs?: Array<NoUniformColObj>,type?:string) {
         canvas.width = lineChartObj.width;
-        yScale = d3.scaleLinear().domain([lineChartObj.data.minv, lineChartObj.data.maxv]).range([lineChartObj.height, 0]);
+        // yScale = d3.scaleLinear().domain([lineChartObj.data.minv, lineChartObj.data.maxv]).range([lineChartObj.height, 0]);
+        yScale = d3.scaleLinear().domain([-1000, 1000]).range([lineChartObj.height, 0]);
         yAxis = d3.axisLeft(yScale)
         if (yAxisG !== null && yAxisG !== undefined) {
             yAxisG.remove();
@@ -212,9 +215,7 @@ export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
         // }
 
     }
-
-    // draw(!lineChartObj.isPow ? lineChartObj.nonUniformColObjs : undefined);
-
+    draw(!lineChartObj.isPow ? lineChartObj.nonUniformColObjs : undefined);
 
     //@ts-ignore
     function brushed({ selection }) {

@@ -2,7 +2,7 @@ import {batchLoadDifWidthPostRawMinMax, loadDif, batchLoadDifWidthPost, batchLoa
 import LevelIndexObj from "../model/level-index-obj";
 import TrendTree from "@/helper/tend-query-tree";
 import store, { pushTimeArray } from "@/store";
-
+import axios from "axios";
 
 let nodeNum: Array<number> = [];
 
@@ -486,14 +486,30 @@ export async function batchLoadDataForRangeLevel1WS(losedRange: Array<Array<numb
     }
 }
 
+async function get(url: string) {
+    if (!url.includes("influx")) {
+        url = 'postgres' + url;
+    }
+    //const loading = openLoading();
+    const { data } = await axios.get(url);
+    // loading.close();
+    return data;
+}
+
 //here
 export async function batchLoadDataForRangeLevel1MinMaxMiss(losedRange: Array<Array<number>>, manager: any, tagName?: string){
     // let difVals: Array<{ l: number, i: number, dif?: Array<number> }>
     // let difVals: Array<{ l: number, dif?: Array<number> }>
     let difVals;
     if(store.state.controlParams.currentLineType==='Single'){
-        difVals= await batchLoadMinMaxMissWithWs(losedRange, manager.dataName, "level_load_data_min_max_miss", manager.maxLevel, tagName) as Array<{ l: number,  dif?: Array<number> }>;
-        // difVals= await batchLoadMinMaxMissWithWs(losedRange, manager.dataName, "level_load_data_min_max_miss", manager.maxLevel, tagName) as Array<{ l: number, dif?: Array<number> }>;
+        // difVals= await batchLoadMinMaxMissWithWs(losedRange, manager.dataName, "level_load_data_min_max_miss", manager.maxLevel, tagName);
+        // difVals: Array<{ l: number, i: number, dif?: Array<number> }> = await batchLoadMinMaxMissWithWs(losedRange, manager.dataName, "level_load_data_min_max_miss", manager.maxLevel, tagName) as Array<{ l: number, dif?: Array<number> }> as Array<{ l: number, i: number }>;
+        const startT = new Date().getTime();
+        console.log(losedRange);
+        const getBatchLoadMinMaxMissWithWsUrl = `/line_chart/batchLoadMinMaxMissWithWs?losedRange=${losedRange}`
+        const data = get(getBatchLoadMinMaxMissWithWsUrl);
+        difVals = await data;
+        console.log("The time of getting cof:", new Date().getTime() - startT);
     }else{
         difVals= await batchLoadMinMaxMissWithPostForMultiLineType(losedRange, manager.dataName, "level_load_data_min_max_miss", manager.maxLevel, tagName)
     }
@@ -508,7 +524,7 @@ export async function batchLoadDataForRangeLevel1MinMaxMiss(losedRange: Array<Ar
 
         for (let j = losedRange[i][1]; j <= losedRange[i][2];j++) {
             // if (p?.index === j && j === difVals[count].i && p.level === difVals[count].l) {
-            if (p?.index === j && p.level === difVals[count].l) {
+            if (p?.index === j && j === difVals[count].i && p.level === difVals[count].l) {
                 let dif = difVals[count].dif!;
                 let curNodeType: "O" | "NULL" | "LEFTNULL" | "RIGHTNULL" = 'O';
                 if (dif[1] === null && dif[2] === null) {
