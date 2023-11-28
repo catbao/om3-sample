@@ -332,6 +332,14 @@ function setAllMultiLineClassAndLinesMap(state: GlobalState, linesMap: any){
     state.allMultiLineClassAndLinesMap = linesMap;
 }
 
+function alterStopEarly(state: GlobalState, stopEarly: boolean){
+    state.controlParams.stopEarly = true;
+}
+
+function alterNoStopEarly(state: GlobalState, stopEarly: boolean){
+    state.controlParams.stopEarly = false;
+}
+
 export {
     alterAlgorithm,
     alterMode,
@@ -359,5 +367,7 @@ export {
     alterProgressive,
     setAllMultiLineClassAndLinesMap,
     alterSelectedOption,
+    alterStopEarly,
+    alterNoStopEarly,
 }
 

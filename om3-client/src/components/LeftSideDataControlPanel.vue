@@ -187,6 +187,11 @@
       </el-select>   
     </div>
 
+    <div class="mt-2 mb-1">
+        <el-switch v-model="isStopEarly" name="OM3 StopEarly" />
+        <label>{{ "Stop Early" }}</label>
+    </div>
+
     <div v-if="chooseLineType == 'Multi'">
       <button id="create_panel_btn" type="button" class="btn btn-secondary ms-2 mt-2 ml-4" style="width: 100px; height: 40px;" @click.prevent="handleComputePanel">
         compute
@@ -215,6 +220,7 @@ export default defineComponent({
       customUserName: "",
       isOpenDbSetup: false,
       isOpenTransform: false,
+      isStopEarly: false,
       lineDateRange: [new Date(2010, 9, 1), new Date(2010, 10, 1)],
       lineStartTime: new Date(2010, 9, 1),
       lineEndTime: new Date(2010, 10, 1),
@@ -406,6 +412,20 @@ export default defineComponent({
           }
         })
       }
+    },
+    isStopEarly(newV, oldV){
+      if(oldV === true){
+        store.commit("alterNoStopEarly", false);
+        // console.log("store.state.controlParams.StopEarly:", store.state.controlParams.StopEarly);
+      }
+      else if(newV){
+        // console.log("newV:", newV);
+        store.commit("alterStopEarly", true);
+        // console.log("store.state.controlParams.StopEarly:", store.state.controlParams.StopEarly);
+      }
+      // else{
+      //   store.commit("alterStopEarly", false);
+      // }
     }
   },
   setup() {

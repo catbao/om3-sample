@@ -306,6 +306,7 @@ export interface GlobalState {
     semanticInterval: number;
     semanticType: 'ms' | 's' | 'm' | 'h' | 'd' | 'W' | 'M' | 'Y';
     transform_symbol: string;
+    stopEarly: boolean;
   },
 }
 
@@ -351,6 +352,7 @@ export default createStore<GlobalState>({
       semanticInterval: 6000,
       semanticType: 'h',
       transform_symbol: "",
+      stopEarly: false,
     }
   },
   mutations,

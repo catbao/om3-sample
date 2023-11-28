@@ -1,6 +1,9 @@
 import TrendTree from "@/helper/tend-query-tree";
 import { getIndexTime } from "@/helper/format-data";
 import { utcYear } from "d3";
+import store from "@/store";
+
+
 
 export class NoUniformColObj {
     col: number;
@@ -619,8 +622,14 @@ export class NoUniformColObj {
                 }
             }
             // console.log("The bottom max(+):", maxIndex);
+            console.log("store.state.controlParams.stopEarly:", store.state.controlParams.stopEarly);
+            if(store.state.controlParams.stopEarly === true){
+                alternativeNodes = [];
+                alternativeNodes2 = [];
+            }
             p = pp, p2 = pp2;
             while(alternativeNodes.length > 0){
+                // console.log("No stop early!");
                 let pop:any = alternativeNodes.pop();
                 if(pop === undefined ) continue;
                 // console.log("pop:", pop);
@@ -1132,6 +1141,10 @@ export class NoUniformColObj {
                 }
             }
             console.log("The bottom max(-):", maxIndex);
+            if(store.state.controlParams.stopEarly === true){
+                alternativeNodes = [];
+                alternativeNodes2 = [];
+            }
             p = pp, p2 = pp2;
             while(alternativeNodes.length > 0){
                 // console.log("alternativeNodes:", alternativeNodes);
@@ -1471,7 +1484,7 @@ export class NoUniformColObj {
                     alternativeNodes.push(tempNode);
                 }
             }
-            console.log("The bottom min(*):", minIndex);
+            // console.log("The bottom min(*):", minIndex);
             p = pp, p2 = pp2;
             while(max > -Infinity){
                 let temp_maxL = 0, temp_maxR = 0;
@@ -1581,7 +1594,11 @@ export class NoUniformColObj {
                     }
                 }
             }
-            console.log("The bottom max(*):", maxIndex);
+            // console.log("The bottom max(*):", maxIndex);
+            if(store.state.controlParams.stopEarly === true){
+                alternativeNodes = [];
+                alternativeNodes2 = [];
+            }
             p = pp, p2 = pp2;
             while(alternativeNodes.length > 0){
                 let pop:any = alternativeNodes.pop();
