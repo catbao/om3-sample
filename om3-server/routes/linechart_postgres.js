@@ -105,7 +105,7 @@ async function getEqualData(req,res){
     array[maxL][0] = 2 ** (maxL-1) - 1;
     let tempStr1 = `${array[maxL][0]},`
     // console.log(tempStr1)
-    let width = 10;
+    let width = 16;
     for(let i = maxL - 1; i > Math.max(1,maxL-width); --i){ //maxL-1-width和maxL-width
         array[i] = new Array(2**(maxL - i));
         for(let j = 0; j < array[i+1].length; ++j){

@@ -159,10 +159,10 @@ async function loadViewChangeQueryWSMinMaxMissDataInitData(context: ActionContex
             
             if(j === 0)
                 // res2 = await dataManager.viewChangeInteractionFinal(Math.ceil(Math.log2(payload.width)), payload.width, [4000*j, 4000*j+20000], yScale,current_maxLevel+2);
-                res2 = await dataManager.viewChangeInteractionFinal(Math.ceil(Math.log2(payload.width)), payload.width, [4000*j, 4000*j+20000], yScale);
+                res2 = await dataManager.viewChangeInteractionFinal(14, payload.width, [4000*j, 4000*j+20000], yScale);
             else
                 // res2 = await dataManager.viewChangeInteractionFinal(Math.ceil(Math.log2(payload.width)), payload.width, [4000*j, 4000*j+20000], yScale,current_maxLevel+2,res2);
-                res2 = await dataManager.viewChangeInteractionFinal(Math.ceil(Math.log2(payload.width)), payload.width, [4000*j, 4000*j+20000], yScale);
+                res2 = await dataManager.viewChangeInteractionFinal(14, payload.width, [4000*j, 4000*j+20000], yScale);
             console.log(res2);
             context.commit("addViewChangeQueryNoPowLineChartObj", { trendTree, dataManager, data: res2, startTime: payload.startTime, endTime: payload.endTime, algorithm: "trendtree", width: payload.width, height: payload.height });
             await new Promise(resolve => setTimeout(resolve, 1000));

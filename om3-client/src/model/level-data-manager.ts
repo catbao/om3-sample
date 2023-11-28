@@ -1689,12 +1689,10 @@ export default class LevelDataManager {
             return nonUniformColObjs;
         }
 
-        let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
-
-
-        if (losedDataInfo.length > 0) {
-            await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);
-        }
+        // let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
+        // if (losedDataInfo.length > 0) {
+        //     await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);
+        // }
 
 
         while (needLoadDifNode.length > 0) {
@@ -1791,10 +1789,10 @@ export default class LevelDataManager {
             if (needLoadDifNode.length === 0) {
                 break;
             }
-            let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
-            if (losedDataInfo.length > 0) {
-                await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);
-            }
+            // let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
+            // if (losedDataInfo.length > 0) {
+            //     await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);
+            // }
 
         }
         for (let i = 0; i < nonUniformColObjs.length; i++) {
@@ -1814,7 +1812,9 @@ export default class LevelDataManager {
             //console.log("flag length:", currentFlagInfo.length)
         }
 
+
         let maxLevel = 16;
+        // let currentLevel = 16;
         allTimes = []
         // console.time("v_c")
         const nonUniformColObjs = computeTimeSE(currentLevel, width, timeRange, this.realDataRowNum, this.maxLevel);
@@ -1878,11 +1878,11 @@ export default class LevelDataManager {
         if (needLoadDifNode.length === 0) {
             return nonUniformColObjs;
         }
-        let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
-        // debugger
-        if (losedDataInfo.length > 0) {
-            await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);
-        }
+        // let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
+        // // debugger
+        // if (losedDataInfo.length > 0) {
+        //     await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);
+        // }
 
         while (needLoadDifNode.length > 0) {
             colIndex = 0;
@@ -2016,10 +2016,10 @@ export default class LevelDataManager {
             if (needLoadDifNode.length === 0) {
                 break;
             }
-            let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
-            if (losedDataInfo.length > 0) {
-                await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);
-            }
+            // let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
+            // if (losedDataInfo.length > 0) {
+            //     await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);
+            // }
 
         }
 
