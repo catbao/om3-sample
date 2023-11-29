@@ -524,7 +524,7 @@ export async function batchLoadDataForRangeLevel1MinMaxMiss(losedRange: Array<Ar
 
         for (let j = losedRange[i][1]; j <= losedRange[i][2];j++) {
             // if (p?.index === j && j === difVals[count].i && p.level === difVals[count].l) {
-            if (p?.index === j && j === difVals[count].i && p.level === difVals[count].l) {
+            if (p?.index === j && p.level === difVals[count].l) {
                 let dif = difVals[count].dif!;
                 let curNodeType: "O" | "NULL" | "LEFTNULL" | "RIGHTNULL" = 'O';
                 if (dif[1] === null && dif[2] === null) {
@@ -596,8 +596,8 @@ export async function batchLoadDataForRangeLevel1MinMaxMiss(losedRange: Array<Ar
                 // }
                 newTreeNode.push(firstNode);
                 newTreeNode.push(secondNode);
-                manager.lruCache.set(firstNode.level+"_"+firstNode.index,firstNode);
-                manager.lruCache.set(secondNode.level+"_"+secondNode.index,secondNode);
+                // manager.lruCache.set(firstNode.level+"_"+firstNode.index,firstNode);
+                // manager.lruCache.set(secondNode.level+"_"+secondNode.index,secondNode);
                 p = p.nextSibling!;
                 count++;
                 if (p === null || count >= difVals.length) {
