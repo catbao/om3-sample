@@ -146,7 +146,7 @@ const loadMultiTimeSeriesInitData: ActionHandler<GlobalState, GlobalState> = (co
         throw new Error("cannot get class info");
     }
     maxLevel = lineClassInfo['level'];
-    const combinedUrl = `/line_chart/init_multi_timeseries?width=${2 ** currentLevel}&class_name=${currentMulitLineClass}&mode=${context.state.controlParams.currentMode}`;
+    const combinedUrl = `/line_chart/init_multi_timeseries2?width=${2 ** currentLevel}&class_name=${currentMulitLineClass}&mode=${context.state.controlParams.currentMode}`;
     const data = get(context.state, combinedUrl);
 
     data.then(res => {

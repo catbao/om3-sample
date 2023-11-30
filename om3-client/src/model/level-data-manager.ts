@@ -8,13 +8,8 @@ import { NoUniformColObj } from "./non-uniform-col-obj";
 import { UniformGapObj } from "./uniform-gap-obj";
 // import { loadDataForRangeLevel, batchLoadDataForRangeLevelRawMinMax, batchLoadDataForRangeLevel, batchLoadDataForRangeLevel1, batchLoadDataForRangeLevel2MinMaxMiss, batchLoadDataForRangeLevel1MinMaxMiss, batchLoadDataForRangeLevel1WS, batchLoadDataForRangeLevelForMinMaxMiss } from "../api/build_tree"
 import { loadDataForRangeLevel, batchLoadDataForRangeLevelRawMinMax, batchLoadDataForRangeLevel, batchLoadDataForRangeLevel1, batchLoadDataForRangeLevel2MinMaxMiss, batchLoadDataForRangeLevel1MinMaxMiss, batchLoadDataForRangeLevel1WS, batchLoadDataForRangeLevelForMinMaxMiss } from "../api/build_tree"
-
-
 import Cache from "lru-cache"
 import { getFlag } from "@/global_state/state";
-
-
-
 
 let allTimes: any = []
 let allSumTimes: any = []
@@ -1801,7 +1796,17 @@ export default class LevelDataManager {
 
     async viewChangeInteractionFinal1(currentLevel: number, width: number, timeRange: Array<number>, yScale: any, drawer: any) {
         
-        const currentFlagInfo = getFlag(this.dataName);
+        const inputString = this.dataName;
+        let dotIndex = inputString.indexOf('.');
+        let beforeDot = inputString.substring(0, dotIndex);
+        beforeDot = beforeDot.replace('stream', 'multi');
+        let afterDot = inputString.substring(dotIndex + 1);
+        afterDot = afterDot.replace('_stream', '');
+        let result = beforeDot + '.' + afterDot;
+        console.log(result);
+
+        const currentFlagInfo = getFlag(result);
+        // const currentFlagInfo = getFlag(this.dataName);
         // const currentFlagInfo = getFlag("mock_guassian_sin_8m_om3_8m");
         if (currentFlagInfo === undefined) {
             throw new Error(this.dataName + " get flag faild")

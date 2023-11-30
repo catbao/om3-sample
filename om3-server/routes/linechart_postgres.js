@@ -71,6 +71,7 @@ router.get('/init_wavelet_bench_min_max_miss', initWaveletBenchMinMaxMissHandler
 //
 router.post("/batchLevelDataProgressiveWaveletMinMaxMiss", batchLevelDataProgressiveWaveletMinMaxMissPostHandler)
 router.get('/init_multi_timeseries', init_multi_timeseries);
+router.get('/init_multi_timeseries2', init_multi_timeseries2);
 router.get('/init_transform_timeseries', init_transform_timeseries);
 router.get("/getAllFlags", getAllFlags);
 
@@ -429,6 +430,133 @@ function init_multi_timeseries(req, res) {
     });
 }
 
+async function init_multi_timeseries2(req, res) {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    const query = req.query;
+    const lineClassName = query['class_name'];
+    const retureRes = [];
+    const userCookie = req.headers['authorization'];
+    let currentPool = pool
+    if (query.mode === 'Custom') {
+        if (userCookie === '' || userCookie === null || userCookie === undefined) {
+            res.send({ code: 400, msg: "cookie not found", data: { result: "fail" } })
+            return
+        }
+        if (!customDBPoolMap().has(userCookie)) {
+            res.send({ code: 400, msg: "custom db not create connection", data: { result: "fail" } })
+            return
+        }
+        currentPool = customDBPoolMap().get(userCookie);
+    }
+    new Promise((resolve, reject) => {
+        if (allMultiSeriesTables.length < 1 || lineClassName !== multiSeriesClass) {
+            allMultiSeriesTables = [];
+            const sqlStr = `select table_schema||'.'||table_name as table_fullname from information_schema."tables" where table_type = 'BASE TABLE' and table_schema not in ('pg_catalog', 'information_schema') and table_schema||'.'||table_name  like '%om3_stream.${lineClassName}%';`
+            currentPool.query(sqlStr, (err, result) => {
+                if (err) {
+                    currentPool.end();
+                    throw err
+                }
+                for (let i = 0; i < result.rows.length; i++) {
+                    const curTableClass = result.rows[i].table_fullname.split(".")[1].split("_")[0];
+                    if (curTableClass == lineClassName) {
+                        allMultiSeriesTables.push(result.rows[i].table_fullname);
+                    }
+                }
+                multiSeriesClass = lineClassName;
+                resolve();
+            });
+        } else {
+            resolve();
+        }
+    }).then(() => {
+        const allPromises = new Array();
+        let amout = allMultiSeriesTables.length
+
+        for (let i = 0; i < amout; i++) {
+            allPromises.push(new Promise(async(resolve, reject) => {
+                const curTableLevel = getTableLevel(allMultiSeriesTables[i]);
+                const timeSeriresRes = {
+                    tn: allMultiSeriesTables[i],
+                    d: [],
+                    l: curTableLevel,
+                }
+
+                const queryMaxIndexSql = `select max(i) from ${allMultiSeriesTables[i]}`;
+                let maxI = await pool.query(queryMaxIndexSql);
+                let cofLen = parseInt(maxI.rows[0].max);
+                console.log(maxI.rows[0].max)
+                let maxL = Math.log2((cofLen+1)*2); //系数*2
+
+                // const sqlStr = `select i,minvd,maxvd,avevd from ${allMultiSeriesTables[i]} where i<$1 order by i asc`;
+                // const params = [];
+                // params.push(2 ** Math.ceil(Math.log2(query.width)));
+                // const sqlQuery = {
+                //     text: sqlStr,
+                //     values: params
+                // }
+                const sqlStr1 = `select i,minvd,maxvd,avevd from ${allMultiSeriesTables[i]} where i in (`;
+                let array = new Array(maxL+1);
+                array[maxL] = new Array(1);
+                array[maxL][0] = 2 ** (maxL-1) - 1;
+                let tempStr1 = `${array[maxL][0]},`
+                // console.log(tempStr1)
+                let width = 10;
+                for(let i = maxL - 1; i > Math.max(1,maxL-width); --i){ //maxL-1-width和maxL-width
+                    array[i] = new Array(2**(maxL - i));
+                    for(let j = 0; j < array[i+1].length; ++j){
+                        array[i][2*j] = array[i+1][j] - 2**(i-1);
+                        tempStr1 += `${array[i][2*j]},`
+                        // console.log(array[i][2*j]);
+                        array[i][2*j+1] = array[i+1][j] - 1;
+                        tempStr1 += `${array[i][2*j+1]},`
+                    }
+                    // console.log(tempStr1)
+                }
+                // console.log(tempStr1)
+                tempStr1 += `-1) order by array_positions(array[`
+                for(let i = maxL - 1; i > Math.max(1,maxL-width); --i){
+                    for(let j = 0; j < array[i+1].length; ++j){
+                        tempStr1 += `${array[i][2*j]},`
+                        tempStr1 += `${array[i][2*j+1]},`
+                    }
+                }
+                let sqlQuery1 = sqlStr1 + tempStr1 + `-1],i)`;
+
+                const startT = new Date().getTime();
+                currentPool.query(sqlQuery1, (err, result) => {
+                    if (err) {
+                        console.log(sqlStr1)
+                        currentPool.end();
+                        console.log(err);
+                        throw err;
+                    }
+                    const finalRes = []
+
+                    for (let i = 0; i < result.rows.length; i++) {
+                        const tempVal = result.rows[i];
+                        // const tempL = Math.floor(Math.log2(tempVal['i']));
+                        // const tempI = tempVal['i'] - 2 ** tempL;
+                        // finalRes.push({ l: curTableLevel - tempL, i: tempI, minvd: tempVal['minvd'], maxvd: tempVal['maxvd'], avevd: tempVal['avevd'] });
+                        finalRes.push({minvd:tempVal['minvd'],maxvd:tempVal['maxvd'],avevd:tempVal['avevd']});
+                    }
+                    // if (result.rows.length > 0) {
+                    //     finalRes.push({ l: -1, i: 0, minvd: result.rows[0]['minvd'], maxvd: result.rows[0]['maxvd'], avevd:result.rows[0]['avevd'] });
+                    // }
+                    timeSeriresRes.d = finalRes;
+                    //console.log(timeSeriresRes)
+                    retureRes.push(timeSeriresRes)
+                    resolve();
+                });
+            }));
+        }
+        Promise.all(allPromises).then(() => {
+            //console.log(finalRes)
+            res.send(retureRes);
+        });
+    });
+}
+
 function init_transform_timeseries(req, res){
     res.setHeader("Access-Control-Allow-Origin", "*");
     const query = req.query;
@@ -540,6 +668,7 @@ function queryMinMaxMissData(req, res) {
     //console.log(req.body)
 
     const needRangeArray = strObj["data"];
+    console.log("multi needRangeArray:", needRangeArray);
 
     const curLevel = needRangeArray[0][0];
     if (curLevel === undefined) {
@@ -580,12 +709,13 @@ function queryMinMaxMissData(req, res) {
             const curI = v['i'];
 
             l.push(curLevel);
-            idx.push(curI - 2 ** curLevel);
+            // idx.push(curI - 2 ** curLevel);
             minV.push(v['minvd']);
             maxV.push(v['maxvd']);
             aveV.push(v['avevd']);
         });
-        res.send({ code: 200, msg: "success", data: [l, idx, minV, maxV, aveV] });
+        // res.send({ code: 200, msg: "success", data: [l, idx, minV, maxV, aveV] });
+        res.send({ code: 200, msg: "success", data: [l, minV, maxV, aveV] });
     });
 }
 

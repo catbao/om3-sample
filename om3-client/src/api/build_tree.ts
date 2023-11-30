@@ -488,11 +488,20 @@ export async function batchLoadDataForRangeLevel1WS(losedRange: Array<Array<numb
 
 //here
 export async function batchLoadDataForRangeLevel1MinMaxMiss(losedRange: Array<Array<number>>, manager: any, tagName?: string){
-    let difVals: Array<{ l: number, i: number, dif?: Array<number> }>
+    // let difVals: Array<{ l: number, i: number, dif?: Array<number> }>
+    let difVals: Array<{ l: number, dif?: Array<number> }>
     if(store.state.controlParams.currentLineType==='Single'){
         difVals= await batchLoadMinMaxMissWithWs(losedRange, manager.dataName, "level_load_data_min_max_miss", manager.maxLevel, tagName) as Array<{ l: number, i: number }>;
     }else{
-        difVals= await batchLoadMinMaxMissWithPostForMultiLineType(losedRange, manager.dataName, "level_load_data_min_max_miss", manager.maxLevel, tagName)
+        const inputString = manager.dataName;
+        let dotIndex = inputString.indexOf('.');
+        let beforeDot = inputString.substring(0, dotIndex);
+        beforeDot = beforeDot.replace('stream', 'multi');
+        let afterDot = inputString.substring(dotIndex + 1);
+        afterDot = afterDot.replace('_stream', '');
+        let result = beforeDot + '.' + afterDot;
+        console.log(result);
+        difVals = await batchLoadMinMaxMissWithPostForMultiLineType(losedRange, result, "level_load_data_min_max_miss", manager.maxLevel, tagName)
     }
 
     let count = 0;
@@ -502,7 +511,8 @@ export async function batchLoadDataForRangeLevel1MinMaxMiss(losedRange: Array<Ar
         let p: TrendTree = startNode;
         const newTreeNode = [];
         for (let j = losedRange[i][1]; j <= losedRange[i][2];j++) {
-            if (p?.index === j && j === difVals[count].i && p.level === difVals[count].l) {
+            // if (p?.index === j && j === difVals[count].i && p.level === difVals[count].l) {
+                if (p?.index === j && p.level === difVals[count].l) {
                 let dif = difVals[count].dif!;
                 let curNodeType: "O" | "NULL" | "LEFTNULL" | "RIGHTNULL" = 'O';
                 if (dif[1] === null && dif[2] === null) {
@@ -605,7 +615,8 @@ export async function batchLoadDataForRangeLevel1MinMaxMiss(losedRange: Array<Ar
     }
 }
 export async function batchLoadDataForRangeLevel2MinMaxMiss(losedRange: Array<Array<number>>, manager: any, tagName?: string){
-    let difVals: Array<{ l: number, i: number, dif?: Array<number> }>
+    // let difVals: Array<{ l: number, i: number, dif?: Array<number> }>
+    let difVals: Array<{ l: number, dif?: Array<number> }>
     if(store.state.controlParams.currentLineType==='Single'){
         difVals= await batchLoadMinMaxMissWithWs(losedRange, manager.dataName, "level_load_data_min_max_miss", manager.maxLevel, tagName) as Array<{ l: number, i: number }>;
     }else{
@@ -625,11 +636,15 @@ export async function batchLoadDataForRangeLevel2MinMaxMiss(losedRange: Array<Ar
                 //debugger
                 continue
             }
-            if(p?.index !== j || j !== difVals[count].i){
+            // if(p?.index !== j || j !== difVals[count].i){
+            //     continue
+            // }
+            if(p?.index !== j){
                 continue
             }
            
-            if (p?.index === j && j === difVals[count].i && p.level === difVals[count].l) {
+            // if (p?.index === j && j === difVals[count].i && p.level === difVals[count].l) {
+            if (p?.index === j && p.level === difVals[count].l) {
                 let dif = difVals[count].dif!;
                 let curNodeType: "O" | "NULL" | "LEFTNULL" | "RIGHTNULL" = 'O';
                 if (dif[1] === null && dif[2] === null) {
