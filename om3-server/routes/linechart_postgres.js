@@ -465,6 +465,20 @@ async function init_multi_timeseries2(req, res) {
                 }
                 multiSeriesClass = lineClassName;
                 resolve();
+
+                // function processRow(index) {
+                //     if (index < result.rows.length) {
+                //     const curTableClass = result.rows[index].table_fullname.split(".")[1].split("_")[0];
+                //     if (curTableClass == lineClassName) {
+                //         allMultiSeriesTables.push(result.rows[index].table_fullname);
+                //     }
+                //     processRow(index + 1); // Recursive call for the next iteration
+                //     } else {
+                //     multiSeriesClass = lineClassName;
+                //     resolve();
+                //     }
+                // }
+                // processRow(0); // Start the loop from index 0
             });
         } else {
             resolve();
@@ -472,6 +486,7 @@ async function init_multi_timeseries2(req, res) {
     }).then(() => {
         const allPromises = new Array();
         let amout = allMultiSeriesTables.length
+        console.log("allMultiSeriesTables:", allMultiSeriesTables);
 
         for (let i = 0; i < amout; i++) {
             allPromises.push(new Promise(async(resolve, reject) => {
@@ -482,11 +497,12 @@ async function init_multi_timeseries2(req, res) {
                     l: curTableLevel,
                 }
 
-                const queryMaxIndexSql = `select max(i) from ${allMultiSeriesTables[i]}`;
-                let maxI = await pool.query(queryMaxIndexSql);
-                let cofLen = parseInt(maxI.rows[0].max);
-                console.log(maxI.rows[0].max)
-                let maxL = Math.log2((cofLen+1)*2); //系数*2
+                // const queryMaxIndexSql = `select max(i) from ${allMultiSeriesTables[i]}`;
+                // let maxI = pool.query(queryMaxIndexSql);
+                // let cofLen = parseInt(maxI.rows[0].max);
+                // console.log(maxI.rows[0].max)
+                // let maxL = Math.log2((cofLen+1)*2); //系数*2
+                let maxL = 16;
 
                 // const sqlStr = `select i,minvd,maxvd,avevd from ${allMultiSeriesTables[i]} where i<$1 order by i asc`;
                 // const params = [];
@@ -531,6 +547,7 @@ async function init_multi_timeseries2(req, res) {
                         console.log(err);
                         throw err;
                     }
+                    console.log(i, "th sql:", sqlStr1);
                     const finalRes = []
 
                     for (let i = 0; i < result.rows.length; i++) {
@@ -545,7 +562,8 @@ async function init_multi_timeseries2(req, res) {
                     // }
                     timeSeriresRes.d = finalRes;
                     //console.log(timeSeriresRes)
-                    retureRes.push(timeSeriresRes)
+                    retureRes.push(timeSeriresRes);
+                    console.log(i, "th Res finished.");
                     resolve();
                 });
             }));
@@ -668,7 +686,7 @@ function queryMinMaxMissData(req, res) {
     //console.log(req.body)
 
     const needRangeArray = strObj["data"];
-    console.log("multi needRangeArray:", needRangeArray);
+    // console.log("multi needRangeArray:", needRangeArray);
 
     const curLevel = needRangeArray[0][0];
     if (curLevel === undefined) {
