@@ -430,7 +430,7 @@ function init_multi_timeseries(req, res) {
     });
 }
 
-async function init_multi_timeseries2(req, res) {
+function init_multi_timeseries2(req, res) {
     res.setHeader("Access-Control-Allow-Origin", "*");
     const query = req.query;
     const lineClassName = query['class_name'];
@@ -474,7 +474,7 @@ async function init_multi_timeseries2(req, res) {
         let amout = allMultiSeriesTables.length
 
         for (let i = 0; i < amout; i++) {
-            allPromises.push(new Promise(async(resolve, reject) => {
+            allPromises.push(new Promise((resolve, reject) => {
                 const curTableLevel = getTableLevel(allMultiSeriesTables[i]);
                 const timeSeriresRes = {
                     tn: allMultiSeriesTables[i],
@@ -482,11 +482,12 @@ async function init_multi_timeseries2(req, res) {
                     l: curTableLevel,
                 }
 
-                const queryMaxIndexSql = `select max(i) from ${allMultiSeriesTables[i]}`;
-                let maxI = await pool.query(queryMaxIndexSql);
-                let cofLen = parseInt(maxI.rows[0].max);
-                console.log(maxI.rows[0].max)
-                let maxL = Math.log2((cofLen+1)*2); //系数*2
+                // const queryMaxIndexSql = `select max(i) from ${allMultiSeriesTables[i]}`;
+                // let maxI = pool.query(queryMaxIndexSql);
+                // let cofLen = parseInt(maxI.rows[0].max);
+                // console.log(maxI.rows[0].max)
+                // let maxL = Math.log2((cofLen+1)*2); //系数*2
+                let maxL = 16;
 
                 // const sqlStr = `select i,minvd,maxvd,avevd from ${allMultiSeriesTables[i]} where i<$1 order by i asc`;
                 // const params = [];
@@ -668,7 +669,7 @@ function queryMinMaxMissData(req, res) {
     //console.log(req.body)
 
     const needRangeArray = strObj["data"];
-    console.log("multi needRangeArray:", needRangeArray);
+    // console.log("multi needRangeArray:", needRangeArray);
 
     const curLevel = needRangeArray[0][0];
     if (curLevel === undefined) {
