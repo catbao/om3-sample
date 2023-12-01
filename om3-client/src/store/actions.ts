@@ -174,7 +174,8 @@ const loadMultiTimeSeriesInitData: ActionHandler<GlobalState, GlobalState> = (co
         const columnsInfoArray: Array<Array<NoUniformColObj>> = new Array(dataManagers.length);
         for (let i = 0; i < dataManagers.length; i++) {
             allPromises.push(new Promise((resolve, reject) => {
-                dataManagers[i].viewChangeInteractionFinal1(currentLevel, payload.width, [0, dataManagers[i].realDataRowNum - 1], null, null).then((noUniformColObjs: Array<NoUniformColObj>) => {
+                // dataManagers[i].viewChangeInteractionFinal1(currentLevel, payload.width, [0, dataManagers[i].realDataRowNum - 1], null, null).then((noUniformColObjs: Array<NoUniformColObj>) => {
+                    dataManagers[i].viewChangeInteractionFinal1(currentLevel, payload.width, [0, 20000], null, null).then((noUniformColObjs: Array<NoUniformColObj>) => {
                     columnsInfoArray[i] = noUniformColObjs;
                     dataManagers[i].columnInfos = noUniformColObjs
                     resolve(null);
@@ -184,6 +185,41 @@ const loadMultiTimeSeriesInitData: ActionHandler<GlobalState, GlobalState> = (co
             }));
         }
         Promise.all(allPromises).then(() => {
+            const startTimeStamp = new Date(lineClassInfo.start_time).getTime();
+            let endTimeStamp = 0
+            if (lineClassInfo.end_time !== '') {
+                endTimeStamp = new Date(lineClassInfo.end_time).getTime();
+            }
+            let timeInterval = 0;
+            if (lineClassInfo.interval !== 0) {
+                timeInterval = lineClassInfo.interval;
+            }
+
+            context.commit("addMultiTimeSeriesObj", {
+                className: lineClassInfo.name,
+                lineAmount: lineClassInfo.amount,
+                startTimeStamp: startTimeStamp,
+                endTimeStamp: endTimeStamp,
+                timeIntervalMs: timeInterval, dataManagers: dataManagers, columnInfos: columnsInfoArray, startTime: 0, endTime: dataManagers[0].realDataRowNum - 1, algorithm: "multitimeseries", width: payload.width, height: payload.height, pow: false, minv: globalMinV, maxv: globalMaxV, maxLevel
+            })
+        }).catch(error => {
+            throw error
+        });
+
+        const allPromises2 = [];
+        for (let i = 0; i < dataManagers.length; i++) {
+            allPromises2.push(new Promise((resolve, reject) => {
+                // dataManagers[i].viewChangeInteractionFinal1(currentLevel, payload.width, [0, dataManagers[i].realDataRowNum - 1], null, null).then((noUniformColObjs: Array<NoUniformColObj>) => {
+                    dataManagers[i].viewChangeInteractionFinal1(currentLevel, payload.width, [20000, 40000], null, null).then((noUniformColObjs: Array<NoUniformColObj>) => {
+                    columnsInfoArray[i] = noUniformColObjs;
+                    dataManagers[i].columnInfos = noUniformColObjs
+                    resolve(null);
+                }).catch((error) => {
+                    reject(error);
+                });
+            }));
+        }
+        Promise.all(allPromises2).then(() => {
             const startTimeStamp = new Date(lineClassInfo.start_time).getTime();
             let endTimeStamp = 0
             if (lineClassInfo.end_time !== '') {

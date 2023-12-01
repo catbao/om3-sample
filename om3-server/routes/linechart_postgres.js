@@ -430,7 +430,7 @@ function init_multi_timeseries(req, res) {
     });
 }
 
-async function init_multi_timeseries2(req, res) {
+function init_multi_timeseries2(req, res) {
     res.setHeader("Access-Control-Allow-Origin", "*");
     const query = req.query;
     const lineClassName = query['class_name'];
@@ -489,7 +489,7 @@ async function init_multi_timeseries2(req, res) {
         console.log("allMultiSeriesTables:", allMultiSeriesTables);
 
         for (let i = 0; i < amout; i++) {
-            allPromises.push(new Promise(async(resolve, reject) => {
+            allPromises.push(new Promise((resolve, reject) => {
                 const curTableLevel = getTableLevel(allMultiSeriesTables[i]);
                 const timeSeriresRes = {
                     tn: allMultiSeriesTables[i],
