@@ -198,6 +198,10 @@ let interactionStack: Array<InteractionInfo> = [];
 
 
 export function drawMultiTimeSeries(multiTimeSeriesObj: MultiTimeSeriesObj) {
+    const svgElement = document.getElementById('my_svg');
+    if(svgElement){
+        svgElement.remove();
+    }
     let realTimeStampRange: Array<number> = [multiTimeSeriesObj.startTimeStamp, multiTimeSeriesObj.endTimeStamp];
     let nodeIndexRange: Array<number> = [multiTimeSeriesObj.timeRange[0], multiTimeSeriesObj.timeRange[1]]
 
@@ -213,13 +217,15 @@ export function drawMultiTimeSeries(multiTimeSeriesObj: MultiTimeSeriesObj) {
         isMove: false,
     };
     //const pading = { top: 20, bottom: 80, left: 45, right: 250 };
-    const pading = { top: 20, bottom: 80, left: 45, right: 20 };
+    // const pading = { top: 20, bottom: 80, left: 45, right: 20 };
+    const pading = { top: 20, bottom: 80, left: 45, right: 45 };
     const svg = d3.select("#content-container").append("svg");
     svg
         .attr("width", multiTimeSeriesObj.width + pading.left + pading.right)
         .attr("height", multiTimeSeriesObj.height + pading.top + pading.bottom)
-        .attr("transform", `translate(${multiTimeSeriesObj.x},${multiTimeSeriesObj.y})`)
-        .style("background-color", "#fff");
+        // .attr("transform", `translate(${multiTimeSeriesObj.x},${multiTimeSeriesObj.y})`)
+        .style("background-color", "#fff")
+        .attr("id", "my_svg");
 
     const foreignId = `foreign${multiTimeSeriesObj.width + Math.random()}`;
     const foreigG = svg.append("g").attr("transfrom", `translate(${pading.left},${pading.top})`)

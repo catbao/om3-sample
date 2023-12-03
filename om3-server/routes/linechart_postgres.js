@@ -72,7 +72,9 @@ router.get('/init_wavelet_bench_min_max_miss', initWaveletBenchMinMaxMissHandler
 router.post("/batchLevelDataProgressiveWaveletMinMaxMiss", batchLevelDataProgressiveWaveletMinMaxMissPostHandler)
 router.get('/init_multi_timeseries', init_multi_timeseries);
 router.get('/init_multi_timeseries2', init_multi_timeseries2);
+// router.get('/init_multi_timeseries3', init_multi_timeseries3);
 router.get('/init_transform_timeseries', init_transform_timeseries);
+router.get('/init_transform_timeseries2', init_transform_timeseries2);
 router.get("/getAllFlags", getAllFlags);
 
 router.get('/getAllTables', getAllTables);
@@ -465,20 +467,6 @@ function init_multi_timeseries2(req, res) {
                 }
                 multiSeriesClass = lineClassName;
                 resolve();
-
-                // function processRow(index) {
-                //     if (index < result.rows.length) {
-                //     const curTableClass = result.rows[index].table_fullname.split(".")[1].split("_")[0];
-                //     if (curTableClass == lineClassName) {
-                //         allMultiSeriesTables.push(result.rows[index].table_fullname);
-                //     }
-                //     processRow(index + 1); // Recursive call for the next iteration
-                //     } else {
-                //     multiSeriesClass = lineClassName;
-                //     resolve();
-                //     }
-                // }
-                // processRow(0); // Start the loop from index 0
             });
         } else {
             resolve();
@@ -575,6 +563,94 @@ function init_multi_timeseries2(req, res) {
     });
 }
 
+async function init_multi_timeseries3(req, res) {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    const query = req.query;
+    const lineClassName = query['class_name'];
+    const retureRes = [];
+    const userCookie = req.headers['authorization'];
+    let currentPool = pool
+    if (query.mode === 'Custom') {
+        if (userCookie === '' || userCookie === null || userCookie === undefined) {
+            res.send({ code: 400, msg: "cookie not found", data: { result: "fail" } })
+            return
+        }
+        if (!customDBPoolMap().has(userCookie)) {
+            res.send({ code: 400, msg: "custom db not create connection", data: { result: "fail" } })
+            return
+        }
+        currentPool = customDBPoolMap().get(userCookie);
+    }
+    if (allMultiSeriesTables.length < 1 || lineClassName !== multiSeriesClass) {
+        allMultiSeriesTables = [];
+        const sqlStr = `select table_schema||'.'||table_name as table_fullname from information_schema."tables" where table_type = 'BASE TABLE' and table_schema not in ('pg_catalog', 'information_schema') and table_schema||'.'||table_name  like '%om3_stream.${lineClassName}%';`
+        let result = await currentPool.query(sqlStr);
+        // console.log(result);
+        for (let i = 0; i < result.rows.length; i++) {
+            const curTableClass = result.rows[i].table_fullname.split(".")[1].split("_")[0];
+            if (curTableClass == lineClassName) {
+                allMultiSeriesTables.push(result.rows[i].table_fullname);
+            }
+        }
+        multiSeriesClass = lineClassName;
+
+        let amout = allMultiSeriesTables.length
+        console.log("allMultiSeriesTables:", allMultiSeriesTables);
+
+        for (let i = 0; i < amout; i++) {
+                const curTableLevel = getTableLevel(allMultiSeriesTables[i]);
+                const timeSeriresRes = {
+                    tn: allMultiSeriesTables[i],
+                    d: [],
+                    l: curTableLevel,
+                }
+
+                let maxL = 16;
+                const sqlStr1 = `select i,minvd,maxvd,avevd from ${allMultiSeriesTables[i]} where i in (`;
+                let array = new Array(maxL+1);
+                array[maxL] = new Array(1);
+                array[maxL][0] = 2 ** (maxL-1) - 1;
+                let tempStr1 = `${array[maxL][0]},`
+                // console.log(tempStr1)
+                let width = 10;
+                for(let i = maxL - 1; i > Math.max(1,maxL-width); --i){ //maxL-1-width和maxL-width
+                    array[i] = new Array(2**(maxL - i));
+                    for(let j = 0; j < array[i+1].length; ++j){
+                        array[i][2*j] = array[i+1][j] - 2**(i-1);
+                        tempStr1 += `${array[i][2*j]},`
+                        // console.log(array[i][2*j]);
+                        array[i][2*j+1] = array[i+1][j] - 1;
+                        tempStr1 += `${array[i][2*j+1]},`
+                    }
+                    // console.log(tempStr1)
+                }
+                // console.log(tempStr1)
+                tempStr1 += `-1) order by array_positions(array[`
+                for(let i = maxL - 1; i > Math.max(1,maxL-width); --i){
+                    for(let j = 0; j < array[i+1].length; ++j){
+                        tempStr1 += `${array[i][2*j]},`
+                        tempStr1 += `${array[i][2*j+1]},`
+                    }
+                }
+                let sqlQuery1 = sqlStr1 + tempStr1 + `-1],i)`;
+                console.log(i, "th sql:", sqlStr1);
+
+                const startT = new Date().getTime();
+                let result = await currentPool.query(sqlQuery1);
+                let finalRes = [];
+                // let finalRes = [[],[]];
+                for (let j = 0; j < result.rows.length; j++) {
+                    const tempVal = result.rows[j];
+                    finalRes.push({minvd:tempVal['minvd'],maxvd:tempVal['maxvd'],avevd:tempVal['avevd']});
+                }
+                timeSeriresRes.d = finalRes;
+                retureRes.push(timeSeriresRes);
+                console.log(i, "th Res finished.");
+        }
+    };
+    res.send(retureRes);
+}
+
 function init_transform_timeseries(req, res){
     res.setHeader("Access-Control-Allow-Origin", "*");
     const query = req.query;
@@ -660,6 +736,114 @@ function init_transform_timeseries(req, res){
     });
 }
 
+function init_transform_timeseries2(req, res){
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    const query = req.query;
+    const lineClassName = query['class_name'];
+    const line1 = query['dataset1'];
+    let line2 = query['dataset2'];
+    // console.log("line2:",line2);
+    line2 = line2.split(",");
+    // console.log("split_line2:",line2);
+    const allMultiSeriesTables = [];
+    allMultiSeriesTables.push(line1);
+    for(let i=0;i<line2.length;++i){
+        allMultiSeriesTables.push(line2[i]);
+    }
+    // allMultiSeriesTables.push("om3_multi.mock_mock_guassian_sin4_6ht_om3_6ht");
+    // allMultiSeriesTables = ["om3_stream.mock_mock_guassian_stream_sin3_6ht_om3_6ht", "om3_stream.mock_mock_guassian_stream_sin4_6ht_om3_6ht"];
+    console.log("allMultiSeriesTables:", allMultiSeriesTables);
+    // const allMultiSeriesTables = [line1, line2];
+    const retureRes = [];
+    const userCookie = req.headers['authorization'];
+    let currentPool = pool
+    if (query.mode === 'Custom') {
+        if (userCookie === '' || userCookie === null || userCookie === undefined) {
+            res.send({ code: 400, msg: "cookie not found", data: { result: "fail" } })
+            return
+        }
+        if (!customDBPoolMap().has(userCookie)) {
+            res.send({ code: 400, msg: "custom db not create connection", data: { result: "fail" } })
+            return
+        }
+        currentPool = customDBPoolMap().get(userCookie);
+    }
+    // const splitArray = line1.split("_");
+    // let maxLevel = levelMap[splitArray[splitArray.length - 1]];
+    // console.log("maxLevel:", maxLevel)
+
+    let maxL = 16;
+    console.log(1);
+    const allPromises = new Array();
+    let amount = allMultiSeriesTables.length;
+    for(let i=0; i<amount; ++i){
+        allPromises.push(new Promise((resolve, reject) => {
+            const curTableLevel = getTableLevel(allMultiSeriesTables[i]);
+            const timeSeriresRes = {
+                tn: allMultiSeriesTables[i],
+                d: [],
+                l: curTableLevel,
+            }
+
+            const sqlStr1 = `select i,minvd,maxvd,avevd from ${allMultiSeriesTables[i]} where i in (`;
+                let array = new Array(maxL+1);
+                array[maxL] = new Array(1);
+                array[maxL][0] = 2 ** (maxL-1) - 1;
+                let tempStr1 = `${array[maxL][0]},`
+                // console.log(tempStr1)
+                let width = 16;
+                for(let i = maxL - 1; i > Math.max(1,maxL-width); --i){ //maxL-1-width和maxL-width
+                    array[i] = new Array(2**(maxL - i));
+                    for(let j = 0; j < array[i+1].length; ++j){
+                        array[i][2*j] = array[i+1][j] - 2**(i-1);
+                        tempStr1 += `${array[i][2*j]},`
+                        // console.log(array[i][2*j]);
+                        array[i][2*j+1] = array[i+1][j] - 1;
+                        tempStr1 += `${array[i][2*j+1]},`
+                    }
+                    // console.log(tempStr1)
+                }
+                // console.log(tempStr1)
+                tempStr1 += `-1) order by array_positions(array[`
+                for(let i = maxL - 1; i > Math.max(1,maxL-width); --i){
+                    for(let j = 0; j < array[i+1].length; ++j){
+                        tempStr1 += `${array[i][2*j]},`
+                        tempStr1 += `${array[i][2*j+1]},`
+                    }
+                }
+                let sqlQuery1 = sqlStr1 + tempStr1 + `-1],i)`;
+                currentPool.query(sqlQuery1,(err, result) => {
+                if(err){
+                    console.log(sqlStr1);
+                    console.log(err);
+                    currentPool.end();
+                    throw err;
+                }
+                const finalRes = [];
+                for (let i = 0; i < result.rows.length; i++) {
+                    const tempVal = result.rows[i];
+                    // const tempL = Math.floor(Math.log2(tempVal['i']));
+                    // const tempI = tempVal['i'] - 2 ** tempL;
+                    // finalRes.push({ l: curTableLevel - tempL, i: tempI, minvd: tempVal['minvd'], maxvd: tempVal['maxvd'], avevd: tempVal['avevd'] });
+                    finalRes.push({minvd:tempVal['minvd'],maxvd:tempVal['maxvd'],avevd:tempVal['avevd']});
+                }
+                // if (result.rows.length > 0) {
+                //     finalRes.push({ l: -1, i: 0, minvd: result.rows[0]['minvd'], maxvd: result.rows[0]['maxvd'], avevd:result.rows[0]['avevd'] });
+                // }
+                timeSeriresRes.d = finalRes;
+                //console.log(timeSeriresRes)
+                retureRes.push(timeSeriresRes);
+                // console.log(i, "th Res finished.");
+                resolve();
+            });
+        }));
+    }
+    retureRes.sort((a, b) => a.tn - b.tn);
+    Promise.all(allPromises).then(() => {
+        res.send(retureRes);
+    });
+}
+
 function queryMinMaxMissData(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
@@ -702,7 +886,7 @@ function queryMinMaxMissData(req, res) {
         schema = "om3_multi";
     }
     const tName = `${schema}.${query.table_name}`;
-    console.log(tName)
+    // console.log(tName)
     const condition = generateSingalLevelSQLMinMaxMissQuery(needRangeArray, maxLevel, tName);
     if (condition === null) {
         console.log(needRangeArray);
@@ -736,7 +920,6 @@ function queryMinMaxMissData(req, res) {
         res.send({ code: 200, msg: "success", data: [l, minV, maxV, aveV] });
     });
 }
-
 
 
 function getAllFlags(req, res) {
