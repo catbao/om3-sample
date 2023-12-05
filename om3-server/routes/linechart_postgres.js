@@ -90,6 +90,7 @@ router.get('/getAllCustomTableAndInfo', getAllCustomTableAndInfo);
 router.get('/getAllDefaultTableAndInfo', getAllDefaultTableAndInfo);
 router.get('/performTransformForMultiLine', performTransformForMultiLine);
 router.get("/getAllMultiLineClassAndLinesInfo", getAllMultiLineClassAndLinesInfo);
+router.get("/onlyChild", onlyChild);
 //router.options('/batchLevelDataProgressiveWavelet',batchLevelDataProgressiveWaveletPostHandler)
 
 
@@ -464,6 +465,7 @@ function init_transform_timeseries(req, res){
     const splitArray = line1.split("_");
     let maxLevel = levelMap[splitArray[splitArray.length - 1]];
     console.log("maxLevel:", maxLevel)
+    let maxL = maxLevel;
 
     const allPromises = new Array();
     let amount = allMultiSeriesTables.length;
@@ -477,30 +479,58 @@ function init_transform_timeseries(req, res){
             }
 
             // const sqlStr = `select i,minvd,maxvd,avevd from ${allMultiSeriesTables[i]} where i<$1 order by i asc`;
-            const sqlStr = `select i,minvd,maxvd,avevd from ${allMultiSeriesTables[i]} order by i asc`;
-            const params = [];
-            params.push(2 ** Math.ceil(Math.log2(query.width)));
-            const sqlQuery = {
-                text: sqlStr,
-                values: params
+            // const sqlStr = `select i,minvd,maxvd,avevd from ${allMultiSeriesTables[i]} order by i asc`;
+            // const params = [];
+            // params.push(2 ** Math.ceil(Math.log2(query.width)));
+            // const sqlQuery = {
+            //     text: sqlStr,
+            //     values: params
+            // }
+            const sqlStr1 = `select i,minvd,maxvd,avevd from ${allMultiSeriesTables[i]} where i in (`;
+            let array = new Array(maxL+1);
+            array[maxL] = new Array(1);
+            array[maxL][0] = 2 ** (maxL-1) - 1;
+            let tempStr1 = `${array[maxL][0]},`
+            // console.log(tempStr1)
+            let width = 10;
+            for(let i = maxL - 1; i > Math.max(1,maxL-width); --i){ //maxL-1-width和maxL-width
+                array[i] = new Array(2**(maxL - i));
+                for(let j = 0; j < array[i+1].length; ++j){
+                    array[i][2*j] = array[i+1][j] - 2**(i-1);
+                    tempStr1 += `${array[i][2*j]},`
+                    // console.log(array[i][2*j]);
+                    array[i][2*j+1] = array[i+1][j] - 1;
+                    tempStr1 += `${array[i][2*j+1]},`
+                }
+                // console.log(tempStr1)
             }
-            currentPool.query(sqlStr,(err, result) => {
+            // console.log(tempStr1)
+            tempStr1 += `-1) order by array_positions(array[`
+            for(let i = maxL - 1; i > Math.max(1,maxL-width); --i){
+                for(let j = 0; j < array[i+1].length; ++j){
+                    tempStr1 += `${array[i][2*j]},`
+                    tempStr1 += `${array[i][2*j+1]},`
+                }
+            }
+            let sqlQuery1 = sqlStr1 + tempStr1 + `-1],i)`;
+            currentPool.query(sqlQuery1,(err, result) => {
                 if(err){
-                    console.log(sqlStr);
+                    console.log(sqlQuery1);
                     console.log(err);
                     currentPool.end();
                     throw err;
                 }
                 const finalRes = [];
-                for(let i=1; i<result.rows.length; ++i){
+                for(let i=0; i<result.rows.length; ++i){
                     const tempVal = result.rows[i];
-                        const tempL = Math.floor(Math.log2(tempVal['i']));
-                        const tempI = tempVal['i'] - 2 ** tempL;
-                        finalRes.push({ l: curTableLevel - tempL, i: tempI, minvd: tempVal['minvd'], maxvd: tempVal['maxvd'], avevd: tempVal['avevd'] });
+                    // const tempL = Math.floor(Math.log2(tempVal['i']));
+                    // const tempI = tempVal['i'] - 2 ** tempL;
+                    // finalRes.push({ l: curTableLevel - tempL, i: tempI, minvd: tempVal['minvd'], maxvd: tempVal['maxvd'], avevd: tempVal['avevd'] });
+                    finalRes.push({minvd:tempVal['minvd'],maxvd:tempVal['maxvd'],avevd:tempVal['avevd']});
                 }
-                if (result.rows.length > 0) {
-                    finalRes.push({ l: -1, i: 0, minvd: result.rows[0]['minvd'], maxvd: result.rows[0]['maxvd'], avevd: result.rows[0]['avevd'] });
-                }
+                // if (result.rows.length > 0) {
+                //     finalRes.push({ l: -1, i: 0, minvd: result.rows[0]['minvd'], maxvd: result.rows[0]['maxvd'], avevd: result.rows[0]['avevd'] });
+                // }
                 timeSeriresRes.d = finalRes;
                 //console.log(timeSeriresRes)
                 retureRes.push(timeSeriresRes)
@@ -512,6 +542,66 @@ function init_transform_timeseries(req, res){
     Promise.all(allPromises).then(() => {
         res.send(retureRes);
     });
+}
+
+function onlyChild(req, res) {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    const query = req.query;
+    const dataName = query['dataName'];
+    // console.log("dataName:",dataName);
+    const dataName1 = query['dataNames'];
+    let dataNames = [];
+    dataNames.push(dataName);
+    for(let i =0;i<dataName1.length;i++){
+        dataNames.push(dataName1[i]);
+    }
+    console.log("dataNames:",dataNames);
+    const p = query['p'];
+    const p2 = query['p2'];
+    let pArray = [];
+    pArray.push(p);
+    for(let i =0;i<p2.length;i++){
+        pArray.push(p2[i]);
+    }
+    console.log(pArray);
+    const retureRes = [];
+    const userCookie = req.headers['authorization'];
+    let currentPool = pool
+    if (query.mode === 'Custom') {
+        if (userCookie === '' || userCookie === null || userCookie === undefined) {
+            res.send({ code: 400, msg: "cookie not found", data: { result: "fail" } })
+            return
+        }
+        if (!customDBPoolMap().has(userCookie)) {
+            res.send({ code: 400, msg: "custom db not create connection", data: { result: "fail" } })
+            return
+        }
+        currentPool = customDBPoolMap().get(userCookie);
+    }
+    for(let i=0; i<dataNames.length+1; ++i){
+        allPromises.push(new Promise((resolve, reject) => {
+            let level = pArray[i].level;
+            let index = pArray[i].index;
+            let sqlStr = `select i,minvd,maxvd,avevd from ${dataNames[i]} where i = ${(2 ** level + index)*2} and i = ${(2 ** level + index)*2+1} order by i asc`;
+            currentPool.query(sqlStr,(err, result) => {
+                if(err){
+                    console.log(sqlQuery1);
+                    console.log(err);
+                    currentPool.end();
+                    throw err;
+                }
+                const finalRes = [];
+                for(let i=0; i<result.rows.length; ++i){
+                    const tempVal = result.rows[i];
+                    finalRes.push({minvd:tempVal['minvd'],maxvd:tempVal['maxvd'],avevd:tempVal['avevd']});
+                }
+                // if (result.rows.length > 0) {
+                //     finalRes.push({ l: -1, i: 0, minvd: result.rows[0]['minvd'], maxvd: result.rows[0]['maxvd'], avevd: result.rows[0]['avevd'] });
+                // }
+                resolve();
+            });
+        }));
+    }
 }
 
 function queryMinMaxMissData(req, res) {
@@ -588,8 +678,6 @@ function queryMinMaxMissData(req, res) {
         res.send({ code: 200, msg: "success", data: [l, idx, minV, maxV, aveV] });
     });
 }
-
-
 
 function getAllFlags(req, res) {
     const allSingleFlagNames = fs.readdirSync("./flags/single_line");
@@ -1104,6 +1192,8 @@ async function getAllDefaultTableAndInfo(req, res) {
         res.send({ code: 400, msg: err })
     }
 }
+
+
 
 
 

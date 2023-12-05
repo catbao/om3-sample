@@ -284,7 +284,7 @@ const computeLineTransform: ActionHandler<GlobalState, GlobalState> = (context: 
                 maxLen: 65536
             }
             const drawer = drawViewChangeLineChart(viewChangeQueryObj)
-            dataManager.getDataMinMaxMiss(currentLevel + 1, 0, 2 ** (currentLevel + 1) - 1).then(() => {
+            // dataManager.getDataMinMaxMiss(currentLevel + 1, 0, 2 ** (currentLevel + 1) - 1).then(() => {
                 const minV = dataManager.levelIndexObjs[0].firstNodes[0].yArray[1];
                 const maxV = dataManager.levelIndexObjs[0].firstNodes[0].yArray[2];
                 // const yScale = d3.scaleLinear().domain([minV, maxV]).range([payload.height, 0]);
@@ -297,7 +297,7 @@ const computeLineTransform: ActionHandler<GlobalState, GlobalState> = (context: 
                     drawer(resultObject.a, resultObject.b, transform_symbol, dataManagers.length+1);
                     //context.commit("addViewChangeQueryNoPowLineChartObj", { trendTree, dataManager, data: res, startTime: payload.startTime, endTime: payload.endTime, algorithm: "trendtree", width: payload.width, height: payload.height });
                 });
-            });
+            // });
         }
         // let columnsInfoArray: any;
         // dataManagers[0].viewTransformFinal(currentLevel, payload.width, [0, dataManagers[0].realDataRowNum - 1], null, null).then(res => {

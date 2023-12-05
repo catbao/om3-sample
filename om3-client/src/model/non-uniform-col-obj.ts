@@ -1,9 +1,21 @@
 import TrendTree from "@/helper/tend-query-tree";
 import { getIndexTime } from "@/helper/format-data";
 import { utcYear } from "d3";
-import store from "@/store";
+import store, {GlobalState} from "@/store";
+import axios from "axios";
+import { Commit, ActionContext, ActionHandler } from 'vuex';
+import { canCut, checkSetType, computeLosedDataRange, computeLosedDataRangeV1, computeTimeSE, deleteSavedNodeIndex, computeSemanticColumn, convertWaveletToRawTableName, computeLosedDataRangeV1ForRawMinMax, computeTimeSE1 } from "@/helper/util";
+import { loadDataForRangeLevel, batchLoadDataForRangeLevelRawMinMax, batchLoadDataForRangeLevel, batchLoadDataForRangeLevel1, batchLoadDataForRangeLevel2MinMaxMiss, batchLoadDataForRangeLevel1MinMaxMiss, batchLoadDataForRangeLevel1WS, batchLoadDataForRangeLevelForMinMaxMiss } from "../api/build_tree"
 
+async function get(url: string) {
 
+    url = 'postgres' + url;
+
+    //const loading = openLoading();
+    const { data } = await axios.get(url);
+    //loading.close();
+    return data;
+}
 
 export class NoUniformColObj {
     col: number;
@@ -334,7 +346,7 @@ export class NoUniformColObj {
         return;
     }
 
-    computeTransform(p: TrendTree, p2:Array<TrendTree>, type: number, currentFlagInfo: any, currentFlagInfo2: any, transform_symbol: any) {
+    async computeTransform(p: TrendTree, p2:Array<TrendTree>, dataName: any, dataNames: any, levelDataManager: any, otherDataManager: any, type: number, currentFlagInfo: any, currentFlagInfo2: any, transform_symbol: any) {
         // let p = pp, p2 = pp2;
         const pp = p, pp2 = p2.slice();
         if (p.nodeType === "NULL") {
@@ -377,70 +389,81 @@ export class NoUniformColObj {
             // let p = pp, p2 = pp2;
             while(max > -10000){
                 let temp_minL = 0, temp_minR = 0;
-                if(!p._leftChild && !p._rightChild){
-                    let minL = 0, minR = 0;
-                    let nodeFlagInfo1 = currentFlagInfo[p.index * 2 + 1];
-                    if(nodeFlagInfo1 === 0){
-                        minL += p.yArray[1];
-                        minR += p.yArray[2];
-                    } 
-                    else{
-                        minL += p.yArray[2];
-                        minR += p.yArray[1];
-                    }
-                    for(let i=0; i<currentFlagInfo2.length;++i){
-                        if(currentFlagInfo2[i][p.index * 2 + 1] === 0){
-                            minL += p2[i].yArray[1];
-                            minR += p2[i].yArray[2];
-                        }
-                        else{
-                            minL += p2[i].yArray[2];
-                            minR += p2[i].yArray[1];
-                        }
-                    }
-                    if(minL < minR){
-                        min = minL;
-                        minIndex = [p.index * 2, min];
-                    }
-                    else{
-                        min = minR;
-                        minIndex = [p.index * 2 + 1, min];
-                    }
-                    if(min < this.addMin[1]){
-                        this.addMin = minIndex;
-                    }
-                    // let nodeFlagInfo2 = currentFlagInfo2[p.index * 2 + 1];
-                    // if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 0){
-                    //     min = p.yArray[1] + p2.yArray[1];
-                    //     minIndex = [p.index * 2, min];
-                    // }
-                    // else if(nodeFlagInfo1 === 1 && nodeFlagInfo2 === 1){
-                    //     min = p.yArray[1] + p2.yArray[1];
-                    //     minIndex = [p.index * 2 + 1, min];
-                    // }
-                    // else if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 1){
-                    //     // min = Math.min(p.yArray[1] + p2.yArray[2], p.yArray[2] + p2.yArray[1]);
-                    //     if(p.yArray[1] + p2.yArray[2] < p.yArray[2] + p2.yArray[1]){
-                    //         min = p.yArray[1] + p2.yArray[2];
-                    //         minIndex = [p.index * 2, p.yArray[1] + p2.yArray[2]];
-                    //     }
-                    //     else{
-                    //         min = p.yArray[2] + p2.yArray[1];
-                    //         minIndex = [p.index * 2 + 1, p.yArray[2] + p2.yArray[1]];
-                    //     }
-                    // }
-                    // else{
-                    //     if(p.yArray[1] + p2.yArray[2] < p.yArray[2] + p2.yArray[1]){
-                    //         min = p.yArray[1] + p2.yArray[2];
-                    //         minIndex = [p.index * 2 + 1, p.yArray[1] + p2.yArray[2]];
-                    //     }
-                    //     else{
-                    //         min = p.yArray[2] + p2.yArray[1];
-                    //         minIndex = [p.index * 2, p.yArray[2] + p2.yArray[1]];
-                    //     }
-                    // }
-                    break;
+                // const combinedUrl = `/line_chart/onlyChild?&p=${p}&p2=${p2}&dataName=${dataName}&dataNames=${dataNames}`;
+                // const data = get(combinedUrl);
+                // const difChild = await data;
+                let needLoadDifNode: Array<TrendTree> = [];
+                needLoadDifNode.push(p);
+                let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
+                if (losedDataInfo.length > 0) {
+                    await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, levelDataManager);  //取得系数
+                    // for(let i=0; i<otherDataManager.length; i++)
+                    //     await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, otherDataManager[i]);
                 }
+                // if(!p._leftChild && !p._rightChild){
+                //     let minL = 0, minR = 0;
+                //     let nodeFlagInfo1 = currentFlagInfo[p.index * 2 + 1];
+                //     if(nodeFlagInfo1 === 0){
+                //         minL += p.yArray[1];
+                //         minR += p.yArray[2];
+                //     } 
+                //     else{
+                //         minL += p.yArray[2];
+                //         minR += p.yArray[1];
+                //     }
+                //     for(let i=0; i<currentFlagInfo2.length;++i){
+                //         if(currentFlagInfo2[i][p.index * 2 + 1] === 0){
+                //             minL += p2[i].yArray[1];
+                //             minR += p2[i].yArray[2];
+                //         }
+                //         else{
+                //             minL += p2[i].yArray[2];
+                //             minR += p2[i].yArray[1];
+                //         }
+                //     }
+                //     if(minL < minR){
+                //         min = minL;
+                //         minIndex = [p.index * 2, min];
+                //     }
+                //     else{
+                //         min = minR;
+                //         minIndex = [p.index * 2 + 1, min];
+                //     }
+                //     if(min < this.addMin[1]){
+                //         this.addMin = minIndex;
+                //     }
+                //     // let nodeFlagInfo2 = currentFlagInfo2[p.index * 2 + 1];
+                //     // if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 0){
+                //     //     min = p.yArray[1] + p2.yArray[1];
+                //     //     minIndex = [p.index * 2, min];
+                //     // }
+                //     // else if(nodeFlagInfo1 === 1 && nodeFlagInfo2 === 1){
+                //     //     min = p.yArray[1] + p2.yArray[1];
+                //     //     minIndex = [p.index * 2 + 1, min];
+                //     // }
+                //     // else if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 1){
+                //     //     // min = Math.min(p.yArray[1] + p2.yArray[2], p.yArray[2] + p2.yArray[1]);
+                //     //     if(p.yArray[1] + p2.yArray[2] < p.yArray[2] + p2.yArray[1]){
+                //     //         min = p.yArray[1] + p2.yArray[2];
+                //     //         minIndex = [p.index * 2, p.yArray[1] + p2.yArray[2]];
+                //     //     }
+                //     //     else{
+                //     //         min = p.yArray[2] + p2.yArray[1];
+                //     //         minIndex = [p.index * 2 + 1, p.yArray[2] + p2.yArray[1]];
+                //     //     }
+                //     // }
+                //     // else{
+                //     //     if(p.yArray[1] + p2.yArray[2] < p.yArray[2] + p2.yArray[1]){
+                //     //         min = p.yArray[1] + p2.yArray[2];
+                //     //         minIndex = [p.index * 2 + 1, p.yArray[1] + p2.yArray[2]];
+                //     //     }
+                //     //     else{
+                //     //         min = p.yArray[2] + p2.yArray[1];
+                //     //         minIndex = [p.index * 2, p.yArray[2] + p2.yArray[1]];
+                //     //     }
+                //     // }
+                //     break;
+                // }
                 if(p._leftChild){
                     temp_minL = p._leftChild.yArray[1];
                     for(let i=0;i<p2.length;++i){

@@ -210,6 +210,8 @@ export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
                     if(nonUniformColObjs[i].addMin[0] < nonUniformColObjs[i].addMin[1]){
                         ctx.moveTo(nonUniformColObjs[i].positionInfo.minX, yScale(nonUniformColObjs[i].addMin[1]));
                         ctx.lineTo(nonUniformColObjs[i].positionInfo.maxX, yScale(nonUniformColObjs[i].addMax[1]));
+                        // ctx.moveTo(nonUniformColObjs[i].positionInfo.minX, yScale(i*2));
+                        // ctx.lineTo(nonUniformColObjs[i].positionInfo.maxX, yScale(i*2));
                     }
                     else{
                         ctx.moveTo(nonUniformColObjs[i].positionInfo.minX, yScale(nonUniformColObjs[i].addMax[1]));
