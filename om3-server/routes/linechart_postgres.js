@@ -479,15 +479,15 @@ function init_transform_timeseries(req, res){
                 l: curTableLevel,
             }
 
-            const sqlStr = `select i,minvd,maxvd,avevd from ${allMultiSeriesTables[i]} where i<$1 order by i asc`;
-            // const sqlStr = `select i,minvd,maxvd,avevd from ${allMultiSeriesTables[i]} order by i asc`;
-            const params = [];
-            params.push(2 ** Math.ceil(Math.log2(query.width)));
-            const sqlQuery = {
-                text: sqlStr,
-                values: params
-            }
-            currentPool.query(sqlQuery,(err, result) => {
+            // const sqlStr = `select i,minvd,maxvd,avevd from ${allMultiSeriesTables[i]} where i<$1 order by i asc`;
+            const sqlStr = `select i,minvd,maxvd,avevd from ${allMultiSeriesTables[i]} order by i asc`;
+            // const params = [];
+            // params.push(2 ** Math.ceil(Math.log2(query.width)));
+            // const sqlQuery = {
+            //     text: sqlStr,
+            //     values: params
+            // }
+            currentPool.query(sqlStr,(err, result) => {
                 if(err){
                     console.log(sqlQuery);
                     console.log(err);
@@ -563,7 +563,7 @@ function getChildTree(req, res) {
     needLoadChildNode.push(index * 2 + 1);
     maxLevel = 16;
     console.log("level, maxLevel, index:", level, maxLevel, index);
-    for(let i=level+1; i<parseInt(maxLevel); i++){
+    for(let i=level+1; i<parseInt(maxLevel)-1; i++){
         // let temp = [];
         let len = needLoadChildNode.length;
         for(let j=(len+1)/2-1; j<len; j++){
@@ -571,7 +571,7 @@ function getChildTree(req, res) {
             needLoadChildNode.push(needLoadChildNode[j] * 2 + 1);
         }
     }
-    console.log("needLoadChildNode:", needLoadChildNode);
+    // console.log("needLoadChildNode:", needLoadChildNode);
     const allPromises = new Array();
     let amount = allMultiSeriesTables.length;
     for(let i=0; i<amount; ++i){

@@ -357,10 +357,10 @@ export default class NoUniformColObj {
             debugger
             throw new Error("error val")
         }
-        const pL = p.level;
-        const pTRange = (2 ** this.maxLevel) / (2 ** pL);
-        const pTimeS = p.index * pTRange;
-        const pTimeE = pTRange + pTimeS - 1;
+        // const pL = p.level;
+        // const pTRange = (2 ** this.maxLevel) / (2 ** pL);
+        // const pTimeS = p.index * pTRange;
+        // const pTimeE = pTRange + pTimeS - 1;
         // console.log("transform_symbol:",transform_symbol);
         let symbol = transform_symbol;
         if((type === 1 || type === 7 || type ===8 || type === 9) && (symbol == '+' || symbol == 'avg')){
@@ -403,7 +403,7 @@ export default class NoUniformColObj {
                 //     for(let i=0; i<otherDataManager.length; i++)
                 //         batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, otherDataManager[i]);
                 // }
-                console.log("get child finished");
+                // console.log("get child finished");
                 if(!p._leftChild && !p._rightChild){
                         let minL = 0, minR = 0;
                         let nodeFlagInfo1 = currentFlagInfo[p.index * 2 + 1];

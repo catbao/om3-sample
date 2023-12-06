@@ -8,7 +8,7 @@ import  NoUniformColObj  from "./non-uniform-col-obj";
 import { UniformGapObj } from "./uniform-gap-obj";
 // import { loadDataForRangeLevel, batchLoadDataForRangeLevelRawMinMax, batchLoadDataForRangeLevel, batchLoadDataForRangeLevel1, batchLoadDataForRangeLevel2MinMaxMiss, batchLoadDataForRangeLevel1MinMaxMiss, batchLoadDataForRangeLevel1WS, batchLoadDataForRangeLevelForMinMaxMiss } from "../api/build_tree"
 import { loadDataForRangeLevel, batchLoadDataForRangeLevelRawMinMax, batchLoadDataForRangeLevel, batchLoadDataForRangeLevel1, batchLoadDataForRangeLevel2MinMaxMiss, batchLoadDataForRangeLevel1MinMaxMiss, batchLoadDataForRangeLevel1WS, batchLoadDataForRangeLevelForMinMaxMiss } from "../api/build_tree"
-
+import { constructMinMaxMissTrendTree, constructMinMaxMissTrendTreeMulti, constructMinMaxMissTrendTreeForGetChildTree} from '../helper/wavlet-decoder';
 
 import Cache from "lru-cache"
 import { getFlag } from "@/global_state/state";
@@ -2076,7 +2076,8 @@ export default class LevelDataManager {
                 p2.push(otherDataManager[k].levelIndexObjs[currentLevel].firstNodes[i])
             }
             // let p2 = otherDataManager.levelIndexObjs[currentLevel].firstNodes[i];//测试
-
+            let data;
+            let resChild;
             if (firstIndexTimeRange.startT <= timeRange[0] && lastIndexTimeRange.endT >= timeRange[1]) {
                 while(p != null){
                     if(colIndex >= nonUniformColObjs.length){
@@ -2085,12 +2086,30 @@ export default class LevelDataManager {
                     const type = nonUniformColObjs[colIndex].isMissContain(p);
                     nonUniformColObjs[colIndex].containColumnRange(p, type);
                     let p2_temp = p2.slice();
-                    const combinedUrl = `/line_chart/getChildTree?level=${p.level}&index=${p.index}&dataset1=${this.dataName}&dataset2=${dataNames}`;
-                    const data = get(combinedUrl);
-                    const resChild = await data;
-
-                    // nonUniformColObjs[colIndex].computeTransform(p, p2_temp,this.dataName, dataNames, this, otherDataManager, type, currentFlagInfo, currentFlagInfo2, transform_symbol);
+                    // if(type === 1 || type === 7 || type === 8 || type === 9){
+                    //     let combinedUrl = `/line_chart/getChildTree?level=${p.level}&index=${p.index}&dataset1=${this.dataName}&dataset2=${dataNames}`;
+                    //     try {
+                    //         resChild = await get(combinedUrl);
+                    //     } catch (error) {
+                    //         console.error("异步操作失败：", error);
+                    //     }
+                    //     resChild = await get(combinedUrl);
+                    //     resChild[0].d.push({l:-1, i:0, minvd:p.yArray[1], maxvd:p.yArray[2], avevd:p.yArray[3]});
+                    //     for(let j=0; j<dataNames.length; j++){
+                    //         resChild[j+1].d.push({l:-1, i:0, minvd:p2[j].yArray[1], maxvd:p2[j].yArray[2], avevd:p2[j].yArray[3]});
+                    //     }
+                    //     let p3: any;
+                    //     let p4 = [];
+                    //     let trendTree = [];
+                    //     for(let j=0; j<resChild.length; j++){
+                    //         trendTree.push(constructMinMaxMissTrendTreeForGetChildTree(resChild[j].d, 600, resChild[j].tn));
+                    //         if(j===0) p3 = trendTree[j].trendTree;
+                    //         else p4.push(trendTree[j].trendTree);
+                    //     }
+                    //     nonUniformColObjs[colIndex].computeTransform(p, p2, type, currentFlagInfo, currentFlagInfo2, transform_symbol);
+                    // }
                     nonUniformColObjs[colIndex].computeTransform(p, p2_temp, type, currentFlagInfo, currentFlagInfo2, transform_symbol);
+                    // nonUniformColObjs[colIndex].computeTransform(p, p2_temp,this.dataName, dataNames, this, otherDataManager, type, currentFlagInfo, currentFlagInfo2, transform_symbol);
                     if(type === 1){
                         p = p.nextSibling!;
                         for(let k=0;k<otherDataManager.length;++k){
