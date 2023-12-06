@@ -1,6 +1,6 @@
 import { initWaveletDecode,initHaarDecode } from './wavlet-decoder';
 import * as d3 from 'd3';
-import { NoUniformColObj } from '@/model/non-uniform-col-obj';
+import  NoUniformColObj  from '@/model/non-uniform-col-obj';
 
 
 export function getIndexTime(l: number, index: number, maxLevel: number) {

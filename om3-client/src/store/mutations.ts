@@ -5,7 +5,7 @@ import * as d3 from 'd3';
 import { constructTrendTree } from '../helper/wavlet-decoder'
 import { getLevelData } from "@/helper/util";
 import { formatToRenderDataForTrend, formatRenderDataForViewChange, formatNonPowDataForViewChange, formatDataForMultiM4 } from "@/helper/format-data";
-import { NoUniformColObj } from "@/model/non-uniform-col-obj";
+import  NoUniformColObj  from "@/model/non-uniform-col-obj";
 import LevelDataManager from "@/model/level-data-manager";
 import TrendTree from "@/helper/tend-query-tree";
 import { setFlagMap } from "@/global_state/state";

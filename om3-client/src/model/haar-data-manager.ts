@@ -5,7 +5,7 @@ import store from "@/store";
 import * as d3 from 'd3';
 import { canCut, checkSetType, computeLosedDataRange, computeTimeSE } from "@/helper/util";
 import { ElNotification } from 'element-plus'
-import { NoUniformColObj } from "./non-uniform-col-obj";
+// import { NoUniformColObj } from "./non-uniform-col-obj";
 import HaarTree from "@/helper/haar-tree";
 
 export default class HaarDataManager {

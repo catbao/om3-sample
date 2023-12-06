@@ -1,5 +1,5 @@
 import { formatNonPowDataForViewChange } from "@/helper/format-data";
-import { NoUniformColObj } from "@/model/non-uniform-col-obj";
+import  NoUniformColObj  from "@/model/non-uniform-col-obj";
 import store, { MultiTimeSeriesObj } from "@/store";
 import * as d3 from 'd3';
 import { batchViewChange, batchGetData } from "../batch/m5batch";

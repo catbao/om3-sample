@@ -1,6 +1,6 @@
 
 
-import { NoUniformColObj } from "@/model/non-uniform-col-obj";
+import  NoUniformColObj  from "@/model/non-uniform-col-obj";
 import store, { ViewChangeLineChartObj } from "@/store";
 import * as d3 from 'd3';
 import { formatRenderDataForViewChange, formatNonPowDataForViewChange } from '../helper/format-data';
@@ -207,7 +207,7 @@ export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
             ctx.strokeStyle = 'steelblue';
             if(transform_symbol === '+'){
                 for(let i=0; i<nonUniformColObjs.length; i++){
-                    if(nonUniformColObjs[i].addMin[0] < nonUniformColObjs[i].addMin[1]){
+                    if(nonUniformColObjs[i].addMin[0] < nonUniformColObjs[i].addMax[0]){
                         ctx.moveTo(nonUniformColObjs[i].positionInfo.minX, yScale(nonUniformColObjs[i].addMin[1]));
                         ctx.lineTo(nonUniformColObjs[i].positionInfo.maxX, yScale(nonUniformColObjs[i].addMax[1]));
                         // ctx.moveTo(nonUniformColObjs[i].positionInfo.minX, yScale(i*2));

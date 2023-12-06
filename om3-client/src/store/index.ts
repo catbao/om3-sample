@@ -5,7 +5,7 @@ import mitt from 'mitt';
 import { WaveletTree } from '@/helper/tree';
 import TrendTree from '@/helper/tend-query-tree';
 import LevelDataManager from '@/model/level-data-manager';
-import { NoUniformColObj } from '@/model/non-uniform-col-obj';
+import  NoUniformColObj  from '@/model/non-uniform-col-obj';
 import HaarDataManager from '@/model/haar-data-manager';
 //import WebSocket from 'ws'
 

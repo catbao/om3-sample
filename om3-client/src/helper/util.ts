@@ -1,4 +1,4 @@
-import { NoUniformColObj } from "@/model/non-uniform-col-obj";
+import  NoUniformColObj  from "@/model/non-uniform-col-obj";
 import TrendTree from "./tend-query-tree";
 import { getIndexTime } from "./format-data"
 import store from "@/store";

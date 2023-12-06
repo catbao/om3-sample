@@ -6,7 +6,7 @@ import { constructMinMaxMissTrendTree, constructMinMaxMissTrendTreeMulti} from '
 import { v4 as uuidv4 } from 'uuid';
 import * as d3 from "d3";
 import LevelDataManager from "@/model/level-data-manager";
-import { NoUniformColObj } from "@/model/non-uniform-col-obj";
+import  NoUniformColObj  from "@/model/non-uniform-col-obj";
 import { formatToRenderDataForTrend, getGlobalMinMaxInfo } from "@/helper/format-data";
 import md5 from "md5"
 import { arrayBufferToBase64, base64ToArrayBuffer, getLevelData, openLoading } from "@/helper/util";

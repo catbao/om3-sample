@@ -1,7 +1,7 @@
 
 import TrendTree from "@/helper/tend-query-tree";
 import LevelDataManager from "@/model/level-data-manager";
-import { NoUniformColObj } from "@/model/non-uniform-col-obj";
+import  NoUniformColObj  from "@/model/non-uniform-col-obj";
 import store, { MultiTimeSeriesObj } from "../store";
 import { formatToRenderDataForTrend, getIndexTime } from "../helper/format-data"
 import { computeLosedDataRange, canCut, getLevelData, computeTimeFilterBaseLevelInfo, computeColTimeRange, computeLosedDataRangeV1 } from "@/helper/util";
