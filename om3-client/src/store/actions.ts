@@ -268,11 +268,11 @@ const computeLineTransform: ActionHandler<GlobalState, GlobalState> = (context: 
                 root: trendTree,
                 data: { powRenderData: [], noPowRenderData: [], minv: minv!, maxv: maxv! },
                 // timeRange: [0, lineInfo['max_len']],
-                timeRange: [0, 65536],
+                timeRange: [0, dataManager.realDataRowNum],
                 // startTime: startTimeStamp,
                 startTime: 0,
                 // endTime: endTimeStamp,
-                endTime: 65536,
+                endTime: dataManager.realDataRowNum,
                 algorithm: "",
                 dataManager: dataManager,
                 params: [0, 0],
@@ -281,7 +281,7 @@ const computeLineTransform: ActionHandler<GlobalState, GlobalState> = (context: 
                 isPow: false,
                 nonUniformColObjs: [],
                 // maxLen: lineInfo['max_len']
-                maxLen: 65536
+                maxLen: dataManager.realDataRowNum+1
             }
             const drawer = drawViewChangeLineChart(viewChangeQueryObj)
             // dataManager.getDataMinMaxMiss(currentLevel + 1, 0, 2 ** (currentLevel + 1) - 1).then(() => {
@@ -290,11 +290,12 @@ const computeLineTransform: ActionHandler<GlobalState, GlobalState> = (context: 
                 // const yScale = d3.scaleLinear().domain([minV, maxV]).range([payload.height, 0]);
                 const yScale = d3.scaleLinear().domain([-1000, 1000]).range([600, 0]);
 
-                dataManager.viewTransformFinal(dataManagers, currentLevel, 600, [0, 65536 - 1], yScale, drawer, transform_symbol).then(res => {
+                dataManager.viewTransformFinal(dataManagers, currentLevel, 600, [0, dataManager.realDataRowNum], yScale, drawer, transform_symbol).then(res => {
                     console.log(res);
                     // console.log(res['a']);
                     const resultObject = res as { a: NoUniformColObj[]; b: number; };
                     drawer(resultObject.a, resultObject.b, transform_symbol, dataManagers.length+1);
+                
                     //context.commit("addViewChangeQueryNoPowLineChartObj", { trendTree, dataManager, data: res, startTime: payload.startTime, endTime: payload.endTime, algorithm: "trendtree", width: payload.width, height: payload.height });
                 });
             // });
