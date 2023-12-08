@@ -1821,6 +1821,7 @@ export default class LevelDataManager {
         const nonUniformColObjs = computeTimeSE(currentLevel, width, timeRange, this.realDataRowNum, this.maxLevel);
         let needLoadDifNode: Array<TrendTree> = [];
         let colIndex = 0;
+        let startT = new Date().getTime();
         for (let i = 0; i < this.levelIndexObjs[currentLevel].firstNodes.length; i++) {
             const firtIndexTimeRange = this.getIndexTime(currentLevel, this.levelIndexObjs[currentLevel].loadedDataRange[i][0], this.maxLevel);
             const lastIndexTimeRange = this.getIndexTime(currentLevel, this.levelIndexObjs[currentLevel].loadedDataRange[i][1], this.maxLevel);
@@ -2024,9 +2025,9 @@ export default class LevelDataManager {
             if (losedDataInfo.length > 0) {
                 await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);
             }
-
         }
 
+        console.log("The time to get all coefficients:" + (new Date().getTime() - startT));
         for (let i = 0; i < nonUniformColObjs.length; i++) {
             nonUniformColObjs[i].checkIsMis();
         }

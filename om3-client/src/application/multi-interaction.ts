@@ -451,11 +451,12 @@ export function drawMultiTimeSeries(multiTimeSeriesObj: MultiTimeSeriesObj) {
                         }
                     }
                     ctx?.stroke();
+                    
                 }
 
             }
         }
-
+        savePNG(canvas);
     }
 
     function resizeW(width: number) {
@@ -724,4 +725,15 @@ function computeMinMax(multiTimeSeriesObj: MultiTimeSeriesObj) {
         min,
         max
     }
+}
+
+function savePNG(canvas: any) {
+    const imgURL = canvas.toDataURL("./image/png");
+    const dlLink = document.createElement("a")
+    dlLink.download = `1b_zoom_init`
+    dlLink.href = imgURL
+    dlLink.dataset.downloadurl = ["./image/png", dlLink.download, dlLink.href].join(":")
+    document.body.appendChild(dlLink)
+    dlLink.click()
+    document.body.removeChild(dlLink)
 }
