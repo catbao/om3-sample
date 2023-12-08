@@ -2207,12 +2207,13 @@ export default class LevelDataManager {
                     //throw new Error("col index out range");
                 }
                 const type = nonUniformColObjs[colIndex].isMissContain(tempQue[i]);
-                nonUniformColObjs[colIndex].containColumnRange(tempQue[i], type);
+                
                 let tempQue3 = [];
                 for(let k=0;k<otherDataManager.length;++k){
                     tempQue3.push(tempQue2[k][i]);
                 }
                 let array = tempQue3.slice();
+                nonUniformColObjs[colIndex].containColumnRange2(tempQue[i], array, type, transform_symbol);
                 // nonUniformColObjs[colIndex].computeTransform(tempQue[i], array, this.dataName, dataNames, this, otherDataManager, type, currentFlagInfo, currentFlagInfo2, transform_symbol);
                 nonUniformColObjs[colIndex].computeTransform(tempQue[i], array, type, currentFlagInfo, currentFlagInfo2, transform_symbol);
                 if (type === 1) {
