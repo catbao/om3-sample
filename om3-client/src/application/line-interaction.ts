@@ -280,25 +280,21 @@ export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
                 }
             }
             else if(transform_symbol === 'avg'){
-                // for(let i=0; i<nonUniformColObjs.length-1; i++){
-                //     ctx.moveTo(nonUniformColObjs[i].positionInfo.startX, yScale(nonUniformColObjs[i].multiAve));
-                //     ctx.lineTo(nonUniformColObjs[i+1].positionInfo.startX, yScale(nonUniformColObjs[i+1].multiAve));
-                // }
-                for(let i=0; i<nonUniformColObjs.length; i++){
-                    if(nonUniformColObjs[i].addMin[0] < nonUniformColObjs[i].addMax[0]){
-                        ctx.moveTo(nonUniformColObjs[i].positionInfo.minX, yScale(nonUniformColObjs[i].addMin[1]/lenOfLines!));
-                        ctx.lineTo(nonUniformColObjs[i].positionInfo.maxX, yScale(nonUniformColObjs[i].addMax[1]/lenOfLines!));
-                    }
-                    else{
-                        ctx.moveTo(nonUniformColObjs[i].positionInfo.minX, yScale(nonUniformColObjs[i].addMax[1]/lenOfLines!));
-                        ctx.lineTo(nonUniformColObjs[i].positionInfo.maxX, yScale(nonUniformColObjs[i].addMin[1]/lenOfLines!));
-                    }
-                    if (i <= nonUniformColObjs.length - 2 && nonUniformColObjs[i].endV !== undefined && nonUniformColObjs[i + 1] !== undefined) {
-                        ctx.moveTo(nonUniformColObjs[i].positionInfo.endX, yScale(nonUniformColObjs[i].endV!));
-                        ctx.lineTo(nonUniformColObjs[i + 1].positionInfo.startX, yScale(nonUniformColObjs[i + 1].startV!));
-                    }
-                    // ctx.moveTo(nonUniformColObjs[i].positionInfo.startX, yScale(nonUniformColObjs[i].addMin));
-                    // ctx.lineTo(nonUniformColObjs[i+1].positionInfo.startX, yScale(nonUniformColObjs[i+1].addMin));
+                for(let i=0; i<nonUniformColObjs.length-1; i++){
+                    // if(nonUniformColObjs[i].addMin[0] < nonUniformColObjs[i].addMax[0]){
+                    //     ctx.moveTo(nonUniformColObjs[i].positionInfo.minX, yScale(nonUniformColObjs[i].addMin[1]/lenOfLines!));
+                    //     ctx.lineTo(nonUniformColObjs[i].positionInfo.maxX, yScale(nonUniformColObjs[i].addMax[1]/lenOfLines!));
+                    // }
+                    // else{
+                    //     ctx.moveTo(nonUniformColObjs[i].positionInfo.minX, yScale(nonUniformColObjs[i].addMax[1]/lenOfLines!));
+                    //     ctx.lineTo(nonUniformColObjs[i].positionInfo.maxX, yScale(nonUniformColObjs[i].addMin[1]/lenOfLines!));
+                    // }
+                    ctx.moveTo(nonUniformColObjs[i].positionInfo.minX, yScale(nonUniformColObjs[i].average));
+                    ctx.lineTo(nonUniformColObjs[i+1].positionInfo.maxX, yScale(nonUniformColObjs[i].average)); 
+                    // if (i <= nonUniformColObjs.length - 2 && nonUniformColObjs[i].endV !== undefined && nonUniformColObjs[i + 1] !== undefined) {
+                    //     ctx.moveTo(nonUniformColObjs[i].positionInfo.endX, yScale(nonUniformColObjs[i].endV!));
+                    //     ctx.lineTo(nonUniformColObjs[i + 1].positionInfo.startX, yScale(nonUniformColObjs[i + 1].startV!));
+                    // }
                 }
             }
             ctx.stroke();

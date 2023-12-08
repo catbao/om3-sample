@@ -2084,8 +2084,9 @@ export default class LevelDataManager {
                         break;
                     } 
                     const type = nonUniformColObjs[colIndex].isMissContain(p);
-                    nonUniformColObjs[colIndex].containColumnRange(p, type);
                     let p2_temp = p2.slice();
+                    nonUniformColObjs[colIndex].containColumnRange2(p, p2_temp, type, transform_symbol);
+                    
                     // if(type === 1 || type === 7 || type === 8 || type === 9){
                     //     let combinedUrl = `/line_chart/getChildTree?level=${p.level}&index=${p.index}&dataset1=${this.dataName}&dataset2=${dataNames}`;
                     //     try {
