@@ -538,8 +538,8 @@ function init_multi_timeseries2(req, res) {
                     console.log(i, "th sql:", sqlStr1);
                     const finalRes = []
 
-                    for (let i = 0; i < result.rows.length; i++) {
-                        const tempVal = result.rows[i];
+                    for (let j = 0; j < result.rows.length; j++) {
+                        const tempVal = result.rows[j];
                         // const tempL = Math.floor(Math.log2(tempVal['i']));
                         // const tempI = tempVal['i'] - 2 ** tempL;
                         // finalRes.push({ l: curTableLevel - tempL, i: tempI, minvd: tempVal['minvd'], maxvd: tempVal['maxvd'], avevd: tempVal['avevd'] });

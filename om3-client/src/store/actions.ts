@@ -176,6 +176,7 @@ async function loadMultiTimeSeriesInitData(context: ActionContext<GlobalState, G
             //     temp_dataManagers.push(dataManagers[i]);
             // }
             let temp_dataManagers = _.cloneDeep(dataManagers);
+            // let temp_dataManagers = JSON.parse(JSON.stringify(dataManagers));
             // let temp_dataManagers = Object.assign({}, dataManagers);
             const allPromises = [];
             const columnsInfoArray: Array<Array<NoUniformColObj>> = new Array(temp_dataManagers.length);
