@@ -12,6 +12,7 @@ import { constructMinMaxMissTrendTree, constructMinMaxMissTrendTreeMulti, constr
 
 import Cache from "lru-cache"
 import { getFlag } from "@/global_state/state";
+import { START_LOCATION } from "vue-router";
 
 async function get(url: string) {
 
@@ -2065,7 +2066,9 @@ export default class LevelDataManager {
         let needLoadDifNode: Array<TrendTree> = [];
         let needLoadDifNode2: Array<Array<TrendTree>> = new Array(otherDataManager.length).fill([]).map(() => new Array<TrendTree>());
         let colIndex = 0;
+        let count_obj = {count: 0};
 
+        let total_time = 0;
         let startT = new Date().getTime();
         //假设对于dataset1
         for(let i=0; i<this.levelIndexObjs[currentLevel].firstNodes.length; ++i){
@@ -2110,7 +2113,10 @@ export default class LevelDataManager {
                     //     }
                     //     nonUniformColObjs[colIndex].computeTransform(p, p2, type, currentFlagInfo, currentFlagInfo2, transform_symbol);
                     // }
-                    nonUniformColObjs[colIndex].computeTransform(p, p2_temp, type, currentFlagInfo, currentFlagInfo2, transform_symbol);
+                    let start_t = new Date().getTime();
+                    nonUniformColObjs[colIndex].computeTransform(p, p2_temp, type, currentFlagInfo, currentFlagInfo2, transform_symbol, count_obj);
+                    let end_t = new Date().getTime();
+                    total_time += end_t - start_t;
                     // nonUniformColObjs[colIndex].computeTransform(p, p2_temp,this.dataName, dataNames, this, otherDataManager, type, currentFlagInfo, currentFlagInfo2, transform_symbol);
                     if(type === 1){
                         p = p.nextSibling!;
@@ -2148,6 +2154,7 @@ export default class LevelDataManager {
                     }
                 }
             }
+            console.log("count:", count_obj.count);
         }
         
         if(needLoadDifNode.length === 0){
@@ -2216,7 +2223,10 @@ export default class LevelDataManager {
                 let array = tempQue3.slice();
                 nonUniformColObjs[colIndex].containColumnRange2(tempQue[i], array, type, transform_symbol);
                 // nonUniformColObjs[colIndex].computeTransform(tempQue[i], array, this.dataName, dataNames, this, otherDataManager, type, currentFlagInfo, currentFlagInfo2, transform_symbol);
-                nonUniformColObjs[colIndex].computeTransform(tempQue[i], array, type, currentFlagInfo, currentFlagInfo2, transform_symbol);
+                let start_t = new Date().getTime(); 
+                nonUniformColObjs[colIndex].computeTransform(tempQue[i], array, type, currentFlagInfo, currentFlagInfo2, transform_symbol, count_obj);
+                let end_t = new Date().getTime();
+                total_time += end_t - start_t;
                 if (type === 1) {
                     continue;
                 } else if (type === 2) {
@@ -2437,7 +2447,9 @@ export default class LevelDataManager {
 
         }
 
-        console.log("The time to get all coefficients:" + (new Date().getTime() - startT));
+        // console.log("The time to get all coefficients:" + (new Date().getTime() - startT));
+        console.log("The final count:", count_obj.count);
+        console.log("The time to get total coefficients:", total_time);
 
         let maxValue = -Infinity, minValue = Infinity, finalValue = 0;
         for (let i = 0; i < nonUniformColObjs.length; i++) {
