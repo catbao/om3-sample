@@ -429,7 +429,7 @@ export default class NoUniformColObj {
         return;
     }
     // async computeTransform(p: TrendTree, p2:Array<TrendTree>, dataName: any, dataNames: any, levelDataManager: any, otherDataManager: any, type: number, currentFlagInfo: any, currentFlagInfo2: any, transform_symbol: any) {
-    async computeTransform(p: TrendTree, p2:Array <TrendTree>, type: number, currentFlagInfo: any, currentFlagInfo2: any, transform_symbol: any) {
+    async computeTransform(p: TrendTree, p2:Array <TrendTree>, type: number, currentFlagInfo: any, currentFlagInfo2: any, transform_symbol: any, count?: any) {
         // let p = pp, p2 = pp2;
         const pp = p, pp2 = p2.slice();
         if (p.nodeType === "NULL") {
@@ -466,7 +466,7 @@ export default class NoUniformColObj {
             minIndex = [-1, Infinity];
             let maxIndex: [number, number];
             maxIndex = [-1, -Infinity];
-
+            // console.log("count:", count);
             let alternativeNodes = [];
             let alternativeNodes2 = [];
             // let p = pp, p2 = pp2;
@@ -604,7 +604,7 @@ export default class NoUniformColObj {
                     alternativeNodes.push(tempNode);
                 }
             }
-            console.log("The bottom min(+):", minIndex);
+            // console.log("The bottom min(+):", minIndex);
             p = pp, p2 = pp2;
             while(max > -10000){
                 let temp_maxL = 0, temp_maxR = 0;
@@ -704,11 +704,12 @@ export default class NoUniformColObj {
                     }
                 }
             }
-            console.log("The bottom max(+):", maxIndex);
-            console.log("store.state.controlParams.stopEarly:", store.state.controlParams.stopEarly);
+            // console.log("The bottom max(+):", maxIndex);
+            // console.log("store.state.controlParams.stopEarly:", store.state.controlParams.stopEarly);
             if(store.state.controlParams.stopEarly === true){
                 alternativeNodes = [];
                 alternativeNodes2 = [];
+                return;
             }
             p = pp, p2 = pp2;
             while(alternativeNodes.length > 0){
@@ -807,6 +808,7 @@ export default class NoUniformColObj {
                         }
                         tempNode.push(temp_minL);
                         alternativeNodes.push(tempNode);
+                        count.count++;
                     }
                 }
                 if(pop[Math.floor(len/2)]._rightChild){
@@ -828,6 +830,7 @@ export default class NoUniformColObj {
                         }
                         tempNode.push(temp_minR);
                         alternativeNodes.push(tempNode);
+                        count.count++;
                     }
                 }
                 // if(pop[2]._leftChild && pop[3]._rightChild){
@@ -946,6 +949,7 @@ export default class NoUniformColObj {
                         }
                         tempNode.push(temp_maxL);
                         alternativeNodes.push(tempNode);
+                        count.count++;
                     }
                 }
                 if(pop[Math.floor(len/2)]._rightChild){
@@ -966,6 +970,7 @@ export default class NoUniformColObj {
                         }
                         tempNode.push(temp_maxR);
                         alternativeNodes.push(tempNode);
+                        count.count++;
                     }
                 }
             }
@@ -1113,7 +1118,7 @@ export default class NoUniformColObj {
                     alternativeNodes.push(tempNode);
                 }
             }
-            console.log("The bottom min(-):", minIndex);
+            // console.log("The bottom min(-):", minIndex);
             p = pp, p2 = pp2;
             while(max > -100000){
                 let temp_maxL = 0, temp_maxR = 0;
@@ -1223,7 +1228,7 @@ export default class NoUniformColObj {
                     }
                 }
             }
-            console.log("The bottom max(-):", maxIndex);
+            // console.log("The bottom max(-):", maxIndex);
             if(store.state.controlParams.stopEarly === true){
                 alternativeNodes = [];
                 alternativeNodes2 = [];
@@ -1304,6 +1309,7 @@ export default class NoUniformColObj {
                         }
                         tempNode.push(temp_minL);
                         alternativeNodes.push(tempNode);
+                        count.count++;
                     }
                 }
                 if(pop[Math.floor(len/2)]._rightChild){
@@ -1326,6 +1332,7 @@ export default class NoUniformColObj {
                         }
                         tempNode.push(temp_minR);
                         alternativeNodes.push(tempNode);
+                        count.count++;
                     }
                 }
                 // console.log("The final min(-):", min);
@@ -1404,6 +1411,7 @@ export default class NoUniformColObj {
                         }
                         tempNode.push(temp_maxL);
                         alternativeNodes2.push(tempNode);
+                        count.count++;
                     }
                 }
                 if(pop[Math.floor(len/2)]._rightChild){
@@ -1425,12 +1433,13 @@ export default class NoUniformColObj {
                         }
                         tempNode.push(temp_maxR);
                         alternativeNodes2.push(tempNode);
+                        count.count++;
                     }
                 }
             }
                      
-            console.log("The final min(-):", minIndex);
-            console.log("The final max(-):", maxIndex); 
+            // console.log("The final min(-):", minIndex);
+            // console.log("The final max(-):", maxIndex); 
             if(min < this.subMin[1]){
                 this.subMin = minIndex;
             }
@@ -1751,6 +1760,7 @@ export default class NoUniformColObj {
                         }
                         tempNode.push(temp_minL);
                         alternativeNodes.push(tempNode);
+                        count.count++;
                     }
                 }
                 if(pop[Math.floor(len/2)]._rightChild){
@@ -1780,6 +1790,7 @@ export default class NoUniformColObj {
                         }
                         tempNode.push(temp_minR);
                         alternativeNodes.push(tempNode);
+                        count.count++;
                     }
                 }
             }
@@ -1853,6 +1864,7 @@ export default class NoUniformColObj {
                         }
                         tempNode.push(temp_maxL);
                         alternativeNodes2.push(tempNode);
+                        count.count++;
                     }
                 }
                 if(pop[Math.floor(len/2)]._rightChild){
@@ -1882,11 +1894,12 @@ export default class NoUniformColObj {
                         }
                         tempNode.push(temp_maxR);
                         alternativeNodes2.push(tempNode);
+                        count.count++;
                     }
                 }
             }
-            console.log("The final min(*):", minIndex);
-            console.log("The final max(*):", maxIndex);
+            // console.log("The final min(*):", minIndex);
+            // console.log("The final max(*):", maxIndex);
             if(min < this.multiMin[1]){
                 this.multiMin = minIndex;
             }
@@ -2160,6 +2173,7 @@ export default class NoUniformColObj {
                         }
                         tempNode.push(temp_minL);
                         alternativeNodes.push(tempNode);
+                        count.count++;
                     }
                 }
                 if(pop[Math.floor(len/2)]._rightChild){
@@ -2179,6 +2193,7 @@ export default class NoUniformColObj {
                         }
                         tempNode.push(temp_minL);
                         alternativeNodes.push(tempNode);
+                        count.count++;
                     }
                 }
             }
@@ -2241,6 +2256,7 @@ export default class NoUniformColObj {
                         }
                         tempNode.push(temp_maxL);
                         alternativeNodes2.push(tempNode);
+                        count.count++;
                     }
                 }
                 if(pop[Math.floor(len/2)]._rightChild){
@@ -2259,11 +2275,12 @@ export default class NoUniformColObj {
                         }
                         tempNode.push(temp_maxL);
                         alternativeNodes2.push(tempNode);
+                        count.count++;
                     }
                 }
             }
-            console.log("The final min(/):", minIndex);
-            console.log("The final max(/):", maxIndex);
+            // console.log("The final min(/):", minIndex);
+            // console.log("The final max(/):", maxIndex);
             if(min < this.divMin[1]){
                 this.divMin = minIndex;
             }

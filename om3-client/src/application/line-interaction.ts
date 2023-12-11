@@ -298,7 +298,7 @@ export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
                 }
             }
             ctx.stroke();
-            savePNG(canvas);
+            // savePNG(canvas);
         } else {
             console.log("error")
         }

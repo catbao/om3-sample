@@ -456,7 +456,7 @@ export function drawMultiTimeSeries(multiTimeSeriesObj: MultiTimeSeriesObj) {
 
             }
         }
-        savePNG(canvas);
+        // savePNG(canvas);
     }
 
     function resizeW(width: number) {
