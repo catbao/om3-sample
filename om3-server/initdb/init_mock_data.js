@@ -17,13 +17,13 @@ const pool = new Pool({
 function x_plus_sinx() {
     const distribution = gaussian(0, 1);
     return (x) => {
-        return x / 2000 + 500 * Math.sin(x / 80000) + 50 * distribution.ppf(Math.random()) + 1000;
+        return x / 2000 + 500 * Math.sin(x / 100000) + 50 * distribution.ppf(Math.random()) + 1000;
     }
 }
 async function generateAndInsertMockData() {
-    const maxPow = 20;
-    await pool.query("create table om3_raw_data.mock_guassian_sin2_1m(t integer,v double precision)")
-    const tableNames = ["om3_raw_data.mock_guassian_sin2_1m"];
+    const maxPow = 21;
+    await pool.query("create table om3_raw_data.mock_guassian_sin2_2m(t integer,v double precision)")
+    const tableNames = ["om3_raw_data.mock_guassian_sin2_2m"];
     let fun = null;
     for (let i = 0; i < tableNames.length; i++) {
         let data = [];

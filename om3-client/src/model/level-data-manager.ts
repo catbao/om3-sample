@@ -2451,6 +2451,8 @@ export default class LevelDataManager {
             else if(transform_symbol === '-'){
                 maxValue = Math.max(maxValue, nonUniformColObjs[i].subMax[1]);
                 minValue = Math.min(minValue, nonUniformColObjs[i].subMin[1]);
+                // maxValue = 1000;
+                // minValue = -2000;
             }
             else if(transform_symbol === '*'){
                 maxValue = Math.max(maxValue, nonUniformColObjs[i].multiMax[1]);
