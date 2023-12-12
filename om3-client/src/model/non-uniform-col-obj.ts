@@ -55,8 +55,8 @@ export default class NoUniformColObj {
     maxNodes: Array<TrendTree>;
     realStart: number;
     sementicInterval: number;
-    addMin: [number, number, number];
-    addMax: [number, number, number];
+    addMin: [number, number, number, Array<TrendTree>];
+    addMax: [number, number, number, Array<TrendTree>];
     subMin: [number, number];
     subMax: [number, number];
     multiMin: [number, number];
@@ -105,8 +105,8 @@ export default class NoUniformColObj {
         this.maxNodes = [];
         this.realStart = 0;
         this.sementicInterval = 0;
-        this.addMin = [-1, Infinity, -1];
-        this.addMax = [-1, -Infinity, -1];
+        this.addMin = [-1, Infinity, -1, []];
+        this.addMax = [-1, -Infinity, -1, []];
         this.subMin = [-1, Infinity];
         this.subMax = [-1, -Infinity];
         this.multiMin = [-1, Infinity];
@@ -144,8 +144,8 @@ export default class NoUniformColObj {
         this.maxVTimeRange[0] = 0;
         this.maxVTimeRange[1] = 0;
         this.dataName = dataName;
-        this.addMin = [-1, Infinity, -1];
-        this.addMax = [-1, -Infinity, -1];
+        this.addMin = [-1, Infinity, -1, []];
+        this.addMax = [-1, -Infinity, -1, []];
         this.subMin = [-1, Infinity];
         this.subMax = [-1, -Infinity];
         this.multiMin = [-1, Infinity];
@@ -345,7 +345,7 @@ export default class NoUniformColObj {
         }
         return;
     }
-    containColumnRange2(p: TrendTree, p2: Array<TrendTree>, type: number, transform_symbol: any) {
+    containColumnRange2(p: TrendTree, p2: Array<TrendTree>, type: number, transform_symbol: any) { //about average
         if (p.nodeType === "NULL") {
             return
         }
@@ -428,9 +428,8 @@ export default class NoUniformColObj {
         }
         return;
     }
-    // async computeTransform(p: TrendTree, p2:Array<TrendTree>, dataName: any, dataNames: any, levelDataManager: any, otherDataManager: any, type: number, currentFlagInfo: any, currentFlagInfo2: any, transform_symbol: any) {
-    async computeTransform(p: TrendTree, p2:Array <TrendTree>, type: number, currentFlagInfo: any, currentFlagInfo2: any, transform_symbol: any, count?: any, needLoadDifNode?: any) {
-        // let p = pp, p2 = pp2;
+    
+    computeTransform2(p: TrendTree, p2:Array <TrendTree>, type: number, currentFlagInfo: any, currentFlagInfo2: any, transform_symbol: any, count?: any, needLoadDifNode?: any, needLoadDifNode2?: any){
         const pp = p, pp2 = p2.slice();
         if (p.nodeType === "NULL") {
             return
@@ -439,11 +438,6 @@ export default class NoUniformColObj {
             debugger
             throw new Error("error val")
         }
-        // const pL = p.level;
-        // const pTRange = (2 ** this.maxLevel) / (2 ** pL);
-        // const pTimeS = p.index * pTRange;
-        // const pTimeE = pTRange + pTimeS - 1;
-        // console.log("transform_symbol:",transform_symbol);
         let symbol = transform_symbol;
         if((type === 1 || type === 7 || type ===8 || type === 9) && (symbol == '+' || symbol == 'avg')){
             // let p = pp, p2 = pp2;
@@ -462,1843 +456,1950 @@ export default class NoUniformColObj {
             let max = (max1 + max2);
             let tempMin;
             let tempMax;
-            let minIndex: [number, number];
-            minIndex = [-1, Infinity];
-            let maxIndex: [number, number];
-            maxIndex = [-1, -Infinity];
+            let minIndex: [number, number, number, Array<TrendTree>];
+            minIndex = [-1, Infinity, -1, []];
+            let maxIndex: [number, number, number, Array<TrendTree>];
+            maxIndex = [-1, -Infinity, -1, []];
             // console.log("count:", count);
             let alternativeNodes = [];
             let alternativeNodes2 = [];
             // this.addMin = [-1, min, -1]; //add level info
             // this.addMax = [-1, max, -1];
+
+            if(p.level === 15){
+                let minL = 0, minR = 0;
+                let nodeFlagInfo1 = currentFlagInfo[p.index * 2 + 1];
+                if(nodeFlagInfo1 === 0){
+                    minL += p.yArray[1];
+                    minR += p.yArray[2];
+                } 
+                else{
+                    minL += p.yArray[2];
+                    minR += p.yArray[1];
+                }
+                for(let i=0; i<currentFlagInfo2.length;++i){
+                    if(currentFlagInfo2[i][p.index * 2 + 1] === 0){
+                        minL += p2[i].yArray[1];
+                        minR += p2[i].yArray[2];
+                    }
+                    else{
+                        minL += p2[i].yArray[2];
+                        minR += p2[i].yArray[1];
+                    }
+                }
+                if(minL < minR){
+                    min = minL;
+                    minIndex = [p.index * 2, min, p.level, [p, ...p2]];
+                    max = minR;
+                    maxIndex = [p.index * 2 + 1, max, p.level, [p, ...p2]];
+                }
+                else{
+                    min = minR;
+                    minIndex = [p.index * 2 + 1, min, p.level, [p, ...p2]];
+                    max = minL;
+                    maxIndex = [p.index * 2, max, p.level, [p, ...p2]];
+                }
+                if(this.addMin[0] === -1){
+                    this.addMin = minIndex;
+                }
+                else if(min < this.addMin[1]){
+                    this.addMin = minIndex;
+                }
+                if(this.addMax[0] === -1){
+                    this.addMax = maxIndex;
+                }
+                else if(max > this.addMax[1]){
+                    this.addMax = maxIndex;
+                }
+                return;
+            }
+
             if(this.addMin[2] === -1){
-                this.addMin = [-1, min, p.level];
-                this.addMax = [-1, max, p.level];
-            }
-            else if(p.level > this.addMin[2]){
-                this.addMin = [-1, min, p.level];
-                this.addMax = [-1, max, p.level];
-            }
-            else if(p.level === this.addMin[2]){
-                if(min < this.addMin[1]){
-                    this.addMin = [-1, min, p.level];
+                this.addMin = [-1, min, p.level, [p, ...p2]];
+                this.addMax = [-1, max, p.level, [p, ...p2]];
+                needLoadDifNode.push(p);
+                for(let i=0; i<needLoadDifNode2.length; i++){
+                    needLoadDifNode2[i].push(p2[i]);
                 }
             }
-            while(max > -10000){
-                let temp_minL = 0, temp_minR = 0;
-                // const combinedUrl = `/line_chart/onlyChild?&p=${p}&p2=${p2}&dataName=${dataName}&dataNames=${dataNames}`;
-                // const data = get(combinedUrl);
-                // const difChild = await data;
-
-                // let needLoadChildNode: Array<TrendTree> = [];
-                // needLoadChildNode.push(p);
-                // let losedDataInfo = computeLosedDataRangeV1(needLoadChildNode);
-                // console.log(losedDataInfo);
-                // if (losedDataInfo.length > 0) {
-                //     batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, levelDataManager);  //取得系数
-                //     for(let i=0; i<otherDataManager.length; i++)
-                //         batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, otherDataManager[i]);
+            else if(p.level > this.addMin[2]){
+                this.addMin = [-1, min, p.level, [p, ...p2]];
+                this.addMax = [-1, max, p.level, [p, ...p2]];
+                needLoadDifNode.push(p);
+                needLoadDifNode.push(p);
+                for(let i=0; i<needLoadDifNode2.length; i++){
+                    needLoadDifNode2[i].push(p2[i]);
+                    needLoadDifNode2[i].push(p2[i]);
+                }
+            }
+            else if(p.level === this.addMin[2]){
+                // let flag = 0;
+                if(min < this.addMin[1]){
+                    // flag++;
+                    for(let i=needLoadDifNode.length-1;i>=0;i--){
+                        if(needLoadDifNode[i] == this.addMin[3][0]){
+                            needLoadDifNode.splice(i,1);
+                            break;
+                        }
+                    }
+                    needLoadDifNode.push(p);
+                    for(let i=0; i<needLoadDifNode2.length; i++){
+                        for(let j=needLoadDifNode.length-1;j>=0;j--){
+                            if(needLoadDifNode2[i][j] == this.addMin[3][i+1]){
+                                needLoadDifNode2[i].splice(j,1);
+                                break;
+                            }
+                        }
+                        needLoadDifNode2[i].push(p2[i]);
+                    }
+                    this.addMin = [-1, min, p.level,[p, ...p2]];
+                }
+                if(max > this.addMax[1]){
+                    // flag++;
+                    for(let i=needLoadDifNode.length-1;i>=0;i--){
+                        if(needLoadDifNode[i] == this.addMin[3][0]){
+                            needLoadDifNode.splice(i,1);
+                            break;
+                        }
+                    }
+                    needLoadDifNode.push(p);
+                    for(let i=0; i<needLoadDifNode2.length; i++){
+                        for(let j=needLoadDifNode.length-1;j>=0;j--){
+                            if(needLoadDifNode2[i][j] == this.addMin[3][i+1]){
+                                needLoadDifNode2[i].splice(j,1);
+                                break;
+                            }
+                        }
+                        needLoadDifNode2[i].push(p2[i]);
+                    }
+                    this.addMax = [-1, max, p.level,[p, ...p2]];
+                }
+                // if(flag === 0){
+                //     needLoadDifNode.pop();
+                //     for(let i=0;i<needLoadDifNode2.length;i++){
+                //         needLoadDifNode2[i].pop();
+                //     }
                 // }
-                // console.log("get child finished");
-                if(!p._leftChild && !p._rightChild){
-                        let minL = 0, minR = 0;
-                        let nodeFlagInfo1 = currentFlagInfo[p.index * 2 + 1];
-                        if(nodeFlagInfo1 === 0){
-                            minL += p.yArray[1];
-                            minR += p.yArray[2];
-                        } 
-                        else{
-                            minL += p.yArray[2];
-                            minR += p.yArray[1];
-                        }
-                        for(let i=0; i<currentFlagInfo2.length;++i){
-                            if(currentFlagInfo2[i][p.index * 2 + 1] === 0){
-                                minL += p2[i].yArray[1];
-                                minR += p2[i].yArray[2];
-                            }
-                            else{
-                                minL += p2[i].yArray[2];
-                                minR += p2[i].yArray[1];
-                            }
-                        }
-                        if(minL < minR){
-                            min = minL;
-                            minIndex = [p.index * 2, min];
-                        }
-                        else{
-                            min = minR;
-                            minIndex = [p.index * 2 + 1, min];
-                        }
-                        if(min < this.addMin[1]){
-                            this.addMin = minIndex;
-                        }
-                        // let nodeFlagInfo2 = currentFlagInfo2[p.index * 2 + 1];
-                        // if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 0){
-                        //     min = p.yArray[1] + p2.yArray[1];
-                        //     minIndex = [p.index * 2, min];
-                        // }
-                        // else if(nodeFlagInfo1 === 1 && nodeFlagInfo2 === 1){
-                        //     min = p.yArray[1] + p2.yArray[1];
-                        //     minIndex = [p.index * 2 + 1, min];
-                        // }
-                        // else if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 1){
-                        //     // min = Math.min(p.yArray[1] + p2.yArray[2], p.yArray[2] + p2.yArray[1]);
-                        //     if(p.yArray[1] + p2.yArray[2] < p.yArray[2] + p2.yArray[1]){
-                        //         min = p.yArray[1] + p2.yArray[2];
-                        //         minIndex = [p.index * 2, p.yArray[1] + p2.yArray[2]];
-                        //     }
-                        //     else{
-                        //         min = p.yArray[2] + p2.yArray[1];
-                        //         minIndex = [p.index * 2 + 1, p.yArray[2] + p2.yArray[1]];
-                        //     }
-                        // }
-                        // else{
-                        //     if(p.yArray[1] + p2.yArray[2] < p.yArray[2] + p2.yArray[1]){
-                        //         min = p.yArray[1] + p2.yArray[2];
-                        //         minIndex = [p.index * 2 + 1, p.yArray[1] + p2.yArray[2]];
-                        //     }
-                        //     else{
-                        //         min = p.yArray[2] + p2.yArray[1];
-                        //         minIndex = [p.index * 2, p.yArray[2] + p2.yArray[1]];
-                        //     }
-                        // }
-                        break;
-                }
-                if(p._leftChild){
-                    temp_minL = p._leftChild.yArray[1];
-                    for(let i=0;i<p2.length;++i){
-                        if(p2[i]._leftChild !== null){
-                            temp_minL += p2[i]._leftChild!.yArray[1];
-                        }
-                    }
-                }
-                if(p._rightChild){
-                    temp_minR = p._rightChild.yArray[1];
-                    for(let i=0;i<p2.length;++i){
-                        if(p2[i]._rightChild !== null){
-                            temp_minR += p2[i]._rightChild!.yArray[1];
-                        }
-                    }
-                }
-                if(temp_minL <= temp_minR && p._leftChild){
-                    let tempNode = [];
-                    tempMin = temp_minL;
-                    tempNode.push(p);
-                    for(let i=0;i<p2.length;++i){
-                        tempNode.push(p2[i]);
-                    }
-                    tempNode.push(p._rightChild);
-                    for(let i=0;i<p2.length;++i){
-                        tempNode.push(p2[i]._rightChild);
-                    }
-                    tempNode.push(temp_minR);
-                    alternativeNodes.push(tempNode);
-                    p = p._leftChild;
-                    for(let i=0;i<p2.length;++i){
-                        p2[i] = p2[i]._leftChild!;
-                    }
-                }
-                else if(temp_minL > temp_minR && p._rightChild){
-                    let tempNode = [];
-                    tempMin = temp_minR;
-                    // alternativeNodes.push([p, p2, p._leftChild, p2._leftChild, temp_minL]);
-                    tempNode.push(p);
-                    for(let i=0;i<p2.length;++i){
-                        tempNode.push(p2[i]);
-                    }
-                    tempNode.push(p._leftChild);
-                    for(let i=0;i<p2.length;++i){
-                        tempNode.push(p2[i]._leftChild);
-                    }
-                    tempNode.push(temp_minL);
-                    p = p._rightChild;
-                    for(let i=0;i<p2.length;++i){
-                        p2[i] = p2[i]._rightChild!;
-                    }
-                    alternativeNodes.push(tempNode);
-                }
-            }
-            // console.log("The bottom min(+):", minIndex);
-            // p = pp, p2 = pp2;
-            // while(max > -10000){
-            //     let temp_maxL = 0, temp_maxR = 0;
-            //     // let needLoadChildNode: Array<TrendTree> = [];
-            //     // needLoadChildNode.push(p);
-            //     // let losedDataInfo = computeLosedDataRangeV1(needLoadChildNode);
-            //     // console.log(losedDataInfo);
-            //     // if (losedDataInfo.length > 0) {
-            //     //     batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, levelDataManager);  //取得系数
-            //     //     for(let i=0; i<otherDataManager.length; i++)
-            //     //         batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, otherDataManager[i]);
-            //     // }
-            //     if(!p._leftChild && !p._rightChild){
-            //         let maxL = 0, maxR = 0;
-            //         let nodeFlagInfo1 = currentFlagInfo[p.index * 2 + 1];
-            //         if(nodeFlagInfo1 === 0){
-            //             maxL += p.yArray[1];
-            //             maxR += p.yArray[2];
-            //         } 
-            //         else{
-            //             maxL += p.yArray[2];
-            //             maxR += p.yArray[1];
-            //         }
-            //         for(let i=0; i<currentFlagInfo2.length;++i){
-            //             if(currentFlagInfo2[i][p.index * 2 + 1] === 0){
-            //                 maxL += p2[i].yArray[1];
-            //                 maxR += p2[i].yArray[2];
-            //             }
-            //             else{
-            //                 maxL += p2[i].yArray[2];
-            //                 maxR += p2[i].yArray[1];
-            //             }
-            //         }
-            //         if(maxL > maxR){
-            //             max = maxL;
-            //             maxIndex = [p.index * 2, max];
-            //         }
-            //         else{
-            //             max = maxR;
-            //             maxIndex = [p.index * 2 + 1, max];
-            //         }
-            //         if(max > this.addMax[1]){
-            //             this.addMax = maxIndex;
-            //         }
-            //         break;
-            //     }
-            //     if(p._leftChild){
-            //         temp_maxL = p._leftChild.yArray[2];
-            //         for(let i=0;i<p2.length;++i){
-            //             if(p2[i]._leftChild !== null){
-            //                 temp_maxL += p2[i]._leftChild!.yArray[2];
-            //             }
-            //         }
-            //     }
-            //     if(p._rightChild){
-            //         temp_maxR = p._rightChild.yArray[2];
-            //         for(let i=0;i<p2.length;++i){
-            //             if(p2[i]._leftChild !== null){
-            //                 temp_maxR += p2[i]._rightChild!.yArray[2];
-            //             }
-            //         }
-            //     }
-            //     if(temp_maxL <= temp_maxR && p._rightChild){
-            //         let tempNode = [];
-            //         tempMax = temp_maxR;
-            //         tempNode.push(p);
-            //         for(let i=0;i<p2.length;++i){
-            //             tempNode.push(p2[i]);
-            //         }
-            //         tempNode.push(p._leftChild);
-            //         for(let i=0;i<p2.length;++i){
-            //             tempNode.push(p2[i]._leftChild);
-            //         }
-            //         tempNode.push(temp_maxL);
-            //         alternativeNodes2.push(tempNode);
-            //         p = p._rightChild!;
-            //         for(let i=0;i<p2.length;++i){
-            //             p2[i] = p2[i]._rightChild!;
-            //         }
-            //     }
-            //     else if(temp_maxL > temp_maxR && p._leftChild){
-            //         let tempNode = [];
-            //         tempMax = temp_maxL;
-            //         tempNode.push(p);
-            //         for(let i=0;i<p2.length;++i){
-            //             tempNode.push(p2[i]);
-            //         }
-            //         tempNode.push(p._rightChild);
-            //         for(let i=0;i<p2.length;++i){
-            //             tempNode.push(p2[i]._rightChild);
-            //         }
-            //         tempNode.push(temp_maxR);
-            //         alternativeNodes2.push(tempNode);
-            //         p = p._leftChild!;
-            //         for(let i=0;i<p2.length;++i){
-            //             p2[i] = p2[i]._leftChild!;
-            //         }
-            //     }
-            // }
-            // console.log("The bottom max(+):", maxIndex);
-            // console.log("store.state.controlParams.stopEarly:", store.state.controlParams.stopEarly);
-            if(store.state.controlParams.stopEarly === true){
-                alternativeNodes = [];
-                alternativeNodes2 = [];
-                // return;
-            }
-            // p = pp, p2 = pp3;
-            while(alternativeNodes.length > 0){
-                // console.log("No stop early!");
-                let pop:any = alternativeNodes.pop();
-                // if(pop === undefined ) continue;
-                // console.log("pop:", pop);
-                // if(Number(pop[pop.length-1]) > min) continue;
-                // min = this.updateMinValue(p![0], min, alternativeNodes);
-                let len = pop.length;
-                let temp_minL = 0, temp_minR = 0;
-                if(!pop[Math.floor(len/2)]._leftChild && !pop[Math.floor(len/2)]._rightChild){
-                    let minL = 0, minR = 0;
-                    let nodeFlagInfo1 = currentFlagInfo[pop[Math.floor(len/2)].index * 2 + 1];
-                    if(nodeFlagInfo1 === 0){
-                        minL += pop[Math.floor(len/2)].yArray[1];
-                        minR += pop[Math.floor(len/2)].yArray[2];
-                    } 
-                    else{
-                        minL += pop[Math.floor(len/2)].yArray[2];
-                        minR += pop[Math.floor(len/2)].yArray[1];
-                    }
-                    for(let i=0; i<currentFlagInfo2.length;++i){
-                        if(currentFlagInfo2[i][pop[Math.floor(len/2)].index * 2 + 1] === 0){
-                            minL += pop[Math.floor(len/2)+i+1].yArray[1];
-                            minR += pop[Math.floor(len/2)+i+1].yArray[2];
-                        }
-                        else{
-                            minL += pop[Math.floor(len/2)+i+1].yArray[2];
-                            minR += pop[Math.floor(len/2)+i+1].yArray[1];
-                        }
-                    }
-                    if(minL < minR){
-                        min = minL;
-                        minIndex = [pop[Math.floor(len/2)].index * 2, min];
-                    }
-                    else{
-                        min = minR;
-                        minIndex = [pop[Math.floor(len/2)].index * 2 + 1, min];
-                    }
-                    if(min < this.addMin[1]){
-                        this.addMin = minIndex;
-                    }
-                    continue;
-                }
-                if(pop[Math.floor(len/2)]._leftChild){
-                    let index = Math.floor(len / 2);
-                    for(let i = index; i < index * 2; ++i){
-                        temp_minL += pop[i]._leftChild.yArray[1];
-                    }
-                    if(temp_minL < min){
-                        let tempNode = [];
-                        for(let i = index; i < index * 2; ++i){
-                            tempNode.push(pop[i]);
-                        }
-                        for(let i = index; i < index * 2; ++i){
-                            tempNode.push(pop[i]._leftChild);
-                        }
-                        tempNode.push(temp_minL);
-                        alternativeNodes.push(tempNode);
-                        count.count++;
-                    }
-                }
-                if(pop[Math.floor(len/2)]._rightChild){
-                    // temp_minR = (pop[2]._rightChild.yArray[1] + pop[3]._rightChild.yArray[1]);
-                    // if(temp_minR < min)
-                    //     alternativeNodes.push([pop[2], pop[3], pop[2]._rightChild, pop[3]._rightChild, temp_minR]);
-                    let index = Math.floor(len / 2);
-                    for(let i = index; i < index * 2; ++i){
-                        temp_minR += pop[i]._rightChild.yArray[1];
-                    }
-                    if(temp_minR < min){
-                        let tempNode = [];
-                        for(let i = index; i < index * 2; ++i){
-                            tempNode.push(pop[i]);
-                        }
-                        for(let i = index; i < index * 2; ++i){
-                            tempNode.push(pop[i]._rightChild);
-                        }
-                        tempNode.push(temp_minR);
-                        alternativeNodes.push(tempNode);
-                        count.count++;
-                    }
-                }
-            }
-            // p = pp, p2 = pp4;
-            // while(alternativeNodes2.length > 0){
-            //     let pop:any = alternativeNodes2.pop();
-            //     // if(pop === undefined) continue;
-            //     // if(Number(pop[pop.length-1]) < max) continue;
-            //     let len = pop.length;
-            //     let temp_maxL = 0, temp_maxR = 0;
-            //     if(!pop[Math.floor(len/2)]._leftChild && !pop[Math.floor(len/2)]._rightChild){
-            //         let maxL = 0, maxR = 0;
-            //         let nodeFlagInfo1 = currentFlagInfo[pop[Math.floor(len/2)].index * 2 + 1];
-            //         if(nodeFlagInfo1 === 0){
-            //             maxL += pop[Math.floor(len/2)].yArray[1];
-            //             maxR += pop[Math.floor(len/2)].yArray[2];
-            //         } 
-            //         else{
-            //             maxL += pop[Math.floor(len/2)].yArray[2];
-            //             maxR += pop[Math.floor(len/2)].yArray[1];
-            //         }
-            //         for(let i=0; i<currentFlagInfo2.length;++i){
-            //             if(currentFlagInfo2[i][p.index * 2 + 1] === 0){
-            //                 maxL += pop[Math.floor(len/2)+i+1].yArray[1];
-            //                 maxR += pop[Math.floor(len/2)+i+1].yArray[2];
-            //             }
-            //             else{
-            //                 maxL += pop[Math.floor(len/2)+i+1].yArray[2];
-            //                 maxR += pop[Math.floor(len/2)+i+1].yArray[1];
-            //             }
-            //         }
-            //         if(maxL > maxR){
-            //             max = maxL;
-            //             maxIndex = [pop[Math.floor(len/2)].index * 2, max];
-            //         }
-            //         else{
-            //             max = maxR;
-            //             maxIndex = [pop[Math.floor(len/2)].index * 2 + 1, max];
-            //         }
-            //         if(max > this.addMax[1]){
-            //             this.addMax = maxIndex;
-            //         }
-            //         // let nodeFlagInfo1 = currentFlagInfo[(pop[2].index) * 2 + 1];
-            //         // let nodeFlagInfo2 = currentFlagInfo2[(pop[2].index) * 2 + 1];
-            //         // if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 0){
-            //         //     // min = Math.min(pop[2].yArray[1] + pop[3].yArray[1], min);
-            //         //     if(pop[2].yArray[2] + pop[3].yArray[2] > max){
-            //         //         max = pop[2].yArray[2] + pop[3].yArray[2];
-            //         //         maxIndex = [pop[2].index * 2 + 1, max]
-            //         //     }
-            //         // }
-            //         // else if(nodeFlagInfo1 === 1 && nodeFlagInfo2 === 1){
-            //         //     // min = Math.min(pop[2].yArray[1] + pop[3].yArray[1], min);
-            //         //     if(pop[2].yArray[1] + pop[3].yArray[1] > max){
-            //         //         max = pop[2].yArray[2] + pop[3].yArray[2];
-            //         //         maxIndex = [pop[2].index * 2, max]
-            //         //     }
-            //         // }
-            //         // else if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 1){
-            //         //     // min = Math.min(Math.min(pop[2].yArray[1] + pop[3].yArray[2], pop[2].yArray[2] + pop[3].yArray[1]), min);
-            //         //     if(pop[2].yArray[1] + pop[3].yArray[2] > max){
-            //         //         max = pop[2].yArray[1] + pop[3].yArray[2];
-            //         //         maxIndex = [pop[2].index * 2, max]
-            //         //     }
-            //         //     else if(pop[2].yArray[2] + pop[3].yArray[1] > max){
-            //         //         max = pop[2].yArray[2] + pop[3].yArray[1];
-            //         //         maxIndex = [pop[2].index * 2 + 1, max]
-            //         //     }
-            //         // }
-            //         // else{
-            //         //     if(pop[2].yArray[1] + pop[3].yArray[2] > max){
-            //         //         max = pop[2].yArray[1] + pop[3].yArray[2];
-            //         //         maxIndex = [pop[2].index * 2 + 1, max]
-            //         //     }
-            //         //     else if(pop[2].yArray[2] + pop[3].yArray[1] > max){
-            //         //         max = pop[2].yArray[2] + pop[3].yArray[1];
-            //         //         maxIndex = [pop[2].index * 2, max]
-            //         //     }
-            //         // }
-            //         continue;
-            //     }
-            //     if(pop[Math.floor(len/2)]._leftChild){
-            //         // temp_maxL = (pop[2]._leftChild.yArray[2] + pop[3]._leftChild.yArray[2]);
-            //         // if(temp_maxL > max)
-            //         //     alternativeNodes2.push([pop[2], pop[3], pop[2]._leftChild, pop[3]._leftChild, temp_maxL]);
-            //         let index = Math.floor(len / 2);
-            //         for(let i = index; i < index * 2; ++i){
-            //             temp_maxL += pop[i]._leftChild.yArray[2];
-            //         }
-            //         if(temp_maxL > max){
-            //             let tempNode = [];
-            //             for(let i = index; i < index * 2; ++i){
-            //                 tempNode.push(pop[i]);
-            //             }
-            //             for(let i = index; i < index * 2; ++i){
-            //                 tempNode.push(pop[i]._leftChild);
-            //             }
-            //             tempNode.push(temp_maxL);
-            //             alternativeNodes2.push(tempNode);
-            //             count.count++;
-            //         }
-            //     }
-            //     if(pop[Math.floor(len/2)]._rightChild){
-            //         // temp_maxR = (pop[2]._rightChild.yArray[2] + pop[3]._rightChild.yArray[2]);
-            //         // if(temp_maxR > max)
-            //         //     alternativeNodes2.push([pop[2], pop[3], pop[2]._rightChild, pop[3]._rightChild, temp_maxR]);
-            //         let index = Math.floor(len / 2);
-            //         for(let i = index; i < index * 2; ++i){
-            //             temp_maxR += pop[i]._rightChild.yArray[2];
-            //         }
-            //         if(temp_maxR > max){
-            //             let tempNode = [];
-            //             for(let i = index; i < index * 2; ++i){
-            //                 tempNode.push(pop[i]);
-            //             }
-            //             for(let i = index; i < index * 2; ++i){
-            //                 tempNode.push(pop[i]._rightChild);
-            //             }
-            //             tempNode.push(temp_maxR);
-            //             alternativeNodes2.push(tempNode);
-            //             count.count++;
-            //         }
-            //     }
-            // }
-            // console.log("The final max(+):", maxIndex);          
-            // console.log("The final min(+):", minIndex);
-            if(min < this.addMin[1]){
-                this.addMin = minIndex;
-            }
-            if(max > this.addMax[1]){
-                this.addMax = maxIndex;
             }
         }
-        else if((type === 1 || type === 7 || type ===8 || type === 9) && symbol == '-'){
-            // let p = pp, p2 = pp2;
-            let min1 = p.yArray[1];
-            let min2 = 0;
-            for(let i=0;i<p2.length;i++){
-                min2 += p2[i].yArray[1];
-            }  
-            let max1 = p.yArray[2];
-            let max2 = 0;
-            for(let i=0;i<p2.length;i++){
-                max2 += p2[i].yArray[2];
-            }
+    }
 
-            let min = (min1 - max2);
-            let max = (max2 - min1);
-            let tempMin;
-            let tempMax;
-            let minIndex: [number, number];
-            minIndex = [-1, Infinity];
-            let maxIndex: [number, number];
-            maxIndex = [-1, -Infinity];
+    // async computeTransform(p: TrendTree, p2:Array <TrendTree>, type: number, currentFlagInfo: any, currentFlagInfo2: any, transform_symbol: any, count?: any, needLoadDifNode?: any) {
+    //     // let p = pp, p2 = pp2;
+    //     const pp = p, pp2 = p2.slice();
+    //     if (p.nodeType === "NULL") {
+    //         return
+    //     }
+    //     if ( p.yArray[1] === undefined || p.yArray[2] === undefined) {
+    //         debugger
+    //         throw new Error("error val")
+    //     }
+    //     // const pL = p.level;
+    //     // const pTRange = (2 ** this.maxLevel) / (2 ** pL);
+    //     // const pTimeS = p.index * pTRange;
+    //     // const pTimeE = pTRange + pTimeS - 1;
+    //     // console.log("transform_symbol:",transform_symbol);
+    //     let symbol = transform_symbol;
+    //     if((type === 1 || type === 7 || type ===8 || type === 9) && (symbol == '+' || symbol == 'avg')){
+    //         // let p = pp, p2 = pp2;
+    //         let min1 = p.yArray[1];
+    //         let min2 = 0;
+    //         for(let i=0;i<p2.length;i++){
+    //             min2 += p2[i].yArray[1];
+    //         } 
+    //         let max1 = p.yArray[2];
+    //         let max2 = 0;
+    //         for(let i=0;i<p2.length;i++){
+    //             max2 += p2[i].yArray[2];
+    //         }
 
-            let alternativeNodes = [];
-            let alternativeNodes2 = [];
-            while(max > -100000){
-                let temp_minL = 0, temp_minR = 0;
-                if(!p._leftChild && !p._rightChild){
-                    let minL = 0, minR = 0;
-                    let nodeFlagInfo1 = currentFlagInfo[p.index * 2 + 1];
-                    if(nodeFlagInfo1 === 0){
-                        minL += p.yArray[1];
-                        minR += p.yArray[2];
-                    } 
-                    else{
-                        minL += p.yArray[2];
-                        minR += p.yArray[1];
-                    }
-                    for(let i=0; i<currentFlagInfo2.length;++i){
-                        if(currentFlagInfo2[i][p.index * 2 + 1] === 0){
-                            minL -= p2[i].yArray[1];
-                            minR -= p2[i].yArray[2];
-                        }
-                        else{
-                            minL -= p2[i].yArray[2];
-                            minR -= p2[i].yArray[1];
-                        }
-                    }
-                    if(minL < minR){
-                        min = minL;
-                        minIndex = [p.index * 2, min];
-                    }
-                    else{
-                        min = minR;
-                        minIndex = [p.index * 2 + 1, min];
-                    }
-                    if(min < this.subMin[1]){
-                        this.subMin = minIndex;
-                    }
-                    // let nodeFlagInfo1 = currentFlagInfo[p.index * 2 + 1];
-                    // let nodeFlagInfo2 = currentFlagInfo2[p.index * 2 + 1];
-                    // if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 0){
-                    //     min = Math.min(p.yArray[1] - p2.yArray[1], p.yArray[2] - p2.yArray[2]);
-                    // }
-                    // else if(nodeFlagInfo1 === 1 && nodeFlagInfo2 === 1){
-                    //     min = Math.min(p.yArray[1] - p2.yArray[1], p.yArray[2] - p2.yArray[2]);
-                    // }
-                    // else{
-                    //     min = Math.min(p.yArray[1] - p2.yArray[2], p.yArray[2] - p2.yArray[1]);
-                    // }
-                    break;
-                }
-                if(p._leftChild){
-                    // temp_minL = (p._leftChild.yArray[1] - p2._leftChild.yArray[2]);
-                    temp_minL = p._leftChild.yArray[1];
-                    for(let i=0;i<p2.length;++i){
-                        if(p2[i]._leftChild !== null){
-                            temp_minL -= p2[i]._leftChild!.yArray[2];
-                        }
-                    }
-                }
-                if(p._rightChild){
-                    // temp_minR = (p._rightChild.yArray[1] - p2._rightChild.yArray[2]);
-                    temp_minR = p._rightChild.yArray[1];
-                    for(let i=0;i<p2.length;++i){
-                        if(p2[i]._rightChild !== null){
-                            temp_minR -= p2[i]._rightChild!.yArray[2];
-                        }
-                    }
-                }
-                if(temp_minL <= temp_minR && p._leftChild){
-                    // tempMin = temp_minL;
-                    // alternativeNodes.push([p, p2, p._rightChild, p2._rightChild, temp_minR]);
-                    // p = p._leftChild;
-                    // p2 = p2._leftChild;
-                    let tempNode = [];
-                    tempMin = temp_minL;
-                    tempNode.push(p);
-                    for(let i=0;i<p2.length;++i){
-                        tempNode.push(p2[i]);
-                    }
-                    tempNode.push(p._rightChild);
-                    for(let i=0;i<p2.length;++i){
-                        tempNode.push(p2[i]._rightChild);
-                    }
-                    tempNode.push(temp_minR);
-                    alternativeNodes.push(tempNode);
-                    p = p._leftChild;
-                    for(let i=0;i<p2.length;++i){
-                        p2[i] = p2[i]._leftChild!;
-                    }
-                }
-                else if(temp_minL > temp_minR && p._rightChild){
-                    // tempMin = temp_minR;
-                    // alternativeNodes.push([p, p2, p._leftChild, p2._leftChild, temp_minL]);
-                    // p = p._rightChild;
-                    // p2 = p2._rightChild;
-                    let tempNode = [];
-                    tempMin = temp_minR;
-                    // alternativeNodes.push([p, p2, p._leftChild, p2._leftChild, temp_minL]);
-                    tempNode.push(p);
-                    for(let i=0;i<p2.length;++i){
-                        tempNode.push(p2[i]);
-                    }
-                    tempNode.push(p._leftChild);
-                    for(let i=0;i<p2.length;++i){
-                        tempNode.push(p2[i]._leftChild);
-                    }
-                    tempNode.push(temp_minL);
-                    p = p._rightChild;
-                    for(let i=0;i<p2.length;++i){
-                        p2[i] = p2[i]._rightChild!;
-                    }
-                    alternativeNodes.push(tempNode);
-                }
-            }
-            // console.log("The bottom min(-):", minIndex);
-            p = pp, p2 = pp2;
-            while(max > -100000){
-                let temp_maxL = 0, temp_maxR = 0;
-                if(!p._leftChild && !p._rightChild){
-                    let maxL = 0, maxR = 0;
-                    let nodeFlagInfo1 = currentFlagInfo[p.index * 2 + 1];
-                    if(nodeFlagInfo1 === 0){
-                        maxL += p.yArray[1];
-                        maxR += p.yArray[2];
-                    } 
-                    else{
-                        maxL += p.yArray[2];
-                        maxR += p.yArray[1];
-                    }
-                    for(let i=0; i<currentFlagInfo2.length;++i){
-                        if(currentFlagInfo2[i][p.index * 2 + 1] === 0){
-                            maxL -= p2[i].yArray[1];
-                            maxR -= p2[i].yArray[2];
-                        }
-                        else{
-                            maxL -= p2[i].yArray[2];
-                            maxR -= p2[i].yArray[1];
-                        }
-                    }
-                    if(maxL > maxR){
-                        max = maxL;
-                        maxIndex = [p.index * 2, max];
-                    }
-                    else{
-                        max = maxR;
-                        maxIndex = [p.index * 2 + 1, max];
-                    }
-                    if(max > this.subMax[1]){
-                        this.subMax = maxIndex;
-                    }
-                    // let nodeFlagInfo1 = currentFlagInfo[p.index * 2 + 1];
-                    // let nodeFlagInfo2 = currentFlagInfo2[p.index * 2 + 1];
-                    // if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 0){
-                    //     max = Math.max(p.yArray[1] - p2.yArray[1], p.yArray[2] - p2.yArray[2]);
-                    // }
-                    // else if(nodeFlagInfo1 === 1 && nodeFlagInfo2 === 1){
-                    //     max = Math.max(p.yArray[1] - p2.yArray[1], p.yArray[2] - p2.yArray[2]);
-                    // }
-                    // else{
-                    //     max = Math.max(p.yArray[1] - p2.yArray[2], p.yArray[2] - p2.yArray[1]);
-                    // }
-                    break;
-                }
-                if(p._leftChild){
-                    // temp_maxL = (p._leftChild.yArray[2] - p2._leftChild.yArray[1]);
-                    temp_maxL = p._leftChild.yArray[2];
-                    for(let i=0;i<p2.length;++i){
-                        if(p2[i]._leftChild !== null){
-                            temp_maxL -= p2[i]._leftChild!.yArray[1];
-                        }
-                    }
-                }
-                if(p._rightChild){
-                    // temp_maxR = (p._rightChild.yArray[2] - p2._rightChild.yArray[1]);
-                    temp_maxR = p._rightChild.yArray[2];
-                    for(let i=0;i<p2.length;++i){
-                        if(p2[i]._leftChild !== null){
-                            temp_maxR -= p2[i]._rightChild!.yArray[1];
-                        }
-                    }
-                }
-                if(temp_maxL <= temp_maxR && p._rightChild){
-                    // alternativeNodes.push([p, p2, p._rightChild, p2._rightChild, temp_maxL]);
-                    // p = p._leftChild;
-                    // p2 = p2._leftChild;
-                    let tempNode = [];
-                    tempMax = temp_maxR;
-                    tempNode.push(p);
-                    for(let i=0;i<p2.length;++i){
-                        tempNode.push(p2[i]);
-                    }
-                    tempNode.push(p._leftChild);
-                    for(let i=0;i<p2.length;++i){
-                        tempNode.push(p2[i]._leftChild);
-                    }
-                    tempNode.push(temp_maxL);
-                    alternativeNodes2.push(tempNode);
-                    p = p._rightChild;
-                    for(let i=0;i<p2.length;++i){
-                        p2[i] = p2[i]._rightChild!;
-                    }
-                }
-                else if(temp_maxL > temp_maxR && p._leftChild){
-                    // alternativeNodes.push([p, p2, p._leftChild, p2._leftChild, temp_maxR]);
-                    // p = p._rightChild;
-                    // p2 = p2._rightChild;
-                    let tempNode = [];
-                    tempMax = temp_maxL;
-                    tempNode.push(p);
-                    for(let i=0;i<p2.length;++i){
-                        tempNode.push(p2[i]);
-                    }
-                    tempNode.push(p._rightChild);
-                    for(let i=0;i<p2.length;++i){
-                        tempNode.push(p2[i]._rightChild);
-                    }
-                    tempNode.push(temp_maxR);
-                    alternativeNodes2.push(tempNode);
-                    p = p._leftChild;
-                    for(let i=0;i<p2.length;++i){
-                        p2[i] = p2[i]._leftChild!;
-                    }
-                }
-            }
-            // console.log("The bottom max(-):", maxIndex);
-            if(store.state.controlParams.stopEarly === true){
-                alternativeNodes = [];
-                alternativeNodes2 = [];
-            }
-            p = pp, p2 = pp2;
-            while(alternativeNodes.length > 0){
-                // console.log("alternativeNodes:", alternativeNodes);
-                let pop:any = alternativeNodes.pop();
-                if(pop === undefined ) continue;
-                // let p:[TrendTree, number] = alternativeNodes.pop();
-                // console.log("pop:", pop);
-                // if(Number(pop[pop.length-1]) > min) continue;
-                // min = this.updateMinValue(p![0], min, alternativeNodes);
-                let temp_minL = 0, temp_minR = 0;
-                let len = pop.length;
-                if(!pop[Math.floor(len/2)]._leftChild && !pop[Math.floor(len/2)]._rightChild){
-                    let minL = 0, minR = 0;
-                    let nodeFlagInfo1 = currentFlagInfo[pop[Math.floor(len/2)].index * 2 + 1];
-                    if(nodeFlagInfo1 === 0){
-                        minL += pop[Math.floor(len/2)].yArray[1];
-                        minR += pop[Math.floor(len/2)].yArray[2];
-                    } 
-                    else{
-                        minL += pop[Math.floor(len/2)].yArray[2];
-                        minR += pop[Math.floor(len/2)].yArray[1];
-                    }
-                    for(let i=0; i<currentFlagInfo2.length;++i){
-                        if(currentFlagInfo2[i][pop[Math.floor(len/2)].index * 2 + 1] === 0){
-                            minL -= pop[Math.floor(len/2)+i+1].yArray[1];
-                            minR -= pop[Math.floor(len/2)+i+1].yArray[2];
-                        }
-                        else{
-                            minL -= pop[Math.floor(len/2)+i+1].yArray[2];
-                            minR -= pop[Math.floor(len/2)+i+1].yArray[1];
-                        }
-                    }
-                    if(minL < minR){
-                        min = minL;
-                        minIndex = [pop[Math.floor(len/2)].index * 2, min];
-                    }
-                    else{
-                        min = minR;
-                        minIndex = [pop[Math.floor(len/2)].index * 2 + 1, min];
-                    }
-                    if(min < this.subMin[1]){
-                        this.subMin = minIndex;
-                    }
-                    // let nodeFlagInfo1 = currentFlagInfo[(pop[2].index) * 2 + 1];
-                    // let nodeFlagInfo2 = currentFlagInfo2[(pop[2].index) * 2 + 1];
-                    // if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 0){
-                    //     min = Math.min(Math.min(pop[2].yArray[1] - pop[3].yArray[1], pop[2].yArray[2] - pop[3].yArray[2]), min);
-                    // }
-                    // else if(nodeFlagInfo1 === 1 && nodeFlagInfo2 === 1){
-                    //     min = Math.min(Math.min(pop[2].yArray[1] - pop[3].yArray[1], pop[2].yArray[2] - pop[3].yArray[2]), min);
-                    // }
-                    // else{
-                    //     min = Math.min(Math.min(pop[2].yArray[1] - pop[3].yArray[2], pop[2].yArray[2] - pop[3].yArray[1]), min);
-                    // }
-                    continue;
-                }
-                if(pop[Math.floor(len/2)]._leftChild){
-                    // temp_minL = (pop[2]._leftChild.yArray[1] - pop[3]._leftChild.yArray[2]);
-                    // if(temp_minL < min)
-                    //     alternativeNodes.push([pop[2], pop[3], pop[2]._leftChild, pop[3]._leftChild, temp_minL]);
-                    let index = Math.floor(len / 2);
-                    temp_minL = pop[index]._leftChild.yArray[1];
-                    for(let i = index + 1; i < index * 2; ++i){
-                        temp_minL -= pop[i]._leftChild.yArray[2];
-                    }
-                    // temp_minL = (pop[2]._leftChild.yArray[1] + pop[3]._leftChild.yArray[1]);
-                    // if(temp_minL < min){
-                        let tempNode = [];
-                        for(let i = index; i < index * 2; ++i){
-                            tempNode.push(pop[i]);
-                        }
-                        for(let i = index; i < index * 2; ++i){
-                            tempNode.push(pop[i]._leftChild);
-                        }
-                        tempNode.push(temp_minL);
-                        alternativeNodes.push(tempNode);
-                        count.count++;
-                    // }
-                }
-                if(pop[Math.floor(len/2)]._rightChild){
-                    // temp_minR = (pop[2]._rightChild.yArray[1] - pop[3]._rightChild.yArray[2]);
-                    // if(temp_minR < min)
-                    //     alternativeNodes.push([pop[2], pop[3], pop[2]._rightChild, pop[3]._rightChild, temp_minR]);
-                    let index = Math.floor(len / 2);
-                    temp_minR = pop[index]._rightChild.yArray[1];
-                    for(let i = index + 1; i < index * 2; ++i){
-                        temp_minR -= pop[i]._rightChild.yArray[2];
-                    }
-                    // temp_minL = (pop[2]._leftChild.yArray[1] + pop[3]._leftChild.yArray[1]);
-                    // if(temp_minR < min){
-                        let tempNode = [];
-                        for(let i = index; i < index * 2; ++i){
-                            tempNode.push(pop[i]);
-                        }
-                        for(let i = index; i < index * 2; ++i){
-                            tempNode.push(pop[i]._rightChild);
-                        }
-                        tempNode.push(temp_minR);
-                        alternativeNodes.push(tempNode);
-                        count.count++;
-                    // }
-                }
-                // console.log("The final min(-):", min);
-                // this.subMin = Math.min(min, this.subMin);
-            }
-            p = pp, p2 = pp2;
-            while(alternativeNodes2.length > 0){
-                // console.log("alternativeNodes2:", alternativeNodes2);
-                let pop:any = alternativeNodes2.pop();
-                if(pop === undefined ) continue;
-                // console.log("pop:", pop);
-                // if(Number(pop[pop.length-1]) < max) continue;
-                let len = pop.length;
-                let temp_maxL = 0, temp_maxR = 0;
-                if(!pop[Math.floor(len/2)]._leftChild && !pop[Math.floor(len/2)]._rightChild){
-                    let maxL = 0, maxR = 0;
-                    let nodeFlagInfo1 = currentFlagInfo[pop[Math.floor(len/2)].index * 2 + 1];
-                    if(nodeFlagInfo1 === 0){
-                        maxL += pop[Math.floor(len/2)].yArray[1];
-                        maxR += pop[Math.floor(len/2)].yArray[2];
-                    } 
-                    else{
-                        maxL += pop[Math.floor(len/2)].yArray[2];
-                        maxR += pop[Math.floor(len/2)].yArray[1];
-                    }
-                    for(let i=0; i<currentFlagInfo2.length;++i){
-                        if(currentFlagInfo2[i][pop[Math.floor(len/2)].index * 2 + 1] === 0){
-                            maxL -= pop[Math.floor(len/2)+i+1].yArray[1];
-                            maxR -= pop[Math.floor(len/2)+i+1].yArray[2];
-                        }
-                        else{
-                            maxL -= pop[Math.floor(len/2)+i+1].yArray[2];
-                            maxR -= pop[Math.floor(len/2)+i+1].yArray[1];
-                        }
-                    }
-                    if(maxL > maxR){
-                        max = maxL;
-                        maxIndex = [pop[Math.floor(len/2)].index * 2, max];
-                    }
-                    else{
-                        max = maxR;
-                        maxIndex = [pop[Math.floor(len/2)].index * 2 + 1, max];
-                    }
-                    if(max > this.subMax[1]){
-                        this.subMax = maxIndex;
-                    }
-                    // let nodeFlagInfo1 = currentFlagInfo[(pop[2].index) * 2 + 1];
-                    // let nodeFlagInfo2 = currentFlagInfo2[(pop[2].index) * 2 + 1];
-                    // if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 0){
-                    //     max = Math.max(Math.max(pop[2].yArray[1] - pop[3].yArray[1], pop[2].yArray[2] - pop[3].yArray[2]), max);
-                    // }
-                    // else if(nodeFlagInfo1 === 1 && nodeFlagInfo2 === 1){
-                    //     max = Math.max(Math.max(pop[2].yArray[1] - pop[3].yArray[1], pop[2].yArray[2] - pop[3].yArray[2]), max);
-                    // }
-                    // else{
-                    //     max = Math.max(Math.max(pop[2].yArray[1] - pop[3].yArray[2], pop[2].yArray[2] - pop[3].yArray[1]), max);
-                    // }
-                    continue;
-                }
-                if(pop[Math.floor(len/2)]._leftChild){
-                    // temp_maxL = (pop[2]._leftChild.yArray[2] - pop[3]._leftChild.yArray[1]);
-                    // if(temp_maxL > max)
-                    //     alternativeNodes.push([pop[2], pop[3], pop[2]._leftChild, pop[3]._leftChild, temp_maxL]);
-                    let index = Math.floor(len / 2);
-                    temp_maxL = pop[index]._leftChild.yArray[2];
-                    for(let i = index + 1; i < index * 2; ++i){
-                        temp_maxL -= pop[i]._leftChild.yArray[1];
-                    }
-                    // if(temp_maxL > max){
-                        let tempNode = [];
-                        for(let i = index; i < index * 2; ++i){
-                            tempNode.push(pop[i]);
-                        }
-                        for(let i = index; i < index * 2; ++i){
-                            tempNode.push(pop[i]._leftChild);
-                        }
-                        tempNode.push(temp_maxL);
-                        alternativeNodes2.push(tempNode);
-                        count.count++;
-                    // }
-                }
-                if(pop[Math.floor(len/2)]._rightChild){
-                    // temp_maxR = (pop[2]._rightChild.yArray[2] - pop[3]._rightChild.yArray[1]);
-                    // if(temp_maxR > max)
-                    //     alternativeNodes.push([pop[2], pop[3], pop[2]._rightChild, pop[3]._rightChild, temp_maxR]);
-                    let index = Math.floor(len / 2);
-                    temp_maxR = pop[index]._rightChild.yArray[2];
-                    for(let i = index; i < index * 2; ++i){
-                        temp_maxR -= pop[i]._rightChild.yArray[1];
-                    }
-                    // if(temp_maxR > max){
-                        let tempNode = [];
-                        for(let i = index; i < index * 2; ++i){
-                            tempNode.push(pop[i]);
-                        }
-                        for(let i = index; i < index * 2; ++i){
-                            tempNode.push(pop[i]._rightChild);
-                        }
-                        tempNode.push(temp_maxR);
-                        alternativeNodes2.push(tempNode);
-                        count.count++;
-                    // }
-                }
-            }
+    //         let min = (min1 + min2);
+    //         let max = (max1 + max2);
+    //         let tempMin;
+    //         let tempMax;
+    //         let minIndex: [number, number];
+    //         minIndex = [-1, Infinity];
+    //         let maxIndex: [number, number];
+    //         maxIndex = [-1, -Infinity];
+    //         // console.log("count:", count);
+    //         let alternativeNodes = [];
+    //         let alternativeNodes2 = [];
+    //         // this.addMin = [-1, min, -1]; //add level info
+    //         // this.addMax = [-1, max, -1];
+    //         if(this.addMin[2] === -1){
+    //             this.addMin = [-1, min, p.level];
+    //             this.addMax = [-1, max, p.level];
+    //         }
+    //         else if(p.level > this.addMin[2]){
+    //             this.addMin = [-1, min, p.level];
+    //             this.addMax = [-1, max, p.level];
+    //         }
+    //         else if(p.level === this.addMin[2]){
+    //             if(min < this.addMin[1]){
+    //                 this.addMin = [-1, min, p.level];
+    //             }
+    //         }
+    //         while(max > -10000){
+    //             let temp_minL = 0, temp_minR = 0;
+    //             // const combinedUrl = `/line_chart/onlyChild?&p=${p}&p2=${p2}&dataName=${dataName}&dataNames=${dataNames}`;
+    //             // const data = get(combinedUrl);
+    //             // const difChild = await data;
+
+    //             // let needLoadChildNode: Array<TrendTree> = [];
+    //             // needLoadChildNode.push(p);
+    //             // let losedDataInfo = computeLosedDataRangeV1(needLoadChildNode);
+    //             // console.log(losedDataInfo);
+    //             // if (losedDataInfo.length > 0) {
+    //             //     batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, levelDataManager);  //取得系数
+    //             //     for(let i=0; i<otherDataManager.length; i++)
+    //             //         batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, otherDataManager[i]);
+    //             // }
+    //             // console.log("get child finished");
+    //             if(!p._leftChild && !p._rightChild){
+    //                     let minL = 0, minR = 0;
+    //                     let nodeFlagInfo1 = currentFlagInfo[p.index * 2 + 1];
+    //                     if(nodeFlagInfo1 === 0){
+    //                         minL += p.yArray[1];
+    //                         minR += p.yArray[2];
+    //                     } 
+    //                     else{
+    //                         minL += p.yArray[2];
+    //                         minR += p.yArray[1];
+    //                     }
+    //                     for(let i=0; i<currentFlagInfo2.length;++i){
+    //                         if(currentFlagInfo2[i][p.index * 2 + 1] === 0){
+    //                             minL += p2[i].yArray[1];
+    //                             minR += p2[i].yArray[2];
+    //                         }
+    //                         else{
+    //                             minL += p2[i].yArray[2];
+    //                             minR += p2[i].yArray[1];
+    //                         }
+    //                     }
+    //                     if(minL < minR){
+    //                         min = minL;
+    //                         minIndex = [p.index * 2, min];
+    //                     }
+    //                     else{
+    //                         min = minR;
+    //                         minIndex = [p.index * 2 + 1, min];
+    //                     }
+    //                     if(min < this.addMin[1]){
+    //                         this.addMin = minIndex;
+    //                     }
+    //                     // let nodeFlagInfo2 = currentFlagInfo2[p.index * 2 + 1];
+    //                     // if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 0){
+    //                     //     min = p.yArray[1] + p2.yArray[1];
+    //                     //     minIndex = [p.index * 2, min];
+    //                     // }
+    //                     // else if(nodeFlagInfo1 === 1 && nodeFlagInfo2 === 1){
+    //                     //     min = p.yArray[1] + p2.yArray[1];
+    //                     //     minIndex = [p.index * 2 + 1, min];
+    //                     // }
+    //                     // else if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 1){
+    //                     //     // min = Math.min(p.yArray[1] + p2.yArray[2], p.yArray[2] + p2.yArray[1]);
+    //                     //     if(p.yArray[1] + p2.yArray[2] < p.yArray[2] + p2.yArray[1]){
+    //                     //         min = p.yArray[1] + p2.yArray[2];
+    //                     //         minIndex = [p.index * 2, p.yArray[1] + p2.yArray[2]];
+    //                     //     }
+    //                     //     else{
+    //                     //         min = p.yArray[2] + p2.yArray[1];
+    //                     //         minIndex = [p.index * 2 + 1, p.yArray[2] + p2.yArray[1]];
+    //                     //     }
+    //                     // }
+    //                     // else{
+    //                     //     if(p.yArray[1] + p2.yArray[2] < p.yArray[2] + p2.yArray[1]){
+    //                     //         min = p.yArray[1] + p2.yArray[2];
+    //                     //         minIndex = [p.index * 2 + 1, p.yArray[1] + p2.yArray[2]];
+    //                     //     }
+    //                     //     else{
+    //                     //         min = p.yArray[2] + p2.yArray[1];
+    //                     //         minIndex = [p.index * 2, p.yArray[2] + p2.yArray[1]];
+    //                     //     }
+    //                     // }
+    //                     break;
+    //             }
+    //             if(p._leftChild){
+    //                 temp_minL = p._leftChild.yArray[1];
+    //                 for(let i=0;i<p2.length;++i){
+    //                     if(p2[i]._leftChild !== null){
+    //                         temp_minL += p2[i]._leftChild!.yArray[1];
+    //                     }
+    //                 }
+    //             }
+    //             if(p._rightChild){
+    //                 temp_minR = p._rightChild.yArray[1];
+    //                 for(let i=0;i<p2.length;++i){
+    //                     if(p2[i]._rightChild !== null){
+    //                         temp_minR += p2[i]._rightChild!.yArray[1];
+    //                     }
+    //                 }
+    //             }
+    //             if(temp_minL <= temp_minR && p._leftChild){
+    //                 let tempNode = [];
+    //                 tempMin = temp_minL;
+    //                 tempNode.push(p);
+    //                 for(let i=0;i<p2.length;++i){
+    //                     tempNode.push(p2[i]);
+    //                 }
+    //                 tempNode.push(p._rightChild);
+    //                 for(let i=0;i<p2.length;++i){
+    //                     tempNode.push(p2[i]._rightChild);
+    //                 }
+    //                 tempNode.push(temp_minR);
+    //                 alternativeNodes.push(tempNode);
+    //                 p = p._leftChild;
+    //                 for(let i=0;i<p2.length;++i){
+    //                     p2[i] = p2[i]._leftChild!;
+    //                 }
+    //             }
+    //             else if(temp_minL > temp_minR && p._rightChild){
+    //                 let tempNode = [];
+    //                 tempMin = temp_minR;
+    //                 // alternativeNodes.push([p, p2, p._leftChild, p2._leftChild, temp_minL]);
+    //                 tempNode.push(p);
+    //                 for(let i=0;i<p2.length;++i){
+    //                     tempNode.push(p2[i]);
+    //                 }
+    //                 tempNode.push(p._leftChild);
+    //                 for(let i=0;i<p2.length;++i){
+    //                     tempNode.push(p2[i]._leftChild);
+    //                 }
+    //                 tempNode.push(temp_minL);
+    //                 p = p._rightChild;
+    //                 for(let i=0;i<p2.length;++i){
+    //                     p2[i] = p2[i]._rightChild!;
+    //                 }
+    //                 alternativeNodes.push(tempNode);
+    //             }
+    //         }
+    //         // console.log("The bottom min(+):", minIndex);
+    //         // p = pp, p2 = pp2;
+    //         // while(max > -10000){
+    //         //     let temp_maxL = 0, temp_maxR = 0;
+    //         //     // let needLoadChildNode: Array<TrendTree> = [];
+    //         //     // needLoadChildNode.push(p);
+    //         //     // let losedDataInfo = computeLosedDataRangeV1(needLoadChildNode);
+    //         //     // console.log(losedDataInfo);
+    //         //     // if (losedDataInfo.length > 0) {
+    //         //     //     batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, levelDataManager);  //取得系数
+    //         //     //     for(let i=0; i<otherDataManager.length; i++)
+    //         //     //         batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, otherDataManager[i]);
+    //         //     // }
+    //         //     if(!p._leftChild && !p._rightChild){
+    //         //         let maxL = 0, maxR = 0;
+    //         //         let nodeFlagInfo1 = currentFlagInfo[p.index * 2 + 1];
+    //         //         if(nodeFlagInfo1 === 0){
+    //         //             maxL += p.yArray[1];
+    //         //             maxR += p.yArray[2];
+    //         //         } 
+    //         //         else{
+    //         //             maxL += p.yArray[2];
+    //         //             maxR += p.yArray[1];
+    //         //         }
+    //         //         for(let i=0; i<currentFlagInfo2.length;++i){
+    //         //             if(currentFlagInfo2[i][p.index * 2 + 1] === 0){
+    //         //                 maxL += p2[i].yArray[1];
+    //         //                 maxR += p2[i].yArray[2];
+    //         //             }
+    //         //             else{
+    //         //                 maxL += p2[i].yArray[2];
+    //         //                 maxR += p2[i].yArray[1];
+    //         //             }
+    //         //         }
+    //         //         if(maxL > maxR){
+    //         //             max = maxL;
+    //         //             maxIndex = [p.index * 2, max];
+    //         //         }
+    //         //         else{
+    //         //             max = maxR;
+    //         //             maxIndex = [p.index * 2 + 1, max];
+    //         //         }
+    //         //         if(max > this.addMax[1]){
+    //         //             this.addMax = maxIndex;
+    //         //         }
+    //         //         break;
+    //         //     }
+    //         //     if(p._leftChild){
+    //         //         temp_maxL = p._leftChild.yArray[2];
+    //         //         for(let i=0;i<p2.length;++i){
+    //         //             if(p2[i]._leftChild !== null){
+    //         //                 temp_maxL += p2[i]._leftChild!.yArray[2];
+    //         //             }
+    //         //         }
+    //         //     }
+    //         //     if(p._rightChild){
+    //         //         temp_maxR = p._rightChild.yArray[2];
+    //         //         for(let i=0;i<p2.length;++i){
+    //         //             if(p2[i]._leftChild !== null){
+    //         //                 temp_maxR += p2[i]._rightChild!.yArray[2];
+    //         //             }
+    //         //         }
+    //         //     }
+    //         //     if(temp_maxL <= temp_maxR && p._rightChild){
+    //         //         let tempNode = [];
+    //         //         tempMax = temp_maxR;
+    //         //         tempNode.push(p);
+    //         //         for(let i=0;i<p2.length;++i){
+    //         //             tempNode.push(p2[i]);
+    //         //         }
+    //         //         tempNode.push(p._leftChild);
+    //         //         for(let i=0;i<p2.length;++i){
+    //         //             tempNode.push(p2[i]._leftChild);
+    //         //         }
+    //         //         tempNode.push(temp_maxL);
+    //         //         alternativeNodes2.push(tempNode);
+    //         //         p = p._rightChild!;
+    //         //         for(let i=0;i<p2.length;++i){
+    //         //             p2[i] = p2[i]._rightChild!;
+    //         //         }
+    //         //     }
+    //         //     else if(temp_maxL > temp_maxR && p._leftChild){
+    //         //         let tempNode = [];
+    //         //         tempMax = temp_maxL;
+    //         //         tempNode.push(p);
+    //         //         for(let i=0;i<p2.length;++i){
+    //         //             tempNode.push(p2[i]);
+    //         //         }
+    //         //         tempNode.push(p._rightChild);
+    //         //         for(let i=0;i<p2.length;++i){
+    //         //             tempNode.push(p2[i]._rightChild);
+    //         //         }
+    //         //         tempNode.push(temp_maxR);
+    //         //         alternativeNodes2.push(tempNode);
+    //         //         p = p._leftChild!;
+    //         //         for(let i=0;i<p2.length;++i){
+    //         //             p2[i] = p2[i]._leftChild!;
+    //         //         }
+    //         //     }
+    //         // }
+    //         // console.log("The bottom max(+):", maxIndex);
+    //         // console.log("store.state.controlParams.stopEarly:", store.state.controlParams.stopEarly);
+    //         if(store.state.controlParams.stopEarly === true){
+    //             alternativeNodes = [];
+    //             alternativeNodes2 = [];
+    //             // return;
+    //         }
+    //         // p = pp, p2 = pp3;
+    //         while(alternativeNodes.length > 0){
+    //             // console.log("No stop early!");
+    //             let pop:any = alternativeNodes.pop();
+    //             // if(pop === undefined ) continue;
+    //             // console.log("pop:", pop);
+    //             // if(Number(pop[pop.length-1]) > min) continue;
+    //             // min = this.updateMinValue(p![0], min, alternativeNodes);
+    //             let len = pop.length;
+    //             let temp_minL = 0, temp_minR = 0;
+    //             if(!pop[Math.floor(len/2)]._leftChild && !pop[Math.floor(len/2)]._rightChild){
+    //                 let minL = 0, minR = 0;
+    //                 let nodeFlagInfo1 = currentFlagInfo[pop[Math.floor(len/2)].index * 2 + 1];
+    //                 if(nodeFlagInfo1 === 0){
+    //                     minL += pop[Math.floor(len/2)].yArray[1];
+    //                     minR += pop[Math.floor(len/2)].yArray[2];
+    //                 } 
+    //                 else{
+    //                     minL += pop[Math.floor(len/2)].yArray[2];
+    //                     minR += pop[Math.floor(len/2)].yArray[1];
+    //                 }
+    //                 for(let i=0; i<currentFlagInfo2.length;++i){
+    //                     if(currentFlagInfo2[i][pop[Math.floor(len/2)].index * 2 + 1] === 0){
+    //                         minL += pop[Math.floor(len/2)+i+1].yArray[1];
+    //                         minR += pop[Math.floor(len/2)+i+1].yArray[2];
+    //                     }
+    //                     else{
+    //                         minL += pop[Math.floor(len/2)+i+1].yArray[2];
+    //                         minR += pop[Math.floor(len/2)+i+1].yArray[1];
+    //                     }
+    //                 }
+    //                 if(minL < minR){
+    //                     min = minL;
+    //                     minIndex = [pop[Math.floor(len/2)].index * 2, min];
+    //                 }
+    //                 else{
+    //                     min = minR;
+    //                     minIndex = [pop[Math.floor(len/2)].index * 2 + 1, min];
+    //                 }
+    //                 if(min < this.addMin[1]){
+    //                     this.addMin = minIndex;
+    //                 }
+    //                 continue;
+    //             }
+    //             if(pop[Math.floor(len/2)]._leftChild){
+    //                 let index = Math.floor(len / 2);
+    //                 for(let i = index; i < index * 2; ++i){
+    //                     temp_minL += pop[i]._leftChild.yArray[1];
+    //                 }
+    //                 if(temp_minL < min){
+    //                     let tempNode = [];
+    //                     for(let i = index; i < index * 2; ++i){
+    //                         tempNode.push(pop[i]);
+    //                     }
+    //                     for(let i = index; i < index * 2; ++i){
+    //                         tempNode.push(pop[i]._leftChild);
+    //                     }
+    //                     tempNode.push(temp_minL);
+    //                     alternativeNodes.push(tempNode);
+    //                     count.count++;
+    //                 }
+    //             }
+    //             if(pop[Math.floor(len/2)]._rightChild){
+    //                 // temp_minR = (pop[2]._rightChild.yArray[1] + pop[3]._rightChild.yArray[1]);
+    //                 // if(temp_minR < min)
+    //                 //     alternativeNodes.push([pop[2], pop[3], pop[2]._rightChild, pop[3]._rightChild, temp_minR]);
+    //                 let index = Math.floor(len / 2);
+    //                 for(let i = index; i < index * 2; ++i){
+    //                     temp_minR += pop[i]._rightChild.yArray[1];
+    //                 }
+    //                 if(temp_minR < min){
+    //                     let tempNode = [];
+    //                     for(let i = index; i < index * 2; ++i){
+    //                         tempNode.push(pop[i]);
+    //                     }
+    //                     for(let i = index; i < index * 2; ++i){
+    //                         tempNode.push(pop[i]._rightChild);
+    //                     }
+    //                     tempNode.push(temp_minR);
+    //                     alternativeNodes.push(tempNode);
+    //                     count.count++;
+    //                 }
+    //             }
+    //         }
+    //         // p = pp, p2 = pp4;
+    //         // while(alternativeNodes2.length > 0){
+    //         //     let pop:any = alternativeNodes2.pop();
+    //         //     // if(pop === undefined) continue;
+    //         //     // if(Number(pop[pop.length-1]) < max) continue;
+    //         //     let len = pop.length;
+    //         //     let temp_maxL = 0, temp_maxR = 0;
+    //         //     if(!pop[Math.floor(len/2)]._leftChild && !pop[Math.floor(len/2)]._rightChild){
+    //         //         let maxL = 0, maxR = 0;
+    //         //         let nodeFlagInfo1 = currentFlagInfo[pop[Math.floor(len/2)].index * 2 + 1];
+    //         //         if(nodeFlagInfo1 === 0){
+    //         //             maxL += pop[Math.floor(len/2)].yArray[1];
+    //         //             maxR += pop[Math.floor(len/2)].yArray[2];
+    //         //         } 
+    //         //         else{
+    //         //             maxL += pop[Math.floor(len/2)].yArray[2];
+    //         //             maxR += pop[Math.floor(len/2)].yArray[1];
+    //         //         }
+    //         //         for(let i=0; i<currentFlagInfo2.length;++i){
+    //         //             if(currentFlagInfo2[i][p.index * 2 + 1] === 0){
+    //         //                 maxL += pop[Math.floor(len/2)+i+1].yArray[1];
+    //         //                 maxR += pop[Math.floor(len/2)+i+1].yArray[2];
+    //         //             }
+    //         //             else{
+    //         //                 maxL += pop[Math.floor(len/2)+i+1].yArray[2];
+    //         //                 maxR += pop[Math.floor(len/2)+i+1].yArray[1];
+    //         //             }
+    //         //         }
+    //         //         if(maxL > maxR){
+    //         //             max = maxL;
+    //         //             maxIndex = [pop[Math.floor(len/2)].index * 2, max];
+    //         //         }
+    //         //         else{
+    //         //             max = maxR;
+    //         //             maxIndex = [pop[Math.floor(len/2)].index * 2 + 1, max];
+    //         //         }
+    //         //         if(max > this.addMax[1]){
+    //         //             this.addMax = maxIndex;
+    //         //         }
+    //         //         // let nodeFlagInfo1 = currentFlagInfo[(pop[2].index) * 2 + 1];
+    //         //         // let nodeFlagInfo2 = currentFlagInfo2[(pop[2].index) * 2 + 1];
+    //         //         // if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 0){
+    //         //         //     // min = Math.min(pop[2].yArray[1] + pop[3].yArray[1], min);
+    //         //         //     if(pop[2].yArray[2] + pop[3].yArray[2] > max){
+    //         //         //         max = pop[2].yArray[2] + pop[3].yArray[2];
+    //         //         //         maxIndex = [pop[2].index * 2 + 1, max]
+    //         //         //     }
+    //         //         // }
+    //         //         // else if(nodeFlagInfo1 === 1 && nodeFlagInfo2 === 1){
+    //         //         //     // min = Math.min(pop[2].yArray[1] + pop[3].yArray[1], min);
+    //         //         //     if(pop[2].yArray[1] + pop[3].yArray[1] > max){
+    //         //         //         max = pop[2].yArray[2] + pop[3].yArray[2];
+    //         //         //         maxIndex = [pop[2].index * 2, max]
+    //         //         //     }
+    //         //         // }
+    //         //         // else if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 1){
+    //         //         //     // min = Math.min(Math.min(pop[2].yArray[1] + pop[3].yArray[2], pop[2].yArray[2] + pop[3].yArray[1]), min);
+    //         //         //     if(pop[2].yArray[1] + pop[3].yArray[2] > max){
+    //         //         //         max = pop[2].yArray[1] + pop[3].yArray[2];
+    //         //         //         maxIndex = [pop[2].index * 2, max]
+    //         //         //     }
+    //         //         //     else if(pop[2].yArray[2] + pop[3].yArray[1] > max){
+    //         //         //         max = pop[2].yArray[2] + pop[3].yArray[1];
+    //         //         //         maxIndex = [pop[2].index * 2 + 1, max]
+    //         //         //     }
+    //         //         // }
+    //         //         // else{
+    //         //         //     if(pop[2].yArray[1] + pop[3].yArray[2] > max){
+    //         //         //         max = pop[2].yArray[1] + pop[3].yArray[2];
+    //         //         //         maxIndex = [pop[2].index * 2 + 1, max]
+    //         //         //     }
+    //         //         //     else if(pop[2].yArray[2] + pop[3].yArray[1] > max){
+    //         //         //         max = pop[2].yArray[2] + pop[3].yArray[1];
+    //         //         //         maxIndex = [pop[2].index * 2, max]
+    //         //         //     }
+    //         //         // }
+    //         //         continue;
+    //         //     }
+    //         //     if(pop[Math.floor(len/2)]._leftChild){
+    //         //         // temp_maxL = (pop[2]._leftChild.yArray[2] + pop[3]._leftChild.yArray[2]);
+    //         //         // if(temp_maxL > max)
+    //         //         //     alternativeNodes2.push([pop[2], pop[3], pop[2]._leftChild, pop[3]._leftChild, temp_maxL]);
+    //         //         let index = Math.floor(len / 2);
+    //         //         for(let i = index; i < index * 2; ++i){
+    //         //             temp_maxL += pop[i]._leftChild.yArray[2];
+    //         //         }
+    //         //         if(temp_maxL > max){
+    //         //             let tempNode = [];
+    //         //             for(let i = index; i < index * 2; ++i){
+    //         //                 tempNode.push(pop[i]);
+    //         //             }
+    //         //             for(let i = index; i < index * 2; ++i){
+    //         //                 tempNode.push(pop[i]._leftChild);
+    //         //             }
+    //         //             tempNode.push(temp_maxL);
+    //         //             alternativeNodes2.push(tempNode);
+    //         //             count.count++;
+    //         //         }
+    //         //     }
+    //         //     if(pop[Math.floor(len/2)]._rightChild){
+    //         //         // temp_maxR = (pop[2]._rightChild.yArray[2] + pop[3]._rightChild.yArray[2]);
+    //         //         // if(temp_maxR > max)
+    //         //         //     alternativeNodes2.push([pop[2], pop[3], pop[2]._rightChild, pop[3]._rightChild, temp_maxR]);
+    //         //         let index = Math.floor(len / 2);
+    //         //         for(let i = index; i < index * 2; ++i){
+    //         //             temp_maxR += pop[i]._rightChild.yArray[2];
+    //         //         }
+    //         //         if(temp_maxR > max){
+    //         //             let tempNode = [];
+    //         //             for(let i = index; i < index * 2; ++i){
+    //         //                 tempNode.push(pop[i]);
+    //         //             }
+    //         //             for(let i = index; i < index * 2; ++i){
+    //         //                 tempNode.push(pop[i]._rightChild);
+    //         //             }
+    //         //             tempNode.push(temp_maxR);
+    //         //             alternativeNodes2.push(tempNode);
+    //         //             count.count++;
+    //         //         }
+    //         //     }
+    //         // }
+    //         // console.log("The final max(+):", maxIndex);          
+    //         // console.log("The final min(+):", minIndex);
+    //         if(min < this.addMin[1]){
+    //             this.addMin = minIndex;
+    //         }
+    //         if(max > this.addMax[1]){
+    //             this.addMax = maxIndex;
+    //         }
+    //     }
+    //     else if((type === 1 || type === 7 || type ===8 || type === 9) && symbol == '-'){
+    //         // let p = pp, p2 = pp2;
+    //         let min1 = p.yArray[1];
+    //         let min2 = 0;
+    //         for(let i=0;i<p2.length;i++){
+    //             min2 += p2[i].yArray[1];
+    //         }  
+    //         let max1 = p.yArray[2];
+    //         let max2 = 0;
+    //         for(let i=0;i<p2.length;i++){
+    //             max2 += p2[i].yArray[2];
+    //         }
+
+    //         let min = (min1 - max2);
+    //         let max = (max2 - min1);
+    //         let tempMin;
+    //         let tempMax;
+    //         let minIndex: [number, number];
+    //         minIndex = [-1, Infinity];
+    //         let maxIndex: [number, number];
+    //         maxIndex = [-1, -Infinity];
+
+    //         let alternativeNodes = [];
+    //         let alternativeNodes2 = [];
+    //         while(max > -100000){
+    //             let temp_minL = 0, temp_minR = 0;
+    //             if(!p._leftChild && !p._rightChild){
+    //                 let minL = 0, minR = 0;
+    //                 let nodeFlagInfo1 = currentFlagInfo[p.index * 2 + 1];
+    //                 if(nodeFlagInfo1 === 0){
+    //                     minL += p.yArray[1];
+    //                     minR += p.yArray[2];
+    //                 } 
+    //                 else{
+    //                     minL += p.yArray[2];
+    //                     minR += p.yArray[1];
+    //                 }
+    //                 for(let i=0; i<currentFlagInfo2.length;++i){
+    //                     if(currentFlagInfo2[i][p.index * 2 + 1] === 0){
+    //                         minL -= p2[i].yArray[1];
+    //                         minR -= p2[i].yArray[2];
+    //                     }
+    //                     else{
+    //                         minL -= p2[i].yArray[2];
+    //                         minR -= p2[i].yArray[1];
+    //                     }
+    //                 }
+    //                 if(minL < minR){
+    //                     min = minL;
+    //                     minIndex = [p.index * 2, min];
+    //                 }
+    //                 else{
+    //                     min = minR;
+    //                     minIndex = [p.index * 2 + 1, min];
+    //                 }
+    //                 if(min < this.subMin[1]){
+    //                     this.subMin = minIndex;
+    //                 }
+    //                 // let nodeFlagInfo1 = currentFlagInfo[p.index * 2 + 1];
+    //                 // let nodeFlagInfo2 = currentFlagInfo2[p.index * 2 + 1];
+    //                 // if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 0){
+    //                 //     min = Math.min(p.yArray[1] - p2.yArray[1], p.yArray[2] - p2.yArray[2]);
+    //                 // }
+    //                 // else if(nodeFlagInfo1 === 1 && nodeFlagInfo2 === 1){
+    //                 //     min = Math.min(p.yArray[1] - p2.yArray[1], p.yArray[2] - p2.yArray[2]);
+    //                 // }
+    //                 // else{
+    //                 //     min = Math.min(p.yArray[1] - p2.yArray[2], p.yArray[2] - p2.yArray[1]);
+    //                 // }
+    //                 break;
+    //             }
+    //             if(p._leftChild){
+    //                 // temp_minL = (p._leftChild.yArray[1] - p2._leftChild.yArray[2]);
+    //                 temp_minL = p._leftChild.yArray[1];
+    //                 for(let i=0;i<p2.length;++i){
+    //                     if(p2[i]._leftChild !== null){
+    //                         temp_minL -= p2[i]._leftChild!.yArray[2];
+    //                     }
+    //                 }
+    //             }
+    //             if(p._rightChild){
+    //                 // temp_minR = (p._rightChild.yArray[1] - p2._rightChild.yArray[2]);
+    //                 temp_minR = p._rightChild.yArray[1];
+    //                 for(let i=0;i<p2.length;++i){
+    //                     if(p2[i]._rightChild !== null){
+    //                         temp_minR -= p2[i]._rightChild!.yArray[2];
+    //                     }
+    //                 }
+    //             }
+    //             if(temp_minL <= temp_minR && p._leftChild){
+    //                 // tempMin = temp_minL;
+    //                 // alternativeNodes.push([p, p2, p._rightChild, p2._rightChild, temp_minR]);
+    //                 // p = p._leftChild;
+    //                 // p2 = p2._leftChild;
+    //                 let tempNode = [];
+    //                 tempMin = temp_minL;
+    //                 tempNode.push(p);
+    //                 for(let i=0;i<p2.length;++i){
+    //                     tempNode.push(p2[i]);
+    //                 }
+    //                 tempNode.push(p._rightChild);
+    //                 for(let i=0;i<p2.length;++i){
+    //                     tempNode.push(p2[i]._rightChild);
+    //                 }
+    //                 tempNode.push(temp_minR);
+    //                 alternativeNodes.push(tempNode);
+    //                 p = p._leftChild;
+    //                 for(let i=0;i<p2.length;++i){
+    //                     p2[i] = p2[i]._leftChild!;
+    //                 }
+    //             }
+    //             else if(temp_minL > temp_minR && p._rightChild){
+    //                 // tempMin = temp_minR;
+    //                 // alternativeNodes.push([p, p2, p._leftChild, p2._leftChild, temp_minL]);
+    //                 // p = p._rightChild;
+    //                 // p2 = p2._rightChild;
+    //                 let tempNode = [];
+    //                 tempMin = temp_minR;
+    //                 // alternativeNodes.push([p, p2, p._leftChild, p2._leftChild, temp_minL]);
+    //                 tempNode.push(p);
+    //                 for(let i=0;i<p2.length;++i){
+    //                     tempNode.push(p2[i]);
+    //                 }
+    //                 tempNode.push(p._leftChild);
+    //                 for(let i=0;i<p2.length;++i){
+    //                     tempNode.push(p2[i]._leftChild);
+    //                 }
+    //                 tempNode.push(temp_minL);
+    //                 p = p._rightChild;
+    //                 for(let i=0;i<p2.length;++i){
+    //                     p2[i] = p2[i]._rightChild!;
+    //                 }
+    //                 alternativeNodes.push(tempNode);
+    //             }
+    //         }
+    //         // console.log("The bottom min(-):", minIndex);
+    //         p = pp, p2 = pp2;
+    //         while(max > -100000){
+    //             let temp_maxL = 0, temp_maxR = 0;
+    //             if(!p._leftChild && !p._rightChild){
+    //                 let maxL = 0, maxR = 0;
+    //                 let nodeFlagInfo1 = currentFlagInfo[p.index * 2 + 1];
+    //                 if(nodeFlagInfo1 === 0){
+    //                     maxL += p.yArray[1];
+    //                     maxR += p.yArray[2];
+    //                 } 
+    //                 else{
+    //                     maxL += p.yArray[2];
+    //                     maxR += p.yArray[1];
+    //                 }
+    //                 for(let i=0; i<currentFlagInfo2.length;++i){
+    //                     if(currentFlagInfo2[i][p.index * 2 + 1] === 0){
+    //                         maxL -= p2[i].yArray[1];
+    //                         maxR -= p2[i].yArray[2];
+    //                     }
+    //                     else{
+    //                         maxL -= p2[i].yArray[2];
+    //                         maxR -= p2[i].yArray[1];
+    //                     }
+    //                 }
+    //                 if(maxL > maxR){
+    //                     max = maxL;
+    //                     maxIndex = [p.index * 2, max];
+    //                 }
+    //                 else{
+    //                     max = maxR;
+    //                     maxIndex = [p.index * 2 + 1, max];
+    //                 }
+    //                 if(max > this.subMax[1]){
+    //                     this.subMax = maxIndex;
+    //                 }
+    //                 // let nodeFlagInfo1 = currentFlagInfo[p.index * 2 + 1];
+    //                 // let nodeFlagInfo2 = currentFlagInfo2[p.index * 2 + 1];
+    //                 // if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 0){
+    //                 //     max = Math.max(p.yArray[1] - p2.yArray[1], p.yArray[2] - p2.yArray[2]);
+    //                 // }
+    //                 // else if(nodeFlagInfo1 === 1 && nodeFlagInfo2 === 1){
+    //                 //     max = Math.max(p.yArray[1] - p2.yArray[1], p.yArray[2] - p2.yArray[2]);
+    //                 // }
+    //                 // else{
+    //                 //     max = Math.max(p.yArray[1] - p2.yArray[2], p.yArray[2] - p2.yArray[1]);
+    //                 // }
+    //                 break;
+    //             }
+    //             if(p._leftChild){
+    //                 // temp_maxL = (p._leftChild.yArray[2] - p2._leftChild.yArray[1]);
+    //                 temp_maxL = p._leftChild.yArray[2];
+    //                 for(let i=0;i<p2.length;++i){
+    //                     if(p2[i]._leftChild !== null){
+    //                         temp_maxL -= p2[i]._leftChild!.yArray[1];
+    //                     }
+    //                 }
+    //             }
+    //             if(p._rightChild){
+    //                 // temp_maxR = (p._rightChild.yArray[2] - p2._rightChild.yArray[1]);
+    //                 temp_maxR = p._rightChild.yArray[2];
+    //                 for(let i=0;i<p2.length;++i){
+    //                     if(p2[i]._leftChild !== null){
+    //                         temp_maxR -= p2[i]._rightChild!.yArray[1];
+    //                     }
+    //                 }
+    //             }
+    //             if(temp_maxL <= temp_maxR && p._rightChild){
+    //                 // alternativeNodes.push([p, p2, p._rightChild, p2._rightChild, temp_maxL]);
+    //                 // p = p._leftChild;
+    //                 // p2 = p2._leftChild;
+    //                 let tempNode = [];
+    //                 tempMax = temp_maxR;
+    //                 tempNode.push(p);
+    //                 for(let i=0;i<p2.length;++i){
+    //                     tempNode.push(p2[i]);
+    //                 }
+    //                 tempNode.push(p._leftChild);
+    //                 for(let i=0;i<p2.length;++i){
+    //                     tempNode.push(p2[i]._leftChild);
+    //                 }
+    //                 tempNode.push(temp_maxL);
+    //                 alternativeNodes2.push(tempNode);
+    //                 p = p._rightChild;
+    //                 for(let i=0;i<p2.length;++i){
+    //                     p2[i] = p2[i]._rightChild!;
+    //                 }
+    //             }
+    //             else if(temp_maxL > temp_maxR && p._leftChild){
+    //                 // alternativeNodes.push([p, p2, p._leftChild, p2._leftChild, temp_maxR]);
+    //                 // p = p._rightChild;
+    //                 // p2 = p2._rightChild;
+    //                 let tempNode = [];
+    //                 tempMax = temp_maxL;
+    //                 tempNode.push(p);
+    //                 for(let i=0;i<p2.length;++i){
+    //                     tempNode.push(p2[i]);
+    //                 }
+    //                 tempNode.push(p._rightChild);
+    //                 for(let i=0;i<p2.length;++i){
+    //                     tempNode.push(p2[i]._rightChild);
+    //                 }
+    //                 tempNode.push(temp_maxR);
+    //                 alternativeNodes2.push(tempNode);
+    //                 p = p._leftChild;
+    //                 for(let i=0;i<p2.length;++i){
+    //                     p2[i] = p2[i]._leftChild!;
+    //                 }
+    //             }
+    //         }
+    //         // console.log("The bottom max(-):", maxIndex);
+    //         if(store.state.controlParams.stopEarly === true){
+    //             alternativeNodes = [];
+    //             alternativeNodes2 = [];
+    //         }
+    //         p = pp, p2 = pp2;
+    //         while(alternativeNodes.length > 0){
+    //             // console.log("alternativeNodes:", alternativeNodes);
+    //             let pop:any = alternativeNodes.pop();
+    //             if(pop === undefined ) continue;
+    //             // let p:[TrendTree, number] = alternativeNodes.pop();
+    //             // console.log("pop:", pop);
+    //             // if(Number(pop[pop.length-1]) > min) continue;
+    //             // min = this.updateMinValue(p![0], min, alternativeNodes);
+    //             let temp_minL = 0, temp_minR = 0;
+    //             let len = pop.length;
+    //             if(!pop[Math.floor(len/2)]._leftChild && !pop[Math.floor(len/2)]._rightChild){
+    //                 let minL = 0, minR = 0;
+    //                 let nodeFlagInfo1 = currentFlagInfo[pop[Math.floor(len/2)].index * 2 + 1];
+    //                 if(nodeFlagInfo1 === 0){
+    //                     minL += pop[Math.floor(len/2)].yArray[1];
+    //                     minR += pop[Math.floor(len/2)].yArray[2];
+    //                 } 
+    //                 else{
+    //                     minL += pop[Math.floor(len/2)].yArray[2];
+    //                     minR += pop[Math.floor(len/2)].yArray[1];
+    //                 }
+    //                 for(let i=0; i<currentFlagInfo2.length;++i){
+    //                     if(currentFlagInfo2[i][pop[Math.floor(len/2)].index * 2 + 1] === 0){
+    //                         minL -= pop[Math.floor(len/2)+i+1].yArray[1];
+    //                         minR -= pop[Math.floor(len/2)+i+1].yArray[2];
+    //                     }
+    //                     else{
+    //                         minL -= pop[Math.floor(len/2)+i+1].yArray[2];
+    //                         minR -= pop[Math.floor(len/2)+i+1].yArray[1];
+    //                     }
+    //                 }
+    //                 if(minL < minR){
+    //                     min = minL;
+    //                     minIndex = [pop[Math.floor(len/2)].index * 2, min];
+    //                 }
+    //                 else{
+    //                     min = minR;
+    //                     minIndex = [pop[Math.floor(len/2)].index * 2 + 1, min];
+    //                 }
+    //                 if(min < this.subMin[1]){
+    //                     this.subMin = minIndex;
+    //                 }
+    //                 // let nodeFlagInfo1 = currentFlagInfo[(pop[2].index) * 2 + 1];
+    //                 // let nodeFlagInfo2 = currentFlagInfo2[(pop[2].index) * 2 + 1];
+    //                 // if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 0){
+    //                 //     min = Math.min(Math.min(pop[2].yArray[1] - pop[3].yArray[1], pop[2].yArray[2] - pop[3].yArray[2]), min);
+    //                 // }
+    //                 // else if(nodeFlagInfo1 === 1 && nodeFlagInfo2 === 1){
+    //                 //     min = Math.min(Math.min(pop[2].yArray[1] - pop[3].yArray[1], pop[2].yArray[2] - pop[3].yArray[2]), min);
+    //                 // }
+    //                 // else{
+    //                 //     min = Math.min(Math.min(pop[2].yArray[1] - pop[3].yArray[2], pop[2].yArray[2] - pop[3].yArray[1]), min);
+    //                 // }
+    //                 continue;
+    //             }
+    //             if(pop[Math.floor(len/2)]._leftChild){
+    //                 // temp_minL = (pop[2]._leftChild.yArray[1] - pop[3]._leftChild.yArray[2]);
+    //                 // if(temp_minL < min)
+    //                 //     alternativeNodes.push([pop[2], pop[3], pop[2]._leftChild, pop[3]._leftChild, temp_minL]);
+    //                 let index = Math.floor(len / 2);
+    //                 temp_minL = pop[index]._leftChild.yArray[1];
+    //                 for(let i = index + 1; i < index * 2; ++i){
+    //                     temp_minL -= pop[i]._leftChild.yArray[2];
+    //                 }
+    //                 // temp_minL = (pop[2]._leftChild.yArray[1] + pop[3]._leftChild.yArray[1]);
+    //                 // if(temp_minL < min){
+    //                     let tempNode = [];
+    //                     for(let i = index; i < index * 2; ++i){
+    //                         tempNode.push(pop[i]);
+    //                     }
+    //                     for(let i = index; i < index * 2; ++i){
+    //                         tempNode.push(pop[i]._leftChild);
+    //                     }
+    //                     tempNode.push(temp_minL);
+    //                     alternativeNodes.push(tempNode);
+    //                     count.count++;
+    //                 // }
+    //             }
+    //             if(pop[Math.floor(len/2)]._rightChild){
+    //                 // temp_minR = (pop[2]._rightChild.yArray[1] - pop[3]._rightChild.yArray[2]);
+    //                 // if(temp_minR < min)
+    //                 //     alternativeNodes.push([pop[2], pop[3], pop[2]._rightChild, pop[3]._rightChild, temp_minR]);
+    //                 let index = Math.floor(len / 2);
+    //                 temp_minR = pop[index]._rightChild.yArray[1];
+    //                 for(let i = index + 1; i < index * 2; ++i){
+    //                     temp_minR -= pop[i]._rightChild.yArray[2];
+    //                 }
+    //                 // temp_minL = (pop[2]._leftChild.yArray[1] + pop[3]._leftChild.yArray[1]);
+    //                 // if(temp_minR < min){
+    //                     let tempNode = [];
+    //                     for(let i = index; i < index * 2; ++i){
+    //                         tempNode.push(pop[i]);
+    //                     }
+    //                     for(let i = index; i < index * 2; ++i){
+    //                         tempNode.push(pop[i]._rightChild);
+    //                     }
+    //                     tempNode.push(temp_minR);
+    //                     alternativeNodes.push(tempNode);
+    //                     count.count++;
+    //                 // }
+    //             }
+    //             // console.log("The final min(-):", min);
+    //             // this.subMin = Math.min(min, this.subMin);
+    //         }
+    //         p = pp, p2 = pp2;
+    //         while(alternativeNodes2.length > 0){
+    //             // console.log("alternativeNodes2:", alternativeNodes2);
+    //             let pop:any = alternativeNodes2.pop();
+    //             if(pop === undefined ) continue;
+    //             // console.log("pop:", pop);
+    //             // if(Number(pop[pop.length-1]) < max) continue;
+    //             let len = pop.length;
+    //             let temp_maxL = 0, temp_maxR = 0;
+    //             if(!pop[Math.floor(len/2)]._leftChild && !pop[Math.floor(len/2)]._rightChild){
+    //                 let maxL = 0, maxR = 0;
+    //                 let nodeFlagInfo1 = currentFlagInfo[pop[Math.floor(len/2)].index * 2 + 1];
+    //                 if(nodeFlagInfo1 === 0){
+    //                     maxL += pop[Math.floor(len/2)].yArray[1];
+    //                     maxR += pop[Math.floor(len/2)].yArray[2];
+    //                 } 
+    //                 else{
+    //                     maxL += pop[Math.floor(len/2)].yArray[2];
+    //                     maxR += pop[Math.floor(len/2)].yArray[1];
+    //                 }
+    //                 for(let i=0; i<currentFlagInfo2.length;++i){
+    //                     if(currentFlagInfo2[i][pop[Math.floor(len/2)].index * 2 + 1] === 0){
+    //                         maxL -= pop[Math.floor(len/2)+i+1].yArray[1];
+    //                         maxR -= pop[Math.floor(len/2)+i+1].yArray[2];
+    //                     }
+    //                     else{
+    //                         maxL -= pop[Math.floor(len/2)+i+1].yArray[2];
+    //                         maxR -= pop[Math.floor(len/2)+i+1].yArray[1];
+    //                     }
+    //                 }
+    //                 if(maxL > maxR){
+    //                     max = maxL;
+    //                     maxIndex = [pop[Math.floor(len/2)].index * 2, max];
+    //                 }
+    //                 else{
+    //                     max = maxR;
+    //                     maxIndex = [pop[Math.floor(len/2)].index * 2 + 1, max];
+    //                 }
+    //                 if(max > this.subMax[1]){
+    //                     this.subMax = maxIndex;
+    //                 }
+    //                 // let nodeFlagInfo1 = currentFlagInfo[(pop[2].index) * 2 + 1];
+    //                 // let nodeFlagInfo2 = currentFlagInfo2[(pop[2].index) * 2 + 1];
+    //                 // if(nodeFlagInfo1 === 0 && nodeFlagInfo2 === 0){
+    //                 //     max = Math.max(Math.max(pop[2].yArray[1] - pop[3].yArray[1], pop[2].yArray[2] - pop[3].yArray[2]), max);
+    //                 // }
+    //                 // else if(nodeFlagInfo1 === 1 && nodeFlagInfo2 === 1){
+    //                 //     max = Math.max(Math.max(pop[2].yArray[1] - pop[3].yArray[1], pop[2].yArray[2] - pop[3].yArray[2]), max);
+    //                 // }
+    //                 // else{
+    //                 //     max = Math.max(Math.max(pop[2].yArray[1] - pop[3].yArray[2], pop[2].yArray[2] - pop[3].yArray[1]), max);
+    //                 // }
+    //                 continue;
+    //             }
+    //             if(pop[Math.floor(len/2)]._leftChild){
+    //                 // temp_maxL = (pop[2]._leftChild.yArray[2] - pop[3]._leftChild.yArray[1]);
+    //                 // if(temp_maxL > max)
+    //                 //     alternativeNodes.push([pop[2], pop[3], pop[2]._leftChild, pop[3]._leftChild, temp_maxL]);
+    //                 let index = Math.floor(len / 2);
+    //                 temp_maxL = pop[index]._leftChild.yArray[2];
+    //                 for(let i = index + 1; i < index * 2; ++i){
+    //                     temp_maxL -= pop[i]._leftChild.yArray[1];
+    //                 }
+    //                 // if(temp_maxL > max){
+    //                     let tempNode = [];
+    //                     for(let i = index; i < index * 2; ++i){
+    //                         tempNode.push(pop[i]);
+    //                     }
+    //                     for(let i = index; i < index * 2; ++i){
+    //                         tempNode.push(pop[i]._leftChild);
+    //                     }
+    //                     tempNode.push(temp_maxL);
+    //                     alternativeNodes2.push(tempNode);
+    //                     count.count++;
+    //                 // }
+    //             }
+    //             if(pop[Math.floor(len/2)]._rightChild){
+    //                 // temp_maxR = (pop[2]._rightChild.yArray[2] - pop[3]._rightChild.yArray[1]);
+    //                 // if(temp_maxR > max)
+    //                 //     alternativeNodes.push([pop[2], pop[3], pop[2]._rightChild, pop[3]._rightChild, temp_maxR]);
+    //                 let index = Math.floor(len / 2);
+    //                 temp_maxR = pop[index]._rightChild.yArray[2];
+    //                 for(let i = index; i < index * 2; ++i){
+    //                     temp_maxR -= pop[i]._rightChild.yArray[1];
+    //                 }
+    //                 // if(temp_maxR > max){
+    //                     let tempNode = [];
+    //                     for(let i = index; i < index * 2; ++i){
+    //                         tempNode.push(pop[i]);
+    //                     }
+    //                     for(let i = index; i < index * 2; ++i){
+    //                         tempNode.push(pop[i]._rightChild);
+    //                     }
+    //                     tempNode.push(temp_maxR);
+    //                     alternativeNodes2.push(tempNode);
+    //                     count.count++;
+    //                 // }
+    //             }
+    //         }
                      
-            // console.log("The final min(-):", minIndex);
-            // console.log("The final max(-):", maxIndex); 
-            if(min < this.subMin[1]){
-                this.subMin = minIndex;
-            }
-            if(max > this.subMax[1]){
-                this.subMax = maxIndex;
-            }
-        }
-        else if((type === 1 || type === 7 || type ===8 || type === 9) && symbol === '*'){
-            // let p = pp, p2 = pp2;
-            let min1 = p.yArray[1];
-            let min2 = 1;
-            for(let i=0;i<p2.length;i++){
-                min2 *= p2[i].yArray[1];
-            }   
-            let max1 = p.yArray[2];
-            let max2 = 1;
-            for(let i=0; i<p2.length; ++i){
-                max2 *= p2[i].yArray[2];
-            } 
-            let min = (min1 * min2);
-            let max = (max1 * max2);
-            let minIndex : [number, number];
-            minIndex = [-1, Infinity];
-            let maxIndex: [number, number];
-            maxIndex = [-1, -Infinity];
+    //         // console.log("The final min(-):", minIndex);
+    //         // console.log("The final max(-):", maxIndex); 
+    //         if(min < this.subMin[1]){
+    //             this.subMin = minIndex;
+    //         }
+    //         if(max > this.subMax[1]){
+    //             this.subMax = maxIndex;
+    //         }
+    //     }
+    //     else if((type === 1 || type === 7 || type ===8 || type === 9) && symbol === '*'){
+    //         // let p = pp, p2 = pp2;
+    //         let min1 = p.yArray[1];
+    //         let min2 = 1;
+    //         for(let i=0;i<p2.length;i++){
+    //             min2 *= p2[i].yArray[1];
+    //         }   
+    //         let max1 = p.yArray[2];
+    //         let max2 = 1;
+    //         for(let i=0; i<p2.length; ++i){
+    //             max2 *= p2[i].yArray[2];
+    //         } 
+    //         let min = (min1 * min2);
+    //         let max = (max1 * max2);
+    //         let minIndex : [number, number];
+    //         minIndex = [-1, Infinity];
+    //         let maxIndex: [number, number];
+    //         maxIndex = [-1, -Infinity];
 
-            let alternativeNodes = [];
-            let alternativeNodes2 = [];
-            while(max > -Infinity){
-                let temp_minL = 0, temp_minR = 0;
-                if(!p._leftChild && !p._rightChild){
-                    let minL = 0, minR = 0;
-                    let nodeFlagInfo1 = currentFlagInfo[p.index * 2 + 1];
-                    if(nodeFlagInfo1 === 0){
-                        minL += p.yArray[1];
-                        minR += p.yArray[2];
-                    } 
-                    else{
-                        minL += p.yArray[2];
-                        minR += p.yArray[1];
-                    }
-                    for(let i=0; i<currentFlagInfo2.length;++i){
-                        if(currentFlagInfo2[i][p.index * 2 + 1] === 0){
-                            minL *= p2[i].yArray[1];
-                            minR *= p2[i].yArray[2];
-                        }
-                        else{
-                            minL *= p2[i].yArray[2];
-                            minR *= p2[i].yArray[1];
-                        }
-                    }
-                    if(minL < minR){
-                        min = minL;
-                        minIndex = [p.index * 2, min];
-                    }
-                    else{
-                        min = minR;
-                        minIndex = [p.index * 2 + 1, min];
-                    }
-                    if(min < this.multiMin[1]){
-                        this.multiMin = minIndex;
-                    }
-                    break;
-                }
-                if(p._leftChild){
-                    // temp_minL = Math.min(p._leftChild.yArray[1] * p2[0]._leftChild!.yArray[1], p._leftChild.yArray[1] * p2[0]._leftChild!.yArray[2], p._leftChild.yArray[2] * p2[0]._leftChild!.yArray[1], p._leftChild.yArray[2] * p2[0]._leftChild!.yArray[2]);
-                    let tempArray = [];
-                    tempArray.push(p._leftChild.yArray[1]);
-                    tempArray.push(p._leftChild.yArray[2]);
-                    for(let i = 0; i<p2.length; ++i){
-                        let len = tempArray.length;
-                         for(let j = 0; j<len; ++j){
-                            tempArray.push(tempArray[j] * p2[i]._leftChild!.yArray[1]);
-                            tempArray.push(tempArray[j] * p2[i]._leftChild!.yArray[2]);
-                        }
-                        for(let j = 0; j<len; ++j){
-                            tempArray.shift();
-                        }   
-                    }
-                    // console.log(tempArray);
-                    temp_minL = Math.min(...tempArray);
-                }
-                if(p._rightChild){
-                    // temp_minR = Math.min(p._rightChild.yArray[1] * p2[0]._rightChild!.yArray[1], p._rightChild.yArray[1] * p2[0]._rightChild!.yArray[2], p._rightChild.yArray[2] * p2[0]._rightChild!.yArray[1], p._rightChild.yArray[2] * p2[0]._rightChild!.yArray[2]);
-                    let tempArray = [];
-                    tempArray.push(p._rightChild.yArray[1]);
-                    tempArray.push(p._rightChild.yArray[2]);
-                    for(let i = 0; i<p2.length; ++i){
-                        let len = tempArray.length;
-                         for(let j = 0; j<len; ++j){
-                            tempArray.push(tempArray[j] * p2[i]._rightChild!.yArray[1]);
-                            tempArray.push(tempArray[j] * p2[i]._rightChild!.yArray[2]);
-                        }   
-                        for(let j = 0; j<len; ++j){
-                            tempArray.shift();
-                        }   
-                    }
-                    // console.log(tempArray);
-                    temp_minR = Math.min(...tempArray);
-                }
-                if(temp_minL <= temp_minR && p._leftChild){
-                    let tempNode = [];
-                    tempNode.push(p);
-                    for(let i=0;i<p2.length;++i){
-                        tempNode.push(p2[i]);
-                    }
-                    tempNode.push(p._rightChild);
-                    for(let i=0;i<p2.length;++i){
-                        tempNode.push(p2[i]._rightChild);
-                    }
-                    tempNode.push(temp_minR);
-                    alternativeNodes.push(tempNode);
-                    p = p._leftChild;
-                    for(let i=0;i<p2.length;++i){
-                        p2[i] = p2[i]._leftChild!;
-                    }
-                }
-                else if(temp_minL > temp_minR && p._rightChild){
-                    let tempNode = [];
-                    // alternativeNodes.push([p, p2, p._leftChild, p2._leftChild, temp_minL]);
-                    tempNode.push(p);
-                    for(let i=0;i<p2.length;++i){
-                        tempNode.push(p2[i]);
-                    }
-                    tempNode.push(p._leftChild);
-                    for(let i=0;i<p2.length;++i){
-                        tempNode.push(p2[i]._leftChild);
-                    }
-                    tempNode.push(temp_minL);
-                    p = p._rightChild;
-                    for(let i=0;i<p2.length;++i){
-                        p2[i] = p2[i]._rightChild!;
-                    }
-                    alternativeNodes.push(tempNode);
-                }
-            }
-            // console.log("The bottom min(*):", minIndex);
-            p = pp, p2 = pp2;
-            while(max > -Infinity){
-                let temp_maxL = 0, temp_maxR = 0;
-                if(!p._leftChild && !p._rightChild){
-                    let maxL = 0, maxR = 0;
-                    let nodeFlagInfo1 = currentFlagInfo[p.index * 2 + 1];
-                    if(nodeFlagInfo1 === 0){
-                        maxL += p.yArray[1];
-                        maxR += p.yArray[2];
-                    } 
-                    else{
-                        maxL += p.yArray[2];
-                        maxR += p.yArray[1];
-                    }
-                    for(let i=0; i<currentFlagInfo2.length;++i){
-                        if(currentFlagInfo2[i][p.index * 2 + 1] === 0){
-                            maxL *= p2[i].yArray[1];
-                            maxR *= p2[i].yArray[2];
-                        }
-                        else{
-                            maxL *= p2[i].yArray[2];
-                            maxR *= p2[i].yArray[1];
-                        }
-                    }
-                    if(maxL > maxR){
-                        max = maxL;
-                        maxIndex = [p.index * 2, max];
-                    }
-                    else{
-                        max = maxR;
-                        maxIndex = [p.index * 2 + 1, max];
-                    }
-                    if(max > this.multiMax[1]){
-                        this.multiMax = maxIndex;
-                    }
-                    break;
-                }
-                if(p._leftChild){
-                    // temp_minL = Math.min(p._leftChild.yArray[1] * p2[0]._leftChild!.yArray[1], p._leftChild.yArray[1] * p2[0]._leftChild!.yArray[2], p._leftChild.yArray[2] * p2[0]._leftChild!.yArray[1], p._leftChild.yArray[2] * p2[0]._leftChild!.yArray[2]);
-                    let tempArray = [];
-                    tempArray.push(p._leftChild.yArray[1]);
-                    tempArray.push(p._leftChild.yArray[2]);
-                    for(let i = 0; i<p2.length; ++i){
-                        let len = tempArray.length;
-                         for(let j = 0; j<len; ++j){
-                            tempArray.push(tempArray[j] * p2[i]._leftChild!.yArray[1]);
-                            tempArray.push(tempArray[j] * p2[i]._leftChild!.yArray[2]);
-                        }   
-                        for(let j = 0; j<len; ++j){
-                            tempArray.shift();
-                        }   
-                    }
-                    // console.log(tempArray);
-                    temp_maxL = Math.max(...tempArray);
-                }
-                if(p._rightChild){
-                    // temp_minR = Math.min(p._rightChild.yArray[1] * p2[0]._rightChild!.yArray[1], p._rightChild.yArray[1] * p2[0]._rightChild!.yArray[2], p._rightChild.yArray[2] * p2[0]._rightChild!.yArray[1], p._rightChild.yArray[2] * p2[0]._rightChild!.yArray[2]);
-                    let tempArray = [];
-                    tempArray.push(p._rightChild.yArray[1]);
-                    tempArray.push(p._rightChild.yArray[2]);
-                    for(let i = 0; i<p2.length; ++i){
-                        let len = tempArray.length;
-                         for(let j = 0; j<len; ++j){
-                            tempArray.push(tempArray[j] * p2[i]._rightChild!.yArray[1]);
-                            tempArray.push(tempArray[j] * p2[i]._rightChild!.yArray[2]);
-                        }   
-                        for(let j = 0; j<len; ++j){
-                            tempArray.shift();
-                        }   
-                    }
-                    // console.log(tempArray);
-                    temp_maxR = Math.max(...tempArray);
-                }
-                if(temp_maxL <= temp_maxR && p._rightChild){
-                    let tempNode = [];
-                    tempNode.push(p);
-                    for(let i=0;i<p2.length;++i){
-                        tempNode.push(p2[i]);
-                    }
-                    tempNode.push(p._leftChild);
-                    for(let i=0;i<p2.length;++i){
-                        tempNode.push(p2[i]._leftChild);
-                    }
-                    tempNode.push(temp_maxL);
-                    alternativeNodes2.push(tempNode);
-                    p = p._rightChild;
-                    for(let i=0;i<p2.length;++i){
-                        p2[i] = p2[i]._rightChild!;
-                    }
-                }
-                else if(temp_maxL > temp_maxR && p._leftChild){
-                    let tempNode = [];
-                    // alternativeNodes.push([p, p2, p._leftChild, p2._leftChild, temp_minL]);
-                    tempNode.push(p);
-                    for(let i=0;i<p2.length;++i){
-                        tempNode.push(p2[i]);
-                    }
-                    tempNode.push(p._rightChild);
-                    for(let i=0;i<p2.length;++i){
-                        tempNode.push(p2[i]._rightChild);
-                    }
-                    tempNode.push(temp_maxR);
-                    alternativeNodes2.push(tempNode);
-                    p = p._leftChild;
-                    for(let i=0;i<p2.length;++i){
-                        p2[i] = p2[i]._leftChild!;
-                    }
-                }
-            }
-            // console.log("The bottom max(*):", maxIndex);
-            if(store.state.controlParams.stopEarly === true){
-                alternativeNodes = [];
-                alternativeNodes2 = [];
-            }
-            p = pp, p2 = pp2;
-            while(alternativeNodes.length > 0){
-                let pop:any = alternativeNodes.pop();
-                if(pop === undefined ) continue;
-                // if(Number(pop[pop.length-1]) > min) continue;
-                let len = pop.length;
-                let temp_minL = 0, temp_minR = 0;
-                if(!pop[Math.floor(len/2)]._leftChild && !pop[Math.floor(len/2)]._rightChild){
-                    let minL = 0, minR = 0;
-                    let nodeFlagInfo1 = currentFlagInfo[pop[Math.floor(len/2)].index * 2 + 1];
-                    if(nodeFlagInfo1 === 0){
-                        minL += pop[Math.floor(len/2)].yArray[1];
-                        minR += pop[Math.floor(len/2)].yArray[2];
-                    } 
-                    else{
-                        minL += pop[Math.floor(len/2)].yArray[2];
-                        minR += pop[Math.floor(len/2)].yArray[1];
-                    }
-                    for(let i=0; i<currentFlagInfo2.length;++i){
-                        if(currentFlagInfo2[i][pop[Math.floor(len/2)].index * 2 + 1] === 0){
-                            minL *= pop[Math.floor(len/2)+i+1].yArray[1];
-                            minR *= pop[Math.floor(len/2)+i+1].yArray[2];
-                        }
-                        else{
-                            minL *= pop[Math.floor(len/2)+i+1].yArray[2];
-                            minR *= pop[Math.floor(len/2)+i+1].yArray[1];
-                        }
-                    }
-                    if(minL > minR){
-                        min = minL;
-                        minIndex = [pop[Math.floor(len/2)].index * 2, min];
-                    }
-                    else{
-                        min = minR;
-                        minIndex = [pop[Math.floor(len/2)].index * 2 + 1, min];
-                    }
-                    if(min < this.multiMin[1]){
-                        this.multiMin = minIndex;
-                    }
-                    continue;
-                }
-                if(pop[Math.floor(len/2)]._leftChild){
-                    let index = Math.floor(len / 2);
-                    let tempArray = [];
-                    tempArray.push(pop[index]._leftChild.yArray[1]);
-                    tempArray.push(pop[index]._leftChild.yArray[2]);
-                    for(let i = index+1; i<index*2; ++i){
-                        let len = tempArray.length;
-                         for(let j = 0; j<len; ++j){
-                            tempArray.push(tempArray[j] * pop[i]._leftChild!.yArray[1]);
-                            tempArray.push(tempArray[j] * pop[i]._leftChild!.yArray[2]);
-                        }   
-                        for(let j = 0; j<len; ++j){
-                            tempArray.shift();
-                        }   
-                    }
-                    // console.log(tempArray);
-                    temp_minL = Math.min(...tempArray);
+    //         let alternativeNodes = [];
+    //         let alternativeNodes2 = [];
+    //         while(max > -Infinity){
+    //             let temp_minL = 0, temp_minR = 0;
+    //             if(!p._leftChild && !p._rightChild){
+    //                 let minL = 0, minR = 0;
+    //                 let nodeFlagInfo1 = currentFlagInfo[p.index * 2 + 1];
+    //                 if(nodeFlagInfo1 === 0){
+    //                     minL += p.yArray[1];
+    //                     minR += p.yArray[2];
+    //                 } 
+    //                 else{
+    //                     minL += p.yArray[2];
+    //                     minR += p.yArray[1];
+    //                 }
+    //                 for(let i=0; i<currentFlagInfo2.length;++i){
+    //                     if(currentFlagInfo2[i][p.index * 2 + 1] === 0){
+    //                         minL *= p2[i].yArray[1];
+    //                         minR *= p2[i].yArray[2];
+    //                     }
+    //                     else{
+    //                         minL *= p2[i].yArray[2];
+    //                         minR *= p2[i].yArray[1];
+    //                     }
+    //                 }
+    //                 if(minL < minR){
+    //                     min = minL;
+    //                     minIndex = [p.index * 2, min];
+    //                 }
+    //                 else{
+    //                     min = minR;
+    //                     minIndex = [p.index * 2 + 1, min];
+    //                 }
+    //                 if(min < this.multiMin[1]){
+    //                     this.multiMin = minIndex;
+    //                 }
+    //                 break;
+    //             }
+    //             if(p._leftChild){
+    //                 // temp_minL = Math.min(p._leftChild.yArray[1] * p2[0]._leftChild!.yArray[1], p._leftChild.yArray[1] * p2[0]._leftChild!.yArray[2], p._leftChild.yArray[2] * p2[0]._leftChild!.yArray[1], p._leftChild.yArray[2] * p2[0]._leftChild!.yArray[2]);
+    //                 let tempArray = [];
+    //                 tempArray.push(p._leftChild.yArray[1]);
+    //                 tempArray.push(p._leftChild.yArray[2]);
+    //                 for(let i = 0; i<p2.length; ++i){
+    //                     let len = tempArray.length;
+    //                      for(let j = 0; j<len; ++j){
+    //                         tempArray.push(tempArray[j] * p2[i]._leftChild!.yArray[1]);
+    //                         tempArray.push(tempArray[j] * p2[i]._leftChild!.yArray[2]);
+    //                     }
+    //                     for(let j = 0; j<len; ++j){
+    //                         tempArray.shift();
+    //                     }   
+    //                 }
+    //                 // console.log(tempArray);
+    //                 temp_minL = Math.min(...tempArray);
+    //             }
+    //             if(p._rightChild){
+    //                 // temp_minR = Math.min(p._rightChild.yArray[1] * p2[0]._rightChild!.yArray[1], p._rightChild.yArray[1] * p2[0]._rightChild!.yArray[2], p._rightChild.yArray[2] * p2[0]._rightChild!.yArray[1], p._rightChild.yArray[2] * p2[0]._rightChild!.yArray[2]);
+    //                 let tempArray = [];
+    //                 tempArray.push(p._rightChild.yArray[1]);
+    //                 tempArray.push(p._rightChild.yArray[2]);
+    //                 for(let i = 0; i<p2.length; ++i){
+    //                     let len = tempArray.length;
+    //                      for(let j = 0; j<len; ++j){
+    //                         tempArray.push(tempArray[j] * p2[i]._rightChild!.yArray[1]);
+    //                         tempArray.push(tempArray[j] * p2[i]._rightChild!.yArray[2]);
+    //                     }   
+    //                     for(let j = 0; j<len; ++j){
+    //                         tempArray.shift();
+    //                     }   
+    //                 }
+    //                 // console.log(tempArray);
+    //                 temp_minR = Math.min(...tempArray);
+    //             }
+    //             if(temp_minL <= temp_minR && p._leftChild){
+    //                 let tempNode = [];
+    //                 tempNode.push(p);
+    //                 for(let i=0;i<p2.length;++i){
+    //                     tempNode.push(p2[i]);
+    //                 }
+    //                 tempNode.push(p._rightChild);
+    //                 for(let i=0;i<p2.length;++i){
+    //                     tempNode.push(p2[i]._rightChild);
+    //                 }
+    //                 tempNode.push(temp_minR);
+    //                 alternativeNodes.push(tempNode);
+    //                 p = p._leftChild;
+    //                 for(let i=0;i<p2.length;++i){
+    //                     p2[i] = p2[i]._leftChild!;
+    //                 }
+    //             }
+    //             else if(temp_minL > temp_minR && p._rightChild){
+    //                 let tempNode = [];
+    //                 // alternativeNodes.push([p, p2, p._leftChild, p2._leftChild, temp_minL]);
+    //                 tempNode.push(p);
+    //                 for(let i=0;i<p2.length;++i){
+    //                     tempNode.push(p2[i]);
+    //                 }
+    //                 tempNode.push(p._leftChild);
+    //                 for(let i=0;i<p2.length;++i){
+    //                     tempNode.push(p2[i]._leftChild);
+    //                 }
+    //                 tempNode.push(temp_minL);
+    //                 p = p._rightChild;
+    //                 for(let i=0;i<p2.length;++i){
+    //                     p2[i] = p2[i]._rightChild!;
+    //                 }
+    //                 alternativeNodes.push(tempNode);
+    //             }
+    //         }
+    //         // console.log("The bottom min(*):", minIndex);
+    //         p = pp, p2 = pp2;
+    //         while(max > -Infinity){
+    //             let temp_maxL = 0, temp_maxR = 0;
+    //             if(!p._leftChild && !p._rightChild){
+    //                 let maxL = 0, maxR = 0;
+    //                 let nodeFlagInfo1 = currentFlagInfo[p.index * 2 + 1];
+    //                 if(nodeFlagInfo1 === 0){
+    //                     maxL += p.yArray[1];
+    //                     maxR += p.yArray[2];
+    //                 } 
+    //                 else{
+    //                     maxL += p.yArray[2];
+    //                     maxR += p.yArray[1];
+    //                 }
+    //                 for(let i=0; i<currentFlagInfo2.length;++i){
+    //                     if(currentFlagInfo2[i][p.index * 2 + 1] === 0){
+    //                         maxL *= p2[i].yArray[1];
+    //                         maxR *= p2[i].yArray[2];
+    //                     }
+    //                     else{
+    //                         maxL *= p2[i].yArray[2];
+    //                         maxR *= p2[i].yArray[1];
+    //                     }
+    //                 }
+    //                 if(maxL > maxR){
+    //                     max = maxL;
+    //                     maxIndex = [p.index * 2, max];
+    //                 }
+    //                 else{
+    //                     max = maxR;
+    //                     maxIndex = [p.index * 2 + 1, max];
+    //                 }
+    //                 if(max > this.multiMax[1]){
+    //                     this.multiMax = maxIndex;
+    //                 }
+    //                 break;
+    //             }
+    //             if(p._leftChild){
+    //                 // temp_minL = Math.min(p._leftChild.yArray[1] * p2[0]._leftChild!.yArray[1], p._leftChild.yArray[1] * p2[0]._leftChild!.yArray[2], p._leftChild.yArray[2] * p2[0]._leftChild!.yArray[1], p._leftChild.yArray[2] * p2[0]._leftChild!.yArray[2]);
+    //                 let tempArray = [];
+    //                 tempArray.push(p._leftChild.yArray[1]);
+    //                 tempArray.push(p._leftChild.yArray[2]);
+    //                 for(let i = 0; i<p2.length; ++i){
+    //                     let len = tempArray.length;
+    //                      for(let j = 0; j<len; ++j){
+    //                         tempArray.push(tempArray[j] * p2[i]._leftChild!.yArray[1]);
+    //                         tempArray.push(tempArray[j] * p2[i]._leftChild!.yArray[2]);
+    //                     }   
+    //                     for(let j = 0; j<len; ++j){
+    //                         tempArray.shift();
+    //                     }   
+    //                 }
+    //                 // console.log(tempArray);
+    //                 temp_maxL = Math.max(...tempArray);
+    //             }
+    //             if(p._rightChild){
+    //                 // temp_minR = Math.min(p._rightChild.yArray[1] * p2[0]._rightChild!.yArray[1], p._rightChild.yArray[1] * p2[0]._rightChild!.yArray[2], p._rightChild.yArray[2] * p2[0]._rightChild!.yArray[1], p._rightChild.yArray[2] * p2[0]._rightChild!.yArray[2]);
+    //                 let tempArray = [];
+    //                 tempArray.push(p._rightChild.yArray[1]);
+    //                 tempArray.push(p._rightChild.yArray[2]);
+    //                 for(let i = 0; i<p2.length; ++i){
+    //                     let len = tempArray.length;
+    //                      for(let j = 0; j<len; ++j){
+    //                         tempArray.push(tempArray[j] * p2[i]._rightChild!.yArray[1]);
+    //                         tempArray.push(tempArray[j] * p2[i]._rightChild!.yArray[2]);
+    //                     }   
+    //                     for(let j = 0; j<len; ++j){
+    //                         tempArray.shift();
+    //                     }   
+    //                 }
+    //                 // console.log(tempArray);
+    //                 temp_maxR = Math.max(...tempArray);
+    //             }
+    //             if(temp_maxL <= temp_maxR && p._rightChild){
+    //                 let tempNode = [];
+    //                 tempNode.push(p);
+    //                 for(let i=0;i<p2.length;++i){
+    //                     tempNode.push(p2[i]);
+    //                 }
+    //                 tempNode.push(p._leftChild);
+    //                 for(let i=0;i<p2.length;++i){
+    //                     tempNode.push(p2[i]._leftChild);
+    //                 }
+    //                 tempNode.push(temp_maxL);
+    //                 alternativeNodes2.push(tempNode);
+    //                 p = p._rightChild;
+    //                 for(let i=0;i<p2.length;++i){
+    //                     p2[i] = p2[i]._rightChild!;
+    //                 }
+    //             }
+    //             else if(temp_maxL > temp_maxR && p._leftChild){
+    //                 let tempNode = [];
+    //                 // alternativeNodes.push([p, p2, p._leftChild, p2._leftChild, temp_minL]);
+    //                 tempNode.push(p);
+    //                 for(let i=0;i<p2.length;++i){
+    //                     tempNode.push(p2[i]);
+    //                 }
+    //                 tempNode.push(p._rightChild);
+    //                 for(let i=0;i<p2.length;++i){
+    //                     tempNode.push(p2[i]._rightChild);
+    //                 }
+    //                 tempNode.push(temp_maxR);
+    //                 alternativeNodes2.push(tempNode);
+    //                 p = p._leftChild;
+    //                 for(let i=0;i<p2.length;++i){
+    //                     p2[i] = p2[i]._leftChild!;
+    //                 }
+    //             }
+    //         }
+    //         // console.log("The bottom max(*):", maxIndex);
+    //         if(store.state.controlParams.stopEarly === true){
+    //             alternativeNodes = [];
+    //             alternativeNodes2 = [];
+    //         }
+    //         p = pp, p2 = pp2;
+    //         while(alternativeNodes.length > 0){
+    //             let pop:any = alternativeNodes.pop();
+    //             if(pop === undefined ) continue;
+    //             // if(Number(pop[pop.length-1]) > min) continue;
+    //             let len = pop.length;
+    //             let temp_minL = 0, temp_minR = 0;
+    //             if(!pop[Math.floor(len/2)]._leftChild && !pop[Math.floor(len/2)]._rightChild){
+    //                 let minL = 0, minR = 0;
+    //                 let nodeFlagInfo1 = currentFlagInfo[pop[Math.floor(len/2)].index * 2 + 1];
+    //                 if(nodeFlagInfo1 === 0){
+    //                     minL += pop[Math.floor(len/2)].yArray[1];
+    //                     minR += pop[Math.floor(len/2)].yArray[2];
+    //                 } 
+    //                 else{
+    //                     minL += pop[Math.floor(len/2)].yArray[2];
+    //                     minR += pop[Math.floor(len/2)].yArray[1];
+    //                 }
+    //                 for(let i=0; i<currentFlagInfo2.length;++i){
+    //                     if(currentFlagInfo2[i][pop[Math.floor(len/2)].index * 2 + 1] === 0){
+    //                         minL *= pop[Math.floor(len/2)+i+1].yArray[1];
+    //                         minR *= pop[Math.floor(len/2)+i+1].yArray[2];
+    //                     }
+    //                     else{
+    //                         minL *= pop[Math.floor(len/2)+i+1].yArray[2];
+    //                         minR *= pop[Math.floor(len/2)+i+1].yArray[1];
+    //                     }
+    //                 }
+    //                 if(minL > minR){
+    //                     min = minL;
+    //                     minIndex = [pop[Math.floor(len/2)].index * 2, min];
+    //                 }
+    //                 else{
+    //                     min = minR;
+    //                     minIndex = [pop[Math.floor(len/2)].index * 2 + 1, min];
+    //                 }
+    //                 if(min < this.multiMin[1]){
+    //                     this.multiMin = minIndex;
+    //                 }
+    //                 continue;
+    //             }
+    //             if(pop[Math.floor(len/2)]._leftChild){
+    //                 let index = Math.floor(len / 2);
+    //                 let tempArray = [];
+    //                 tempArray.push(pop[index]._leftChild.yArray[1]);
+    //                 tempArray.push(pop[index]._leftChild.yArray[2]);
+    //                 for(let i = index+1; i<index*2; ++i){
+    //                     let len = tempArray.length;
+    //                      for(let j = 0; j<len; ++j){
+    //                         tempArray.push(tempArray[j] * pop[i]._leftChild!.yArray[1]);
+    //                         tempArray.push(tempArray[j] * pop[i]._leftChild!.yArray[2]);
+    //                     }   
+    //                     for(let j = 0; j<len; ++j){
+    //                         tempArray.shift();
+    //                     }   
+    //                 }
+    //                 // console.log(tempArray);
+    //                 temp_minL = Math.min(...tempArray);
 
-                    // if(temp_minL < min || temp_minL >= min){
-                        let tempNode = [];
-                        for(let i = index; i < index * 2; ++i){
-                            tempNode.push(pop[i]);
-                        }
-                        for(let i = index; i < index * 2; ++i){
-                            tempNode.push(pop[i]._leftChild);
-                        }
-                        tempNode.push(temp_minL);
-                        alternativeNodes.push(tempNode);
-                        count.count++;
-                    // }
-                }
-                if(pop[Math.floor(len/2)]._rightChild){
-                    let index = Math.floor(len / 2);
-                    let tempArray = [];
-                    tempArray.push(pop[index]._rightChild.yArray[1]);
-                    tempArray.push(pop[index]._rightChild.yArray[2]);
-                    for(let i = index+1; i<index*2; ++i){
-                        let len = tempArray.length;
-                         for(let j = 0; j<len; ++j){
-                            tempArray.push(tempArray[j] * pop[i]._rightChild!.yArray[1]);
-                            tempArray.push(tempArray[j] * pop[i]._rightChild!.yArray[2]);
-                        }   
-                        for(let j = 0; j<len; ++j){
-                            tempArray.shift();
-                        }   
-                    }
-                    // console.log(tempArray);
-                    temp_minR = Math.min(...tempArray);
-                    // if(temp_minR < min || temp_minR >= min){
-                        let tempNode = [];
-                        for(let i = index; i < index * 2; ++i){
-                            tempNode.push(pop[i]);
-                        }
-                        for(let i = index; i < index * 2; ++i){
-                            tempNode.push(pop[i]._rightChild);
-                        }
-                        tempNode.push(temp_minR);
-                        alternativeNodes.push(tempNode);
-                        count.count++;
-                    // }
-                }
-            }
-            p = pp, p2 = pp2;
-            while(alternativeNodes2.length > 0){
-                // console.log("alternativeNodes2:", alternativeNodes2);
-                let pop:any = alternativeNodes2.pop();
-                if(pop === undefined ) continue;
-                // console.log("pop:", pop);
-                // if(Number(pop[pop.length-1]) < max) continue;
-                let len = pop.length;
-                let temp_maxL = 0, temp_maxR = 0;
-                if(!pop[Math.floor(len/2)]._leftChild && !pop[Math.floor(len/2)]._rightChild){
-                    let maxL = 0, maxR = 0;
-                    let nodeFlagInfo1 = currentFlagInfo[pop[Math.floor(len/2)].index * 2 + 1];
-                    if(nodeFlagInfo1 === 0){
-                        maxL += pop[Math.floor(len/2)].yArray[1];
-                        maxR += pop[Math.floor(len/2)].yArray[2];
-                    } 
-                    else{
-                        maxL += pop[Math.floor(len/2)].yArray[2];
-                        maxR += pop[Math.floor(len/2)].yArray[1];
-                    }
-                    for(let i=0; i<currentFlagInfo2.length;++i){
-                        if(currentFlagInfo2[i][pop[Math.floor(len/2)].index * 2 + 1] === 0){
-                            maxL *= pop[Math.floor(len/2)+i+1].yArray[1];
-                            maxR *= pop[Math.floor(len/2)+i+1].yArray[2];
-                        }
-                        else{
-                            maxL *= pop[Math.floor(len/2)+i+1].yArray[2];
-                            maxR *= pop[Math.floor(len/2)+i+1].yArray[1];
-                        }
-                    }
-                    if(maxL > maxR){
-                        max = maxL;
-                        maxIndex = [pop[Math.floor(len/2)].index * 2, max];
-                    }
-                    else{
-                        max = maxR;
-                        maxIndex = [pop[Math.floor(len/2)].index * 2 + 1, max];
-                    }
-                    if(max > this.multiMax[1]){
-                        this.multiMax = maxIndex;
-                    }
-                    continue;
-                }
-                if(pop[Math.floor(len/2)]._leftChild){
-                    let index = Math.floor(len / 2);
-                    let tempArray = [];
-                    tempArray.push(pop[index]._leftChild.yArray[1]);
-                    tempArray.push(pop[index]._leftChild.yArray[2]);
-                    for(let i = index+1; i<index*2; ++i){
-                        let len = tempArray.length;
-                         for(let j = 0; j<len; ++j){
-                            tempArray.push(tempArray[j] * pop[i]._leftChild!.yArray[1]);
-                            tempArray.push(tempArray[j] * pop[i]._leftChild!.yArray[2]);
-                        }   
-                        for(let j = 0; j<len; ++j){
-                            tempArray.shift();
-                        }   
-                    }
-                    // console.log(tempArray);
-                    temp_maxL = Math.max(...tempArray);
-                    // if(temp_maxL > max || temp_maxL <= max){
-                        let tempNode = [];
-                        for(let i = index; i < index * 2; ++i){
-                            tempNode.push(pop[i]);
-                        }
-                        for(let i = index; i < index * 2; ++i){
-                            tempNode.push(pop[i]._leftChild);
-                        }
-                        tempNode.push(temp_maxL);
-                        alternativeNodes2.push(tempNode);
-                        count.count++;
-                    // }
-                }
-                if(pop[Math.floor(len/2)]._rightChild){
-                    let index = Math.floor(len / 2);
-                    let tempArray = [];
-                    tempArray.push(pop[index]._rightChild.yArray[1]);
-                    tempArray.push(pop[index]._rightChild.yArray[2]);
-                    for(let i = index+1; i<index*2; ++i){
-                        let len = tempArray.length;
-                         for(let j = 0; j<len; ++j){
-                            tempArray.push(tempArray[j] * pop[i]._rightChild!.yArray[1]);
-                            tempArray.push(tempArray[j] * pop[i]._rightChild!.yArray[2]);
-                        }   
-                        for(let j = 0; j<len; ++j){
-                            tempArray.shift();
-                        }   
-                    }
-                    // console.log(tempArray);
-                    temp_maxR = Math.max(...tempArray);
-                    // if(temp_maxR > max || temp_maxR <= max){
-                        let tempNode = [];
-                        for(let i = index; i < index * 2; ++i){
-                            tempNode.push(pop[i]);
-                        }
-                        for(let i = index; i < index * 2; ++i){
-                            tempNode.push(pop[i]._rightChild);
-                        }
-                        tempNode.push(temp_maxR);
-                        alternativeNodes2.push(tempNode);
-                        count.count++;
-                    // }
-                }
-            }
-            // console.log("The final min(*):", minIndex);
-            // console.log("The final max(*):", maxIndex);
-            if(min < this.multiMin[1]){
-                this.multiMin = minIndex;
-            }
-            if(max > this.multiMax[1]){
-                this.multiMax = maxIndex;
-            }
-        }
-        else if((type === 1 || type === 7 || type ===8 || type === 9) && symbol === '/'){
-            // let p = pp, p2 = pp2;
-            let min1 = p.yArray[1];
-            let min2 = 1;
-            for(let i=0;i<p2.length;i++){
-                min2 *= p2[i].yArray[1];
-            }   
-            let max1 = p.yArray[2];
-            let max2 = 1;
-            for(let i=0; i<p2.length; ++i){
-                max2 *= p2[i].yArray[2];
-            } 
-            let min = (min1 / max2);
-            let max = (max1 / min2);
-            let minIndex : [number, number];
-            minIndex = [-1, Infinity];
-            let maxIndex: [number, number];
-            maxIndex = [-1, -Infinity];
+    //                 // if(temp_minL < min || temp_minL >= min){
+    //                     let tempNode = [];
+    //                     for(let i = index; i < index * 2; ++i){
+    //                         tempNode.push(pop[i]);
+    //                     }
+    //                     for(let i = index; i < index * 2; ++i){
+    //                         tempNode.push(pop[i]._leftChild);
+    //                     }
+    //                     tempNode.push(temp_minL);
+    //                     alternativeNodes.push(tempNode);
+    //                     count.count++;
+    //                 // }
+    //             }
+    //             if(pop[Math.floor(len/2)]._rightChild){
+    //                 let index = Math.floor(len / 2);
+    //                 let tempArray = [];
+    //                 tempArray.push(pop[index]._rightChild.yArray[1]);
+    //                 tempArray.push(pop[index]._rightChild.yArray[2]);
+    //                 for(let i = index+1; i<index*2; ++i){
+    //                     let len = tempArray.length;
+    //                      for(let j = 0; j<len; ++j){
+    //                         tempArray.push(tempArray[j] * pop[i]._rightChild!.yArray[1]);
+    //                         tempArray.push(tempArray[j] * pop[i]._rightChild!.yArray[2]);
+    //                     }   
+    //                     for(let j = 0; j<len; ++j){
+    //                         tempArray.shift();
+    //                     }   
+    //                 }
+    //                 // console.log(tempArray);
+    //                 temp_minR = Math.min(...tempArray);
+    //                 // if(temp_minR < min || temp_minR >= min){
+    //                     let tempNode = [];
+    //                     for(let i = index; i < index * 2; ++i){
+    //                         tempNode.push(pop[i]);
+    //                     }
+    //                     for(let i = index; i < index * 2; ++i){
+    //                         tempNode.push(pop[i]._rightChild);
+    //                     }
+    //                     tempNode.push(temp_minR);
+    //                     alternativeNodes.push(tempNode);
+    //                     count.count++;
+    //                 // }
+    //             }
+    //         }
+    //         p = pp, p2 = pp2;
+    //         while(alternativeNodes2.length > 0){
+    //             // console.log("alternativeNodes2:", alternativeNodes2);
+    //             let pop:any = alternativeNodes2.pop();
+    //             if(pop === undefined ) continue;
+    //             // console.log("pop:", pop);
+    //             // if(Number(pop[pop.length-1]) < max) continue;
+    //             let len = pop.length;
+    //             let temp_maxL = 0, temp_maxR = 0;
+    //             if(!pop[Math.floor(len/2)]._leftChild && !pop[Math.floor(len/2)]._rightChild){
+    //                 let maxL = 0, maxR = 0;
+    //                 let nodeFlagInfo1 = currentFlagInfo[pop[Math.floor(len/2)].index * 2 + 1];
+    //                 if(nodeFlagInfo1 === 0){
+    //                     maxL += pop[Math.floor(len/2)].yArray[1];
+    //                     maxR += pop[Math.floor(len/2)].yArray[2];
+    //                 } 
+    //                 else{
+    //                     maxL += pop[Math.floor(len/2)].yArray[2];
+    //                     maxR += pop[Math.floor(len/2)].yArray[1];
+    //                 }
+    //                 for(let i=0; i<currentFlagInfo2.length;++i){
+    //                     if(currentFlagInfo2[i][pop[Math.floor(len/2)].index * 2 + 1] === 0){
+    //                         maxL *= pop[Math.floor(len/2)+i+1].yArray[1];
+    //                         maxR *= pop[Math.floor(len/2)+i+1].yArray[2];
+    //                     }
+    //                     else{
+    //                         maxL *= pop[Math.floor(len/2)+i+1].yArray[2];
+    //                         maxR *= pop[Math.floor(len/2)+i+1].yArray[1];
+    //                     }
+    //                 }
+    //                 if(maxL > maxR){
+    //                     max = maxL;
+    //                     maxIndex = [pop[Math.floor(len/2)].index * 2, max];
+    //                 }
+    //                 else{
+    //                     max = maxR;
+    //                     maxIndex = [pop[Math.floor(len/2)].index * 2 + 1, max];
+    //                 }
+    //                 if(max > this.multiMax[1]){
+    //                     this.multiMax = maxIndex;
+    //                 }
+    //                 continue;
+    //             }
+    //             if(pop[Math.floor(len/2)]._leftChild){
+    //                 let index = Math.floor(len / 2);
+    //                 let tempArray = [];
+    //                 tempArray.push(pop[index]._leftChild.yArray[1]);
+    //                 tempArray.push(pop[index]._leftChild.yArray[2]);
+    //                 for(let i = index+1; i<index*2; ++i){
+    //                     let len = tempArray.length;
+    //                      for(let j = 0; j<len; ++j){
+    //                         tempArray.push(tempArray[j] * pop[i]._leftChild!.yArray[1]);
+    //                         tempArray.push(tempArray[j] * pop[i]._leftChild!.yArray[2]);
+    //                     }   
+    //                     for(let j = 0; j<len; ++j){
+    //                         tempArray.shift();
+    //                     }   
+    //                 }
+    //                 // console.log(tempArray);
+    //                 temp_maxL = Math.max(...tempArray);
+    //                 // if(temp_maxL > max || temp_maxL <= max){
+    //                     let tempNode = [];
+    //                     for(let i = index; i < index * 2; ++i){
+    //                         tempNode.push(pop[i]);
+    //                     }
+    //                     for(let i = index; i < index * 2; ++i){
+    //                         tempNode.push(pop[i]._leftChild);
+    //                     }
+    //                     tempNode.push(temp_maxL);
+    //                     alternativeNodes2.push(tempNode);
+    //                     count.count++;
+    //                 // }
+    //             }
+    //             if(pop[Math.floor(len/2)]._rightChild){
+    //                 let index = Math.floor(len / 2);
+    //                 let tempArray = [];
+    //                 tempArray.push(pop[index]._rightChild.yArray[1]);
+    //                 tempArray.push(pop[index]._rightChild.yArray[2]);
+    //                 for(let i = index+1; i<index*2; ++i){
+    //                     let len = tempArray.length;
+    //                      for(let j = 0; j<len; ++j){
+    //                         tempArray.push(tempArray[j] * pop[i]._rightChild!.yArray[1]);
+    //                         tempArray.push(tempArray[j] * pop[i]._rightChild!.yArray[2]);
+    //                     }   
+    //                     for(let j = 0; j<len; ++j){
+    //                         tempArray.shift();
+    //                     }   
+    //                 }
+    //                 // console.log(tempArray);
+    //                 temp_maxR = Math.max(...tempArray);
+    //                 // if(temp_maxR > max || temp_maxR <= max){
+    //                     let tempNode = [];
+    //                     for(let i = index; i < index * 2; ++i){
+    //                         tempNode.push(pop[i]);
+    //                     }
+    //                     for(let i = index; i < index * 2; ++i){
+    //                         tempNode.push(pop[i]._rightChild);
+    //                     }
+    //                     tempNode.push(temp_maxR);
+    //                     alternativeNodes2.push(tempNode);
+    //                     count.count++;
+    //                 // }
+    //             }
+    //         }
+    //         // console.log("The final min(*):", minIndex);
+    //         // console.log("The final max(*):", maxIndex);
+    //         if(min < this.multiMin[1]){
+    //             this.multiMin = minIndex;
+    //         }
+    //         if(max > this.multiMax[1]){
+    //             this.multiMax = maxIndex;
+    //         }
+    //     }
+    //     else if((type === 1 || type === 7 || type ===8 || type === 9) && symbol === '/'){
+    //         // let p = pp, p2 = pp2;
+    //         let min1 = p.yArray[1];
+    //         let min2 = 1;
+    //         for(let i=0;i<p2.length;i++){
+    //             min2 *= p2[i].yArray[1];
+    //         }   
+    //         let max1 = p.yArray[2];
+    //         let max2 = 1;
+    //         for(let i=0; i<p2.length; ++i){
+    //             max2 *= p2[i].yArray[2];
+    //         } 
+    //         let min = (min1 / max2);
+    //         let max = (max1 / min2);
+    //         let minIndex : [number, number];
+    //         minIndex = [-1, Infinity];
+    //         let maxIndex: [number, number];
+    //         maxIndex = [-1, -Infinity];
 
-            let alternativeNodes = [];
-            let alternativeNodes2 = [];
-            while(max > -Infinity){
-                let temp_minL = 0, temp_minR = 0;
-                if(!p._leftChild && !p._rightChild){
-                    let minL = 0, minR = 0;
-                    let nodeFlagInfo1 = currentFlagInfo[p.index * 2 + 1];
-                    if(nodeFlagInfo1 === 0){
-                        minL += p.yArray[1];
-                        minR += p.yArray[2];
-                    } 
-                    else{
-                        minL += p.yArray[2];
-                        minR += p.yArray[1];
-                    }
-                    for(let i=0; i<currentFlagInfo2.length;++i){
-                        if(currentFlagInfo2[i][p.index * 2 + 1] === 0){
-                            minL /= p2[i].yArray[1];
-                            minR /= p2[i].yArray[2];
-                        }
-                        else{
-                            minL /= p2[i].yArray[2];
-                            minR /= p2[i].yArray[1];
-                        }
-                    }
-                    if(minL < minR){
-                        min = minL;
-                        minIndex = [p.index * 2, min];
-                    }
-                    else{
-                        min = minR;
-                        minIndex = [p.index * 2 + 1, min];
-                    }
-                    if(min < this.divMin[1]){
-                        this.divMin = minIndex;
-                    }
-                    break;
-                }
-                if(p._leftChild){
-                    // temp_minL = Math.min(p._leftChild.yArray[1] * p2[0]._leftChild!.yArray[1], p._leftChild.yArray[1] * p2[0]._leftChild!.yArray[2], p._leftChild.yArray[2] * p2[0]._leftChild!.yArray[1], p._leftChild.yArray[2] * p2[0]._leftChild!.yArray[2]);
-                    temp_minL = p._leftChild.yArray[1];
-                    for(let i=0;i<p2.length;++i){
-                        if(p2[i]._leftChild !== null){
-                            temp_minL /= p2[i]._leftChild!.yArray[2];
-                        }
-                    }
-                }
-                if(p._rightChild){
-                    // temp_minR = Math.min(p._rightChild.yArray[1] * p2[0]._rightChild!.yArray[1], p._rightChild.yArray[1] * p2[0]._rightChild!.yArray[2], p._rightChild.yArray[2] * p2[0]._rightChild!.yArray[1], p._rightChild.yArray[2] * p2[0]._rightChild!.yArray[2]);
-                    temp_minL = p._rightChild.yArray[1];
-                    for(let i=0;i<p2.length;++i){
-                        if(p2[i]._rightChild !== null){
-                            temp_minL /= p2[i]._leftChild!.yArray[2];
-                        }
-                    }
-                }
-                if(temp_minL <= temp_minR && p._leftChild){
-                    let tempNode = [];
-                    tempNode.push(p);
-                    for(let i=0;i<p2.length;++i){
-                        tempNode.push(p2[i]);
-                    }
-                    tempNode.push(p._rightChild);
-                    for(let i=0;i<p2.length;++i){
-                        tempNode.push(p2[i]._rightChild);
-                    }
-                    tempNode.push(temp_minR);
-                    alternativeNodes.push(tempNode);
-                    p = p._leftChild;
-                    for(let i=0;i<p2.length;++i){
-                        p2[i] = p2[i]._leftChild!;
-                    }
-                }
-                else if(temp_minL > temp_minR && p._rightChild){
-                    let tempNode = [];
-                    // alternativeNodes.push([p, p2, p._leftChild, p2._leftChild, temp_minL]);
-                    tempNode.push(p);
-                    for(let i=0;i<p2.length;++i){
-                        tempNode.push(p2[i]);
-                    }
-                    tempNode.push(p._leftChild);
-                    for(let i=0;i<p2.length;++i){
-                        tempNode.push(p2[i]._leftChild);
-                    }
-                    tempNode.push(temp_minL);
-                    p = p._rightChild;
-                    for(let i=0;i<p2.length;++i){
-                        p2[i] = p2[i]._rightChild!;
-                    }
-                    alternativeNodes.push(tempNode);
-                }
-            }
-            // console.log("The bottom min(*):", minIndex);
-            p = pp, p2 = pp2;
-            while(max > -Infinity){
-                let temp_maxL = 0, temp_maxR = 0;
-                if(!p._leftChild && !p._rightChild){
-                    let maxL = 0, maxR = 0;
-                    let nodeFlagInfo1 = currentFlagInfo[p.index * 2 + 1];
-                    if(nodeFlagInfo1 === 0){
-                        maxL += p.yArray[1];
-                        maxR += p.yArray[2];
-                    } 
-                    else{
-                        maxL += p.yArray[2];
-                        maxR += p.yArray[1];
-                    }
-                    for(let i=0; i<currentFlagInfo2.length;++i){
-                        if(currentFlagInfo2[i][p.index * 2 + 1] === 0){
-                            maxL /= p2[i].yArray[1];
-                            maxR /= p2[i].yArray[2];
-                        }
-                        else{
-                            maxL /= p2[i].yArray[2];
-                            maxR /= p2[i].yArray[1];
-                        }
-                    }
-                    if(maxL > maxR){
-                        max = maxL;
-                        maxIndex = [p.index * 2, max];
-                    }
-                    else{
-                        max = maxR;
-                        maxIndex = [p.index * 2 + 1, max];
-                    }
-                    if(max > this.divMax[1]){
-                        this.divMax = maxIndex;
-                    }
-                    break;
-                }
-                if(p._leftChild){
-                    // temp_minL = Math.min(p._leftChild.yArray[1] * p2[0]._leftChild!.yArray[1], p._leftChild.yArray[1] * p2[0]._leftChild!.yArray[2], p._leftChild.yArray[2] * p2[0]._leftChild!.yArray[1], p._leftChild.yArray[2] * p2[0]._leftChild!.yArray[2]);
-                    temp_maxL = p._leftChild.yArray[2];
-                    for(let i=0;i<p2.length;++i){
-                        if(p2[i]._leftChild !== null){
-                            temp_maxL /= p2[i]._leftChild!.yArray[1];
-                        }
-                    }
-                }
-                if(p._rightChild){
-                    // temp_minR = Math.min(p._rightChild.yArray[1] * p2[0]._rightChild!.yArray[1], p._rightChild.yArray[1] * p2[0]._rightChild!.yArray[2], p._rightChild.yArray[2] * p2[0]._rightChild!.yArray[1], p._rightChild.yArray[2] * p2[0]._rightChild!.yArray[2]);
-                    temp_maxL = p._rightChild.yArray[2];
-                    for(let i=0;i<p2.length;++i){
-                        if(p2[i]._leftChild !== null){
-                            temp_maxL /= p2[i]._leftChild!.yArray[1];
-                        }
-                    }
-                }
-                if(temp_maxL <= temp_maxR && p._rightChild){
-                    let tempNode = [];
-                    tempNode.push(p);
-                    for(let i=0;i<p2.length;++i){
-                        tempNode.push(p2[i]);
-                    }
-                    tempNode.push(p._leftChild);
-                    for(let i=0;i<p2.length;++i){
-                        tempNode.push(p2[i]._leftChild);
-                    }
-                    tempNode.push(temp_maxL);
-                    alternativeNodes2.push(tempNode);
-                    p = p._rightChild;
-                    for(let i=0;i<p2.length;++i){
-                        p2[i] = p2[i]._rightChild!;
-                    }
-                }
-                else if(temp_maxL > temp_maxR && p._leftChild){
-                    let tempNode = [];
-                    // alternativeNodes.push([p, p2, p._leftChild, p2._leftChild, temp_minL]);
-                    tempNode.push(p);
-                    for(let i=0;i<p2.length;++i){
-                        tempNode.push(p2[i]);
-                    }
-                    tempNode.push(p._rightChild);
-                    for(let i=0;i<p2.length;++i){
-                        tempNode.push(p2[i]._rightChild);
-                    }
-                    tempNode.push(temp_maxR);
-                    alternativeNodes2.push(tempNode);
-                    p = p._leftChild;
-                    for(let i=0;i<p2.length;++i){
-                        p2[i] = p2[i]._leftChild!;
-                    }
-                }
-            }
-            // console.log("The bottom max(*):", maxIndex);
-            if(store.state.controlParams.stopEarly === true){
-                alternativeNodes = [];
-                alternativeNodes2 = [];
-            }
-            p = pp, p2 = pp2;
-            while(alternativeNodes.length > 0){
-                let pop:any = alternativeNodes.pop();
-                if(pop === undefined ) continue;
-                // if(Number(pop[pop.length-1]) > min) continue;
-                let len = pop.length;
-                let temp_minL = 0, temp_minR = 0;
-                if(!pop[Math.floor(len/2)]._leftChild && !pop[Math.floor(len/2)]._rightChild){
-                    let minL = 0, minR = 0;
-                    let nodeFlagInfo1 = currentFlagInfo[pop[Math.floor(len/2)].index * 2 + 1];
-                    if(nodeFlagInfo1 === 0){
-                        minL += pop[Math.floor(len/2)].yArray[1];
-                        minR += pop[Math.floor(len/2)].yArray[2];
-                    } 
-                    else{
-                        minL += pop[Math.floor(len/2)].yArray[2];
-                        minR += pop[Math.floor(len/2)].yArray[1];
-                    }
-                    for(let i=0; i<currentFlagInfo2.length;++i){
-                        if(currentFlagInfo2[i][pop[Math.floor(len/2)].index * 2 + 1] === 0){
-                            minL /= pop[Math.floor(len/2)+i+1].yArray[1];
-                            minR /= pop[Math.floor(len/2)+i+1].yArray[2];
-                        }
-                        else{
-                            minL /= pop[Math.floor(len/2)+i+1].yArray[2];
-                            minR /= pop[Math.floor(len/2)+i+1].yArray[1];
-                        }
-                    }
-                    if(minL > minR){
-                        min = minL;
-                        minIndex = [pop[Math.floor(len/2)].index * 2, min];
-                    }
-                    else{
-                        min = minR;
-                        minIndex = [pop[Math.floor(len/2)].index * 2 + 1, min];
-                    }
-                    if(min < this.divMin[1]){
-                        this.divMin = minIndex;
-                    }
-                    continue;
-                }
-                if(pop[Math.floor(len/2)]._leftChild){
-                    let index = Math.floor(len / 2);
-                    temp_minL = pop[index]._leftChild.yArray[1];
-                    for(let i = index + 1; i < index * 2; ++i){
-                        temp_minL /= pop[i]._leftChild.yArray[2];
-                    }
-                    // temp_minL = (pop[2]._leftChild.yArray[1] + pop[3]._leftChild.yArray[1]);
-                    // if(temp_minL < min){
-                        let tempNode = [];
-                        for(let i = index; i < index * 2; ++i){
-                            tempNode.push(pop[i]);
-                        }
-                        for(let i = index; i < index * 2; ++i){
-                            tempNode.push(pop[i]._leftChild);
-                        }
-                        tempNode.push(temp_minL);
-                        alternativeNodes.push(tempNode);
-                        count.count++;
-                    // }
-                }
-                if(pop[Math.floor(len/2)]._rightChild){
-                    let index = Math.floor(len / 2);
-                    temp_minL = pop[index]._rightChild.yArray[1];
-                    for(let i = index + 1; i < index * 2; ++i){
-                        temp_minL /= pop[i]._rightChild.yArray[2];
-                    }
-                    // temp_minL = (pop[2]._leftChild.yArray[1] + pop[3]._leftChild.yArray[1]);
-                    // if(temp_minL < min){
-                        let tempNode = [];
-                        for(let i = index; i < index * 2; ++i){
-                            tempNode.push(pop[i]);
-                        }
-                        for(let i = index; i < index * 2; ++i){
-                            tempNode.push(pop[i]._rightChild);
-                        }
-                        tempNode.push(temp_minL);
-                        alternativeNodes.push(tempNode);
-                        count.count++;
-                    // }
-                }
-            }
-            p = pp, p2 = pp2;
-            while(alternativeNodes2.length > 0){
-                // console.log("alternativeNodes2:", alternativeNodes2);
-                let pop:any = alternativeNodes2.pop();
-                if(pop === undefined ) continue;
-                // console.log("pop:", pop);
-                // if(Number(pop[pop.length-1]) < max) continue;
-                let len = pop.length;
-                let temp_maxL = 0, temp_maxR = 0;
-                if(!pop[Math.floor(len/2)]._leftChild && !pop[Math.floor(len/2)]._rightChild){
-                    let maxL = 0, maxR = 0;
-                    let nodeFlagInfo1 = currentFlagInfo[pop[Math.floor(len/2)].index * 2 + 1];
-                    if(nodeFlagInfo1 === 0){
-                        maxL += pop[Math.floor(len/2)].yArray[1];
-                        maxR += pop[Math.floor(len/2)].yArray[2];
-                    } 
-                    else{
-                        maxL += pop[Math.floor(len/2)].yArray[2];
-                        maxR += pop[Math.floor(len/2)].yArray[1];
-                    }
-                    for(let i=0; i<currentFlagInfo2.length;++i){
-                        if(currentFlagInfo2[i][pop[Math.floor(len/2)].index * 2 + 1] === 0){
-                            maxL /= pop[Math.floor(len/2)+i+1].yArray[1];
-                            maxR /= pop[Math.floor(len/2)+i+1].yArray[2];
-                        }
-                        else{
-                            maxL /= pop[Math.floor(len/2)+i+1].yArray[2];
-                            maxR /= pop[Math.floor(len/2)+i+1].yArray[1];
-                        }
-                    }
-                    if(maxL > maxR){
-                        max = maxL;
-                        maxIndex = [pop[Math.floor(len/2)].index * 2, max];
-                    }
-                    else{
-                        max = maxR;
-                        maxIndex = [pop[Math.floor(len/2)].index * 2 + 1, max];
-                    }
-                    if(max > this.divMax[1]){
-                        this.divMax = maxIndex;
-                    }
-                    continue;
-                }
-                if(pop[Math.floor(len/2)]._leftChild){
-                    let index = Math.floor(len / 2);
-                    temp_maxL = pop[index]._leftChild.yArray[2];
-                    for(let i = index + 1; i < index * 2; ++i){
-                        temp_maxL /= pop[i]._leftChild.yArray[1];
-                    }
-                    // if(temp_maxL > max){
-                        let tempNode = [];
-                        for(let i = index; i < index * 2; ++i){
-                            tempNode.push(pop[i]);
-                        }
-                        for(let i = index; i < index * 2; ++i){
-                            tempNode.push(pop[i]._leftChild);
-                        }
-                        tempNode.push(temp_maxL);
-                        alternativeNodes2.push(tempNode);
-                        count.count++;
-                    // }
-                }
-                if(pop[Math.floor(len/2)]._rightChild){
-                    let index = Math.floor(len / 2);
-                    temp_maxL = pop[index]._rightChild.yArray[2];
-                    for(let i = index + 1; i < index * 2; ++i){
-                        temp_maxL /= pop[i]._rightChild.yArray[1];
-                    }
-                    // if(temp_maxL > max){
-                        let tempNode = [];
-                        for(let i = index; i < index * 2; ++i){
-                            tempNode.push(pop[i]);
-                        }
-                        for(let i = index; i < index * 2; ++i){
-                            tempNode.push(pop[i]._rightChild);
-                        }
-                        tempNode.push(temp_maxL);
-                        alternativeNodes2.push(tempNode);
-                        count.count++;
-                    // }
-                }
-            }
-            // console.log("The final min(/):", minIndex);
-            // console.log("The final max(/):", maxIndex);
-            if(min < this.divMin[1]){
-                this.divMin = minIndex;
-            }
-            if(max > this.divMax[1]){
-                this.divMax = maxIndex;
-            }
-        }
-    }
-
-    computeTransform2(p: TrendTree, p2:Array <TrendTree>, type: number, currentFlagInfo: any, currentFlagInfo2: any, transform_symbol: any, count?: any, needLoadDifNode?: any){
-        const pp = p, pp2 = p2.slice();
-        if (p.nodeType === "NULL") {
-            return
-        }
-        if ( p.yArray[1] === undefined || p.yArray[2] === undefined) {
-            debugger
-            throw new Error("error val")
-        }
-        let symbol = transform_symbol;
-        if((type === 1 || type === 7 || type ===8 || type === 9) && (symbol == '+' || symbol == 'avg')){
-            // let p = pp, p2 = pp2;
-            let min1 = p.yArray[1];
-            let min2 = 0;
-            for(let i=0;i<p2.length;i++){
-                min2 += p2[i].yArray[1];
-            } 
-            let max1 = p.yArray[2];
-            let max2 = 0;
-            for(let i=0;i<p2.length;i++){
-                max2 += p2[i].yArray[2];
-            }
-
-            let min = (min1 + min2);
-            let max = (max1 + max2);
-            let tempMin;
-            let tempMax;
-            let minIndex: [number, number];
-            minIndex = [-1, Infinity];
-            let maxIndex: [number, number];
-            maxIndex = [-1, -Infinity];
-            // console.log("count:", count);
-            let alternativeNodes = [];
-            let alternativeNodes2 = [];
-            // this.addMin = [-1, min, -1]; //add level info
-            // this.addMax = [-1, max, -1];
-            if(this.addMin[2] === -1){
-                this.addMin = [-1, min, p.level];
-                this.addMax = [-1, max, p.level];
-                needLoadDifNode.push(p);
-            }
-            else if(p.level > this.addMin[2]){
-                this.addMin = [-1, min, p.level];
-                this.addMax = [-1, max, p.level];
-                needLoadDifNode.push(p);
-            }
-            else if(p.level === this.addMin[2]){
-                if(min < this.addMin[1]){
-                    this.addMin = [-1, min, p.level];
-                }
-            }
-        }
-    }
+    //         let alternativeNodes = [];
+    //         let alternativeNodes2 = [];
+    //         while(max > -Infinity){
+    //             let temp_minL = 0, temp_minR = 0;
+    //             if(!p._leftChild && !p._rightChild){
+    //                 let minL = 0, minR = 0;
+    //                 let nodeFlagInfo1 = currentFlagInfo[p.index * 2 + 1];
+    //                 if(nodeFlagInfo1 === 0){
+    //                     minL += p.yArray[1];
+    //                     minR += p.yArray[2];
+    //                 } 
+    //                 else{
+    //                     minL += p.yArray[2];
+    //                     minR += p.yArray[1];
+    //                 }
+    //                 for(let i=0; i<currentFlagInfo2.length;++i){
+    //                     if(currentFlagInfo2[i][p.index * 2 + 1] === 0){
+    //                         minL /= p2[i].yArray[1];
+    //                         minR /= p2[i].yArray[2];
+    //                     }
+    //                     else{
+    //                         minL /= p2[i].yArray[2];
+    //                         minR /= p2[i].yArray[1];
+    //                     }
+    //                 }
+    //                 if(minL < minR){
+    //                     min = minL;
+    //                     minIndex = [p.index * 2, min];
+    //                 }
+    //                 else{
+    //                     min = minR;
+    //                     minIndex = [p.index * 2 + 1, min];
+    //                 }
+    //                 if(min < this.divMin[1]){
+    //                     this.divMin = minIndex;
+    //                 }
+    //                 break;
+    //             }
+    //             if(p._leftChild){
+    //                 // temp_minL = Math.min(p._leftChild.yArray[1] * p2[0]._leftChild!.yArray[1], p._leftChild.yArray[1] * p2[0]._leftChild!.yArray[2], p._leftChild.yArray[2] * p2[0]._leftChild!.yArray[1], p._leftChild.yArray[2] * p2[0]._leftChild!.yArray[2]);
+    //                 temp_minL = p._leftChild.yArray[1];
+    //                 for(let i=0;i<p2.length;++i){
+    //                     if(p2[i]._leftChild !== null){
+    //                         temp_minL /= p2[i]._leftChild!.yArray[2];
+    //                     }
+    //                 }
+    //             }
+    //             if(p._rightChild){
+    //                 // temp_minR = Math.min(p._rightChild.yArray[1] * p2[0]._rightChild!.yArray[1], p._rightChild.yArray[1] * p2[0]._rightChild!.yArray[2], p._rightChild.yArray[2] * p2[0]._rightChild!.yArray[1], p._rightChild.yArray[2] * p2[0]._rightChild!.yArray[2]);
+    //                 temp_minL = p._rightChild.yArray[1];
+    //                 for(let i=0;i<p2.length;++i){
+    //                     if(p2[i]._rightChild !== null){
+    //                         temp_minL /= p2[i]._leftChild!.yArray[2];
+    //                     }
+    //                 }
+    //             }
+    //             if(temp_minL <= temp_minR && p._leftChild){
+    //                 let tempNode = [];
+    //                 tempNode.push(p);
+    //                 for(let i=0;i<p2.length;++i){
+    //                     tempNode.push(p2[i]);
+    //                 }
+    //                 tempNode.push(p._rightChild);
+    //                 for(let i=0;i<p2.length;++i){
+    //                     tempNode.push(p2[i]._rightChild);
+    //                 }
+    //                 tempNode.push(temp_minR);
+    //                 alternativeNodes.push(tempNode);
+    //                 p = p._leftChild;
+    //                 for(let i=0;i<p2.length;++i){
+    //                     p2[i] = p2[i]._leftChild!;
+    //                 }
+    //             }
+    //             else if(temp_minL > temp_minR && p._rightChild){
+    //                 let tempNode = [];
+    //                 // alternativeNodes.push([p, p2, p._leftChild, p2._leftChild, temp_minL]);
+    //                 tempNode.push(p);
+    //                 for(let i=0;i<p2.length;++i){
+    //                     tempNode.push(p2[i]);
+    //                 }
+    //                 tempNode.push(p._leftChild);
+    //                 for(let i=0;i<p2.length;++i){
+    //                     tempNode.push(p2[i]._leftChild);
+    //                 }
+    //                 tempNode.push(temp_minL);
+    //                 p = p._rightChild;
+    //                 for(let i=0;i<p2.length;++i){
+    //                     p2[i] = p2[i]._rightChild!;
+    //                 }
+    //                 alternativeNodes.push(tempNode);
+    //             }
+    //         }
+    //         // console.log("The bottom min(*):", minIndex);
+    //         p = pp, p2 = pp2;
+    //         while(max > -Infinity){
+    //             let temp_maxL = 0, temp_maxR = 0;
+    //             if(!p._leftChild && !p._rightChild){
+    //                 let maxL = 0, maxR = 0;
+    //                 let nodeFlagInfo1 = currentFlagInfo[p.index * 2 + 1];
+    //                 if(nodeFlagInfo1 === 0){
+    //                     maxL += p.yArray[1];
+    //                     maxR += p.yArray[2];
+    //                 } 
+    //                 else{
+    //                     maxL += p.yArray[2];
+    //                     maxR += p.yArray[1];
+    //                 }
+    //                 for(let i=0; i<currentFlagInfo2.length;++i){
+    //                     if(currentFlagInfo2[i][p.index * 2 + 1] === 0){
+    //                         maxL /= p2[i].yArray[1];
+    //                         maxR /= p2[i].yArray[2];
+    //                     }
+    //                     else{
+    //                         maxL /= p2[i].yArray[2];
+    //                         maxR /= p2[i].yArray[1];
+    //                     }
+    //                 }
+    //                 if(maxL > maxR){
+    //                     max = maxL;
+    //                     maxIndex = [p.index * 2, max];
+    //                 }
+    //                 else{
+    //                     max = maxR;
+    //                     maxIndex = [p.index * 2 + 1, max];
+    //                 }
+    //                 if(max > this.divMax[1]){
+    //                     this.divMax = maxIndex;
+    //                 }
+    //                 break;
+    //             }
+    //             if(p._leftChild){
+    //                 // temp_minL = Math.min(p._leftChild.yArray[1] * p2[0]._leftChild!.yArray[1], p._leftChild.yArray[1] * p2[0]._leftChild!.yArray[2], p._leftChild.yArray[2] * p2[0]._leftChild!.yArray[1], p._leftChild.yArray[2] * p2[0]._leftChild!.yArray[2]);
+    //                 temp_maxL = p._leftChild.yArray[2];
+    //                 for(let i=0;i<p2.length;++i){
+    //                     if(p2[i]._leftChild !== null){
+    //                         temp_maxL /= p2[i]._leftChild!.yArray[1];
+    //                     }
+    //                 }
+    //             }
+    //             if(p._rightChild){
+    //                 // temp_minR = Math.min(p._rightChild.yArray[1] * p2[0]._rightChild!.yArray[1], p._rightChild.yArray[1] * p2[0]._rightChild!.yArray[2], p._rightChild.yArray[2] * p2[0]._rightChild!.yArray[1], p._rightChild.yArray[2] * p2[0]._rightChild!.yArray[2]);
+    //                 temp_maxL = p._rightChild.yArray[2];
+    //                 for(let i=0;i<p2.length;++i){
+    //                     if(p2[i]._leftChild !== null){
+    //                         temp_maxL /= p2[i]._leftChild!.yArray[1];
+    //                     }
+    //                 }
+    //             }
+    //             if(temp_maxL <= temp_maxR && p._rightChild){
+    //                 let tempNode = [];
+    //                 tempNode.push(p);
+    //                 for(let i=0;i<p2.length;++i){
+    //                     tempNode.push(p2[i]);
+    //                 }
+    //                 tempNode.push(p._leftChild);
+    //                 for(let i=0;i<p2.length;++i){
+    //                     tempNode.push(p2[i]._leftChild);
+    //                 }
+    //                 tempNode.push(temp_maxL);
+    //                 alternativeNodes2.push(tempNode);
+    //                 p = p._rightChild;
+    //                 for(let i=0;i<p2.length;++i){
+    //                     p2[i] = p2[i]._rightChild!;
+    //                 }
+    //             }
+    //             else if(temp_maxL > temp_maxR && p._leftChild){
+    //                 let tempNode = [];
+    //                 // alternativeNodes.push([p, p2, p._leftChild, p2._leftChild, temp_minL]);
+    //                 tempNode.push(p);
+    //                 for(let i=0;i<p2.length;++i){
+    //                     tempNode.push(p2[i]);
+    //                 }
+    //                 tempNode.push(p._rightChild);
+    //                 for(let i=0;i<p2.length;++i){
+    //                     tempNode.push(p2[i]._rightChild);
+    //                 }
+    //                 tempNode.push(temp_maxR);
+    //                 alternativeNodes2.push(tempNode);
+    //                 p = p._leftChild;
+    //                 for(let i=0;i<p2.length;++i){
+    //                     p2[i] = p2[i]._leftChild!;
+    //                 }
+    //             }
+    //         }
+    //         // console.log("The bottom max(*):", maxIndex);
+    //         if(store.state.controlParams.stopEarly === true){
+    //             alternativeNodes = [];
+    //             alternativeNodes2 = [];
+    //         }
+    //         p = pp, p2 = pp2;
+    //         while(alternativeNodes.length > 0){
+    //             let pop:any = alternativeNodes.pop();
+    //             if(pop === undefined ) continue;
+    //             // if(Number(pop[pop.length-1]) > min) continue;
+    //             let len = pop.length;
+    //             let temp_minL = 0, temp_minR = 0;
+    //             if(!pop[Math.floor(len/2)]._leftChild && !pop[Math.floor(len/2)]._rightChild){
+    //                 let minL = 0, minR = 0;
+    //                 let nodeFlagInfo1 = currentFlagInfo[pop[Math.floor(len/2)].index * 2 + 1];
+    //                 if(nodeFlagInfo1 === 0){
+    //                     minL += pop[Math.floor(len/2)].yArray[1];
+    //                     minR += pop[Math.floor(len/2)].yArray[2];
+    //                 } 
+    //                 else{
+    //                     minL += pop[Math.floor(len/2)].yArray[2];
+    //                     minR += pop[Math.floor(len/2)].yArray[1];
+    //                 }
+    //                 for(let i=0; i<currentFlagInfo2.length;++i){
+    //                     if(currentFlagInfo2[i][pop[Math.floor(len/2)].index * 2 + 1] === 0){
+    //                         minL /= pop[Math.floor(len/2)+i+1].yArray[1];
+    //                         minR /= pop[Math.floor(len/2)+i+1].yArray[2];
+    //                     }
+    //                     else{
+    //                         minL /= pop[Math.floor(len/2)+i+1].yArray[2];
+    //                         minR /= pop[Math.floor(len/2)+i+1].yArray[1];
+    //                     }
+    //                 }
+    //                 if(minL > minR){
+    //                     min = minL;
+    //                     minIndex = [pop[Math.floor(len/2)].index * 2, min];
+    //                 }
+    //                 else{
+    //                     min = minR;
+    //                     minIndex = [pop[Math.floor(len/2)].index * 2 + 1, min];
+    //                 }
+    //                 if(min < this.divMin[1]){
+    //                     this.divMin = minIndex;
+    //                 }
+    //                 continue;
+    //             }
+    //             if(pop[Math.floor(len/2)]._leftChild){
+    //                 let index = Math.floor(len / 2);
+    //                 temp_minL = pop[index]._leftChild.yArray[1];
+    //                 for(let i = index + 1; i < index * 2; ++i){
+    //                     temp_minL /= pop[i]._leftChild.yArray[2];
+    //                 }
+    //                 // temp_minL = (pop[2]._leftChild.yArray[1] + pop[3]._leftChild.yArray[1]);
+    //                 // if(temp_minL < min){
+    //                     let tempNode = [];
+    //                     for(let i = index; i < index * 2; ++i){
+    //                         tempNode.push(pop[i]);
+    //                     }
+    //                     for(let i = index; i < index * 2; ++i){
+    //                         tempNode.push(pop[i]._leftChild);
+    //                     }
+    //                     tempNode.push(temp_minL);
+    //                     alternativeNodes.push(tempNode);
+    //                     count.count++;
+    //                 // }
+    //             }
+    //             if(pop[Math.floor(len/2)]._rightChild){
+    //                 let index = Math.floor(len / 2);
+    //                 temp_minL = pop[index]._rightChild.yArray[1];
+    //                 for(let i = index + 1; i < index * 2; ++i){
+    //                     temp_minL /= pop[i]._rightChild.yArray[2];
+    //                 }
+    //                 // temp_minL = (pop[2]._leftChild.yArray[1] + pop[3]._leftChild.yArray[1]);
+    //                 // if(temp_minL < min){
+    //                     let tempNode = [];
+    //                     for(let i = index; i < index * 2; ++i){
+    //                         tempNode.push(pop[i]);
+    //                     }
+    //                     for(let i = index; i < index * 2; ++i){
+    //                         tempNode.push(pop[i]._rightChild);
+    //                     }
+    //                     tempNode.push(temp_minL);
+    //                     alternativeNodes.push(tempNode);
+    //                     count.count++;
+    //                 // }
+    //             }
+    //         }
+    //         p = pp, p2 = pp2;
+    //         while(alternativeNodes2.length > 0){
+    //             // console.log("alternativeNodes2:", alternativeNodes2);
+    //             let pop:any = alternativeNodes2.pop();
+    //             if(pop === undefined ) continue;
+    //             // console.log("pop:", pop);
+    //             // if(Number(pop[pop.length-1]) < max) continue;
+    //             let len = pop.length;
+    //             let temp_maxL = 0, temp_maxR = 0;
+    //             if(!pop[Math.floor(len/2)]._leftChild && !pop[Math.floor(len/2)]._rightChild){
+    //                 let maxL = 0, maxR = 0;
+    //                 let nodeFlagInfo1 = currentFlagInfo[pop[Math.floor(len/2)].index * 2 + 1];
+    //                 if(nodeFlagInfo1 === 0){
+    //                     maxL += pop[Math.floor(len/2)].yArray[1];
+    //                     maxR += pop[Math.floor(len/2)].yArray[2];
+    //                 } 
+    //                 else{
+    //                     maxL += pop[Math.floor(len/2)].yArray[2];
+    //                     maxR += pop[Math.floor(len/2)].yArray[1];
+    //                 }
+    //                 for(let i=0; i<currentFlagInfo2.length;++i){
+    //                     if(currentFlagInfo2[i][pop[Math.floor(len/2)].index * 2 + 1] === 0){
+    //                         maxL /= pop[Math.floor(len/2)+i+1].yArray[1];
+    //                         maxR /= pop[Math.floor(len/2)+i+1].yArray[2];
+    //                     }
+    //                     else{
+    //                         maxL /= pop[Math.floor(len/2)+i+1].yArray[2];
+    //                         maxR /= pop[Math.floor(len/2)+i+1].yArray[1];
+    //                     }
+    //                 }
+    //                 if(maxL > maxR){
+    //                     max = maxL;
+    //                     maxIndex = [pop[Math.floor(len/2)].index * 2, max];
+    //                 }
+    //                 else{
+    //                     max = maxR;
+    //                     maxIndex = [pop[Math.floor(len/2)].index * 2 + 1, max];
+    //                 }
+    //                 if(max > this.divMax[1]){
+    //                     this.divMax = maxIndex;
+    //                 }
+    //                 continue;
+    //             }
+    //             if(pop[Math.floor(len/2)]._leftChild){
+    //                 let index = Math.floor(len / 2);
+    //                 temp_maxL = pop[index]._leftChild.yArray[2];
+    //                 for(let i = index + 1; i < index * 2; ++i){
+    //                     temp_maxL /= pop[i]._leftChild.yArray[1];
+    //                 }
+    //                 // if(temp_maxL > max){
+    //                     let tempNode = [];
+    //                     for(let i = index; i < index * 2; ++i){
+    //                         tempNode.push(pop[i]);
+    //                     }
+    //                     for(let i = index; i < index * 2; ++i){
+    //                         tempNode.push(pop[i]._leftChild);
+    //                     }
+    //                     tempNode.push(temp_maxL);
+    //                     alternativeNodes2.push(tempNode);
+    //                     count.count++;
+    //                 // }
+    //             }
+    //             if(pop[Math.floor(len/2)]._rightChild){
+    //                 let index = Math.floor(len / 2);
+    //                 temp_maxL = pop[index]._rightChild.yArray[2];
+    //                 for(let i = index + 1; i < index * 2; ++i){
+    //                     temp_maxL /= pop[i]._rightChild.yArray[1];
+    //                 }
+    //                 // if(temp_maxL > max){
+    //                     let tempNode = [];
+    //                     for(let i = index; i < index * 2; ++i){
+    //                         tempNode.push(pop[i]);
+    //                     }
+    //                     for(let i = index; i < index * 2; ++i){
+    //                         tempNode.push(pop[i]._rightChild);
+    //                     }
+    //                     tempNode.push(temp_maxL);
+    //                     alternativeNodes2.push(tempNode);
+    //                     count.count++;
+    //                 // }
+    //             }
+    //         }
+    //         // console.log("The final min(/):", minIndex);
+    //         // console.log("The final max(/):", maxIndex);
+    //         if(min < this.divMin[1]){
+    //             this.divMin = minIndex;
+    //         }
+    //         if(max > this.divMax[1]){
+    //             this.divMax = maxIndex;
+    //         }
+    //     }
+    // }
 
     addLastVal(v: number, p?: any) {
         if (v === undefined) {
