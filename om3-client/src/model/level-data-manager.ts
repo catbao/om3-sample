@@ -2169,6 +2169,7 @@ export default class LevelDataManager {
                 await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, otherDataManager[i]);
         }
 
+        let testT = 0;
         while (needLoadDifNode.length > 0) { //如果需要继续向下获取系数，则一直向下查询，直到最后一层
             colIndex = 0;
             let tempNeedLoadDifNodes = [];
@@ -2263,11 +2264,14 @@ export default class LevelDataManager {
             //     }
             // }
             ////this.checkMonotonicity(nonUniformColObjs,preColIndex,tempNeedLoadDifNodes);
+            let testTime = new Date().getTime();
             tempNeedLoadDifNodes = [...new Set(tempNeedLoadDifNodes)];
             needLoadDifNode = tempNeedLoadDifNodes;
             for(let i=0;i<tempNeedLoadDifNodes2.length;i++){
                 tempNeedLoadDifNodes2[i] = [...new Set(tempNeedLoadDifNodes2[i])];
             }
+            let testTime2 = new Date().getTime() - testTime;
+            testT += testTime2;
             needLoadDifNode2 = tempNeedLoadDifNodes2;
             if (needLoadDifNode.length > 0 && needLoadDifNode[0].level === this.maxLevel - 1) {
                 if(transform_symbol === '+'){
@@ -2453,7 +2457,7 @@ export default class LevelDataManager {
 
         }
 
-        console.log("The time to get all coefficients:" + (new Date().getTime() - startT));
+        console.log("The time to get all coefficients:" + (new Date().getTime() - startT - testT));
         console.log("The final count:", count_obj.count);
         // console.log("The time to get total coefficients:", total_time);
 

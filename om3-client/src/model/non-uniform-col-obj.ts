@@ -466,7 +466,7 @@ export default class NoUniformColObj {
             // this.addMin = [-1, min, -1]; //add level info
             // this.addMax = [-1, max, -1];
 
-            if(p.level === 15){
+            if(p.level === 19){
                 let minL = 0, minR = 0;
                 let nodeFlagInfo1 = currentFlagInfo[p.index * 2 + 1];
                 if(nodeFlagInfo1 === 0){
