@@ -2114,7 +2114,7 @@ export default class LevelDataManager {
                     //     nonUniformColObjs[colIndex].computeTransform(p, p2, type, currentFlagInfo, currentFlagInfo2, transform_symbol);
                     // }
                     let start_t = new Date().getTime();
-                    nonUniformColObjs[colIndex].computeTransform(p, p2_temp, type, currentFlagInfo, currentFlagInfo2, transform_symbol, count_obj);
+                    nonUniformColObjs[colIndex].computeTransform(p, p2_temp, type, currentFlagInfo, currentFlagInfo2, transform_symbol, count_obj, needLoadDifNode);
                     let end_t = new Date().getTime();
                     total_time += end_t - start_t;
                     // nonUniformColObjs[colIndex].computeTransform(p, p2_temp,this.dataName, dataNames, this, otherDataManager, type, currentFlagInfo, currentFlagInfo2, transform_symbol);
