@@ -429,7 +429,8 @@ export default class NoUniformColObj {
         return;
     }
     
-    computeTransform2(p: TrendTree, p2:Array <TrendTree>, type: number, currentFlagInfo: any, currentFlagInfo2: any, transform_symbol: any, count?: any, needLoadDifNode?: any, needLoadDifNode2?: any){
+
+    computeTransform2(p: TrendTree, p2:Array <TrendTree>, type: number, currentFlagInfo: any, currentFlagInfo2: any, transform_symbol: any, count?: any, needLoadDifNode?: any, needLoadDifNode2?: any, alterNativeNodes?: any){
         const pp = p, pp2 = p2.slice();
         if (p.nodeType === "NULL") {
             return
@@ -518,7 +519,9 @@ export default class NoUniformColObj {
                 this.addMin = [-1, min, p.level, [p, ...p2]];
                 this.addMax = [-1, max, p.level, [p, ...p2]];
                 needLoadDifNode.push(p);
+                needLoadDifNode.push(p);
                 for(let i=0; i<needLoadDifNode2.length; i++){
+                    needLoadDifNode2[i].push(p2[i]);
                     needLoadDifNode2[i].push(p2[i]);
                 }
             }
@@ -539,6 +542,7 @@ export default class NoUniformColObj {
                     for(let i=needLoadDifNode.length-1;i>=0;i--){
                         if(needLoadDifNode[i] == this.addMin[3][0]){
                             needLoadDifNode.splice(i,1);
+                            alterNativeNodes[p.level-10].push(needLoadDifNode[i]);
                             break;
                         }
                     }
@@ -559,6 +563,7 @@ export default class NoUniformColObj {
                     for(let i=needLoadDifNode.length-1;i>=0;i--){
                         if(needLoadDifNode[i] == this.addMin[3][0]){
                             needLoadDifNode.splice(i,1);
+                            alterNativeNodes[p.level-10].push(needLoadDifNode[i]);
                             break;
                         }
                     }
