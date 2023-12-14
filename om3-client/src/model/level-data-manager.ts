@@ -2058,6 +2058,7 @@ export default class LevelDataManager {
                 console.log("flag2 length:", currentFlagInfo2[i].length)
             }
         }
+        const maxLevel = Math.ceil(Math.log2(timeRange[1]));
         // const currentFlagInfo = [0,1,1,0,1,0,0,1];
         // const currentFlagInfo2 = [0,1,0,1,0,1,0,1];
 
@@ -2069,6 +2070,7 @@ export default class LevelDataManager {
         let count_obj = {count: 0};
 
         let total_time = 0;
+        let databaseT = 0;
         let startT = new Date().getTime();
         //假设对于dataset1
         for(let i=0; i<this.levelIndexObjs[currentLevel].firstNodes.length; ++i){
@@ -2091,28 +2093,6 @@ export default class LevelDataManager {
                     let p2_temp = p2.slice();
                     nonUniformColObjs[colIndex].containColumnRange(p, type);
                     
-                    // if(type === 1 || type === 7 || type === 8 || type === 9){
-                    //     let combinedUrl = `/line_chart/getChildTree?level=${p.level}&index=${p.index}&dataset1=${this.dataName}&dataset2=${dataNames}`;
-                    //     try {
-                    //         resChild = await get(combinedUrl);
-                    //     } catch (error) {
-                    //         console.error("异步操作失败：", error);
-                    //     }
-                    //     resChild = await get(combinedUrl);
-                    //     resChild[0].d.push({l:-1, i:0, minvd:p.yArray[1], maxvd:p.yArray[2], avevd:p.yArray[3]});
-                    //     for(let j=0; j<dataNames.length; j++){
-                    //         resChild[j+1].d.push({l:-1, i:0, minvd:p2[j].yArray[1], maxvd:p2[j].yArray[2], avevd:p2[j].yArray[3]});
-                    //     }
-                    //     let p3: any;
-                    //     let p4 = [];
-                    //     let trendTree = [];
-                    //     for(let j=0; j<resChild.length; j++){
-                    //         trendTree.push(constructMinMaxMissTrendTreeForGetChildTree(resChild[j].d, 600, resChild[j].tn));
-                    //         if(j===0) p3 = trendTree[j].trendTree;
-                    //         else p4.push(trendTree[j].trendTree);
-                    //     }
-                    //     nonUniformColObjs[colIndex].computeTransform(p, p2, type, currentFlagInfo, currentFlagInfo2, transform_symbol);
-                    // }
                     let start_t = new Date().getTime();
                     nonUniformColObjs[colIndex].computeTransform2(p, p2_temp, type, currentFlagInfo, currentFlagInfo2, transform_symbol, count_obj, needLoadDifNode, needLoadDifNode2);
                     let end_t = new Date().getTime();
@@ -2166,15 +2146,19 @@ export default class LevelDataManager {
             needLoadDifNode2[i] = [...new Set(needLoadDifNode2[i])];
         }
         console.log("get data");
+        let start_databaseT = new Date().getTime();
         let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
         if (losedDataInfo.length > 0) {
             await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);  //取得系数
             for(let i=0; i<otherDataManager.length; i++)
                 await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, otherDataManager[i]);
         }
+        databaseT += new Date().getTime() - start_databaseT;
 
         let testT = 0;
-        let alternativeNodes = [[],[],[],[],[],[],[],[],[],[],[]]
+        let alternativeNodes = Array.from({ length: 11 }, () => []);
+        let alternativeNodes2 = Array.from({ length: 2 }, () => Array.from({ length: 11 }, () => []));
+
         while (needLoadDifNode.length > 0) { //如果需要继续向下获取系数，则一直向下查询，直到最后一层
             colIndex = 0;
             let tempNeedLoadDifNodes = [];
@@ -2215,7 +2199,6 @@ export default class LevelDataManager {
                 });
             }
             
-
             const preColIndex = [];
             for (let i = 0; i < tempQue.length; i++) {
                 if (colIndex >= nonUniformColObjs.length) {
@@ -2232,7 +2215,7 @@ export default class LevelDataManager {
                 nonUniformColObjs[colIndex].containColumnRange(tempQue[i], type);
                 // nonUniformColObjs[colIndex].computeTransform(tempQue[i], array, this.dataName, dataNames, this, otherDataManager, type, currentFlagInfo, currentFlagInfo2, transform_symbol);
                 let start_t = new Date().getTime(); 
-                nonUniformColObjs[colIndex].computeTransform2(tempQue[i], array, type, currentFlagInfo, currentFlagInfo2, transform_symbol, count_obj, tempNeedLoadDifNodes, tempNeedLoadDifNodes2, alternativeNodes);
+                nonUniformColObjs[colIndex].computeTransform2(tempQue[i], array, type, currentFlagInfo, currentFlagInfo2, transform_symbol, count_obj, tempNeedLoadDifNodes, tempNeedLoadDifNodes2, alternativeNodes, alternativeNodes2, maxLevel);
                 let end_t = new Date().getTime();
                 total_time += end_t - start_t;
                 if (type === 1) {
@@ -2278,7 +2261,7 @@ export default class LevelDataManager {
             let testTime2 = new Date().getTime() - testTime;
             testT += testTime2;
             needLoadDifNode2 = tempNeedLoadDifNodes2;
-            if (needLoadDifNode.length > 0 && needLoadDifNode[0].level === this.maxLevel - 1) {
+            if (needLoadDifNode.length > 0 && needLoadDifNode[0].level === maxLevel - 1) {
                 if(transform_symbol === '+'){
                     for (let i = 0; i < needLoadDifNode.length; i++) {
                         let maxL = 0, maxR = 0;
@@ -2453,34 +2436,46 @@ export default class LevelDataManager {
             //     break;
             // }
 
+            let start_databaseT2 = new Date().getTime();
             let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
             if (losedDataInfo.length > 0) {
                 await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this); //每一层都需要判断子节点是否需要获取，需要的话要从数据库获取系数
                 for(let i=0; i<otherDataManager.length; i++)
                     await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, otherDataManager[i]); 
             }
+            databaseT += new Date().getTime() - start_databaseT2;
 
         }
        
-        console.log("The time to get all coefficients:" + (new Date().getTime() - startT - testT));
+        // console.log("The time to get all coefficients:" + (new Date().getTime() - startT - testT));
         console.log("The final count:", count_obj.count);
-        // console.log("The time to get total coefficients:", total_time);
+        console.log("The time to get total coefficients:", databaseT);
 
         for(let i=0; i<alternativeNodes.length;i++){
             alternativeNodes[i] = [...new Set(alternativeNodes[i])];
         }
-
-        for(let i=0; i<alternativeNodes.length;i++){
-            for(let j=0; j<alternativeNodes[i].length; j++){
-                
-            }
-            let losedDataInfo = computeLosedDataRangeV1(alternativeNodes[i]);
-            if (losedDataInfo.length > 0) {
-                await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this); 
-                for(let i=0; i<otherDataManager.length; i++)
-                    await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, otherDataManager[i]); 
+        for(let i=0; i<alternativeNodes2.length; i++){
+            for(let j=0; j<alternativeNodes2[i].length; j++){
+                alternativeNodes2[i][j] = [...new Set(alternativeNodes2[i][j])];
             }
         }
+
+        // for(let i=0; i<alternativeNodes.length;i++){
+        //     for(let j=0; j<alternativeNodes[i].length; j++){
+        //         let level = i + 10;
+        //         let col = (65566 / 2**(level) * alternativeNodes[i][j]!.index)/(65536/600);
+        //         if((alternativeNodes[i][j].yArray[1] + alternativeNodes2[0][i][j].yArray[1] > nonUniformColObjs[col].addMin[1]) && (alternativeNodes[i][j].yArray[2] + alternativeNodes2[0][i][j].yArray[2] > nonUniformColObjs[col].addMax[1])){
+        //             alternativeNodes[i].splice(j,1);
+        //             alternativeNodes2[0][i].splice(j,1);
+        //         }
+        //     }
+        //     // let losedDataInfo = computeLosedDataRangeV1(alternativeNodes[i]);
+        //     // if (losedDataInfo.length > 0) {
+        //     //     await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this); 
+        //     //     for(let i=0; i<otherDataManager.length; i++)
+        //     //         await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, otherDataManager[i]); 
+        //     // }
+        // }
 
         let maxValue = -Infinity, minValue = Infinity, finalValue = 0;
         for (let i = 0; i < nonUniformColObjs.length; i++) {
@@ -2518,7 +2513,7 @@ export default class LevelDataManager {
         return myDict;
     }
 
-    ifPrune()
+    // ifPrune()
 
 }
 

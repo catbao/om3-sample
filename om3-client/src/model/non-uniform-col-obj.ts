@@ -57,10 +57,10 @@ export default class NoUniformColObj {
     sementicInterval: number;
     addMin: [number, number, number, Array<TrendTree>];
     addMax: [number, number, number, Array<TrendTree>];
-    subMin: [number, number];
-    subMax: [number, number];
-    multiMin: [number, number];
-    multiMax: [number, number];
+    subMin: [number, number, number, Array<TrendTree>];
+    subMax: [number, number, number, Array<TrendTree>];
+    multiMin: [number, number, number, Array<TrendTree>];
+    multiMax: [number, number, number, Array<TrendTree>];
     divMin: [number, number];
     divMax: [number, number];
     multiAve: number;
@@ -107,10 +107,10 @@ export default class NoUniformColObj {
         this.sementicInterval = 0;
         this.addMin = [-1, Infinity, -1, []];
         this.addMax = [-1, -Infinity, -1, []];
-        this.subMin = [-1, Infinity];
-        this.subMax = [-1, -Infinity];
-        this.multiMin = [-1, Infinity];
-        this.multiMax = [-1, -Infinity];
+        this.subMin = [-1, Infinity, -1, []];
+        this.subMax = [-1, -Infinity, -1, []];
+        this.multiMin = [-1, Infinity, -1, []];
+        this.multiMax = [-1, -Infinity, -1, []];
         this.divMin = [-1, Infinity];
         this.divMax = [-1, -Infinity];
         this.multiAve = 0;
@@ -146,10 +146,10 @@ export default class NoUniformColObj {
         this.dataName = dataName;
         this.addMin = [-1, Infinity, -1, []];
         this.addMax = [-1, -Infinity, -1, []];
-        this.subMin = [-1, Infinity];
-        this.subMax = [-1, -Infinity];
-        this.multiMin = [-1, Infinity];
-        this.multiMax = [-1, -Infinity];
+        this.subMin = [-1, Infinity, -1, []];
+        this.subMax = [-1, -Infinity, -1, []];
+        this.multiMin = [-1, Infinity, -1, []];
+        this.multiMax = [-1, -Infinity, -1, []];
         this.divMin = [-1, Infinity];
         this.divMax = [-1, -Infinity];
         this.multiAve = 0;
@@ -430,7 +430,7 @@ export default class NoUniformColObj {
     }
     
 
-    computeTransform2(p: TrendTree, p2:Array <TrendTree>, type: number, currentFlagInfo: any, currentFlagInfo2: any, transform_symbol: any, count?: any, needLoadDifNode?: any, needLoadDifNode2?: any, alterNativeNodes?: any){
+    computeTransform2(p: TrendTree, p2:Array <TrendTree>, type: number, currentFlagInfo: any, currentFlagInfo2: any, transform_symbol: any, count?: any, needLoadDifNode?: any, needLoadDifNode2?: any, alternativeNodes?: any, alternativeNodes2?: any, maxLevel?: number){
         const pp = p, pp2 = p2.slice();
         if (p.nodeType === "NULL") {
             return
@@ -462,12 +462,12 @@ export default class NoUniformColObj {
             let maxIndex: [number, number, number, Array<TrendTree>];
             maxIndex = [-1, -Infinity, -1, []];
             // console.log("count:", count);
-            let alternativeNodes = [];
-            let alternativeNodes2 = [];
+            // let alternativeNodes = [];
+            // let alternativeNodes2 = [];
             // this.addMin = [-1, min, -1]; //add level info
             // this.addMax = [-1, max, -1];
 
-            if(p.level === 19){
+            if(p.level === maxLevel!-1){
                 let minL = 0, minR = 0;
                 let nodeFlagInfo1 = currentFlagInfo[p.index * 2 + 1];
                 if(nodeFlagInfo1 === 0){
@@ -541,8 +541,8 @@ export default class NoUniformColObj {
                     // flag++;
                     for(let i=needLoadDifNode.length-1;i>=0;i--){
                         if(needLoadDifNode[i] == this.addMin[3][0]){
+                            alternativeNodes[p.level-10].push(needLoadDifNode[i]);
                             needLoadDifNode.splice(i,1);
-                            alterNativeNodes[p.level-10].push(needLoadDifNode[i]);
                             break;
                         }
                     }
@@ -550,6 +550,7 @@ export default class NoUniformColObj {
                     for(let i=0; i<needLoadDifNode2.length; i++){
                         for(let j=needLoadDifNode.length-1;j>=0;j--){
                             if(needLoadDifNode2[i][j] == this.addMin[3][i+1]){
+                                alternativeNodes2[i][p.level-10].push(needLoadDifNode2[i][j]);
                                 needLoadDifNode2[i].splice(j,1);
                                 break;
                             }
@@ -562,8 +563,9 @@ export default class NoUniformColObj {
                     // flag++;
                     for(let i=needLoadDifNode.length-1;i>=0;i--){
                         if(needLoadDifNode[i] == this.addMin[3][0]){
+                            
+                            alternativeNodes[p.level-10].push(needLoadDifNode[i]);
                             needLoadDifNode.splice(i,1);
-                            alterNativeNodes[p.level-10].push(needLoadDifNode[i]);
                             break;
                         }
                     }
@@ -571,6 +573,8 @@ export default class NoUniformColObj {
                     for(let i=0; i<needLoadDifNode2.length; i++){
                         for(let j=needLoadDifNode.length-1;j>=0;j--){
                             if(needLoadDifNode2[i][j] == this.addMin[3][i+1]){
+                                
+                                alternativeNodes2[i][p.level-10].push(needLoadDifNode2[i][j]);
                                 needLoadDifNode2[i].splice(j,1);
                                 break;
                             }
@@ -585,6 +589,291 @@ export default class NoUniformColObj {
                 //         needLoadDifNode2[i].pop();
                 //     }
                 // }
+            }
+        }
+        else if((type === 1 || type === 7 || type ===8 || type === 9) && (symbol == '-')){
+            // let p = pp, p2 = pp2;
+            let min1 = p.yArray[1];
+            let min2 = 0;
+            for(let i=0;i<p2.length;i++){
+                min2 += p2[i].yArray[1];
+            } 
+            let max1 = p.yArray[2];
+            let max2 = 0;
+            for(let i=0;i<p2.length;i++){
+                max2 += p2[i].yArray[2];
+            }
+
+            let min = (min1 - max2);
+            let max = (max1 - min2);
+            let minIndex: [number, number, number, Array<TrendTree>];
+            minIndex = [-1, Infinity, -1, []];
+            let maxIndex: [number, number, number, Array<TrendTree>];
+            maxIndex = [-1, -Infinity, -1, []];
+
+            if(p.level === maxLevel!-1){
+                let minL = 0, minR = 0;
+                let nodeFlagInfo1 = currentFlagInfo[p.index * 2 + 1];
+                if(nodeFlagInfo1 === 0){
+                    minL += p.yArray[1];
+                    minR += p.yArray[2];
+                } 
+                else{
+                    minL += p.yArray[2];
+                    minR += p.yArray[1];
+                }
+                for(let i=0; i<currentFlagInfo2.length;++i){
+                    if(currentFlagInfo2[i][p.index * 2 + 1] === 0){
+                        minL -= p2[i].yArray[1];
+                        minR -= p2[i].yArray[2];
+                    }
+                    else{
+                        minL -= p2[i].yArray[2];
+                        minR -= p2[i].yArray[1];
+                    }
+                }
+                if(minL < minR){
+                    min = minL;
+                    minIndex = [p.index * 2, min, p.level, [p, ...p2]];
+                    max = minR;
+                    maxIndex = [p.index * 2 + 1, max, p.level, [p, ...p2]];
+                }
+                else{
+                    min = minR;
+                    minIndex = [p.index * 2 + 1, min, p.level, [p, ...p2]];
+                    max = minL;
+                    maxIndex = [p.index * 2, max, p.level, [p, ...p2]];
+                }
+                if(this.subMin[0] === -1){
+                    this.subMin = minIndex;
+                }
+                else if(min < this.subMin[1]){
+                    this.subMin = minIndex;
+                }
+                if(this.subMax[0] === -1){
+                    this.subMax = maxIndex;
+                }
+                else if(max > this.subMax[1]){
+                    this.subMax = maxIndex;
+                }
+                return;
+            }
+
+            if(this.subMin[2] === -1){
+                this.subMin = [-1, min, p.level, [p, ...p2]];
+                this.subMax = [-1, max, p.level, [p, ...p2]];
+                needLoadDifNode.push(p);
+                needLoadDifNode.push(p);
+                for(let i=0; i<needLoadDifNode2.length; i++){
+                    needLoadDifNode2[i].push(p2[i]);
+                    needLoadDifNode2[i].push(p2[i]);
+                }
+            }
+            else if(p.level > this.subMin[2]){
+                this.subMin = [-1, min, p.level, [p, ...p2]];
+                this.subMax = [-1, max, p.level, [p, ...p2]];
+                needLoadDifNode.push(p);
+                needLoadDifNode.push(p);
+                for(let i=0; i<needLoadDifNode2.length; i++){
+                    needLoadDifNode2[i].push(p2[i]);
+                    needLoadDifNode2[i].push(p2[i]);
+                }
+            }
+            else if(p.level === this.subMin[2]){
+                // let flag = 0;
+                if(min < this.subMin[1]){
+                    // flag++;
+                    for(let i=needLoadDifNode.length-1;i>=0;i--){
+                        if(needLoadDifNode[i] == this.subMin[3][0]){
+                            alternativeNodes[p.level-10].push(needLoadDifNode[i]);
+                            needLoadDifNode.splice(i,1);
+                            break;
+                        }
+                    }
+                    needLoadDifNode.push(p);
+                    for(let i=0; i<needLoadDifNode2.length; i++){
+                        for(let j=needLoadDifNode.length-1;j>=0;j--){
+                            if(needLoadDifNode2[i][j] == this.subMin[3][i+1]){
+                                alternativeNodes2[i][p.level-10].push(needLoadDifNode2[i][j]);
+                                needLoadDifNode2[i].splice(j,1);
+                                break;
+                            }
+                        }
+                        needLoadDifNode2[i].push(p2[i]);
+                    }
+                    this.subMin = [-1, min, p.level,[p, ...p2]];
+                }
+                if(max > this.subMax[1]){
+                    // flag++;
+                    for(let i=needLoadDifNode.length-1;i>=0;i--){
+                        if(needLoadDifNode[i] == this.subMin[3][0]){
+                            
+                            alternativeNodes[p.level-10].push(needLoadDifNode[i]);
+                            needLoadDifNode.splice(i,1);
+                            break;
+                        }
+                    }
+                    needLoadDifNode.push(p);
+                    for(let i=0; i<needLoadDifNode2.length; i++){
+                        for(let j=needLoadDifNode.length-1;j>=0;j--){
+                            if(needLoadDifNode2[i][j] == this.subMin[3][i+1]){
+                                
+                                alternativeNodes2[i][p.level-10].push(needLoadDifNode2[i][j]);
+                                needLoadDifNode2[i].splice(j,1);
+                                break;
+                            }
+                        }
+                        needLoadDifNode2[i].push(p2[i]);
+                    }
+                    this.subMax = [-1, max, p.level,[p, ...p2]];
+                }
+                // if(flag === 0){
+                //     needLoadDifNode.pop();
+                //     for(let i=0;i<needLoadDifNode2.length;i++){
+                //         needLoadDifNode2[i].pop();
+                //     }
+                // }
+            }
+        }
+        else if((type === 1 || type === 7 || type ===8 || type === 9) && (symbol == '*')){
+            let min, max;
+            let tempArray = [];
+            tempArray.push(p.yArray[1]);
+            tempArray.push(p.yArray[2]);
+            for(let i = 0; i<p2.length; ++i){
+                let len = tempArray.length;
+                for(let j = 0; j<len; ++j){
+                    tempArray.push(tempArray[j] * p2[i].yArray[1]);
+                    tempArray.push(tempArray[j] * p2[i].yArray[2]);
+                }   
+                for(let j = 0; j<len; ++j){
+                    tempArray.shift();
+                }   
+            }
+            min = Math.min(...tempArray);
+            max = Math.max(...tempArray);
+
+            let minIndex: [number, number, number, Array<TrendTree>];
+            minIndex = [-1, Infinity, -1, []];
+            let maxIndex: [number, number, number, Array<TrendTree>];
+            maxIndex = [-1, -Infinity, -1, []];
+
+            if(p.level === maxLevel!-1){
+                let minL = 0, minR = 0;
+                let nodeFlagInfo1 = currentFlagInfo[p.index * 2 + 1];
+                if(nodeFlagInfo1 === 0){
+                    minL += p.yArray[1];
+                    minR += p.yArray[2];
+                } 
+                else{
+                    minL += p.yArray[2];
+                    minR += p.yArray[1];
+                }
+                for(let i=0; i<currentFlagInfo2.length;++i){
+                    if(currentFlagInfo2[i][p.index * 2 + 1] === 0){
+                        minL *= p2[i].yArray[1];
+                        minR *= p2[i].yArray[2];
+                    }
+                    else{
+                        minL *= p2[i].yArray[2];
+                        minR *= p2[i].yArray[1];
+                    }
+                }
+                if(minL < minR){
+                    min = minL;
+                    minIndex = [p.index * 2, min, p.level, [p, ...p2]];
+                    max = minR;
+                    maxIndex = [p.index * 2 + 1, max, p.level, [p, ...p2]];
+                }
+                else{
+                    min = minR;
+                    minIndex = [p.index * 2 + 1, min, p.level, [p, ...p2]];
+                    max = minL;
+                    maxIndex = [p.index * 2, max, p.level, [p, ...p2]];
+                }
+                if(this.multiMin[0] === -1){
+                    this.multiMin = minIndex;
+                }
+                else if(min < this.multiMin[1]){
+                    this.multiMin = minIndex;
+                }
+                if(this.multiMax[0] === -1){
+                    this.multiMax = maxIndex;
+                }
+                else if(max > this.multiMax[1]){
+                    this.multiMax = maxIndex;
+                }
+                return;
+            }
+
+            if(this.multiMin[2] === -1){
+                this.multiMin = [-1, min, p.level, [p, ...p2]];
+                this.multiMax = [-1, max, p.level, [p, ...p2]];
+                needLoadDifNode.push(p);
+                needLoadDifNode.push(p);
+                for(let i=0; i<needLoadDifNode2.length; i++){
+                    needLoadDifNode2[i].push(p2[i]);
+                    needLoadDifNode2[i].push(p2[i]);
+                }
+            }
+            else if(p.level > this.multiMin[2]){
+                this.multiMin = [-1, min, p.level, [p, ...p2]];
+                this.multiMax = [-1, max, p.level, [p, ...p2]];
+                needLoadDifNode.push(p);
+                needLoadDifNode.push(p);
+                for(let i=0; i<needLoadDifNode2.length; i++){
+                    needLoadDifNode2[i].push(p2[i]);
+                    needLoadDifNode2[i].push(p2[i]);
+                }
+            }
+            else if(p.level === this.multiMin[2]){
+                // let flag = 0;
+                if(min < this.multiMin[1]){
+                    // flag++;
+                    for(let i=needLoadDifNode.length-1;i>=0;i--){
+                        if(needLoadDifNode[i] == this.multiMin[3][0]){
+                            alternativeNodes[p.level-10].push(needLoadDifNode[i]);
+                            needLoadDifNode.splice(i,1);
+                            break;
+                        }
+                    }
+                    needLoadDifNode.push(p);
+                    for(let i=0; i<needLoadDifNode2.length; i++){
+                        for(let j=needLoadDifNode.length-1;j>=0;j--){
+                            if(needLoadDifNode2[i][j] == this.multiMin[3][i+1]){
+                                alternativeNodes2[i][p.level-10].push(needLoadDifNode2[i][j]);
+                                needLoadDifNode2[i].splice(j,1);
+                                break;
+                            }
+                        }
+                        needLoadDifNode2[i].push(p2[i]);
+                    }
+                    this.multiMin = [-1, min, p.level,[p, ...p2]];
+                }
+                if(max > this.multiMax[1]){
+                    // flag++;
+                    for(let i=needLoadDifNode.length-1;i>=0;i--){
+                        if(needLoadDifNode[i] == this.multiMin[3][0]){
+                            
+                            alternativeNodes[p.level-10].push(needLoadDifNode[i]);
+                            needLoadDifNode.splice(i,1);
+                            break;
+                        }
+                    }
+                    needLoadDifNode.push(p);
+                    for(let i=0; i<needLoadDifNode2.length; i++){
+                        for(let j=needLoadDifNode.length-1;j>=0;j--){
+                            if(needLoadDifNode2[i][j] == this.multiMin[3][i+1]){
+                                
+                                alternativeNodes2[i][p.level-10].push(needLoadDifNode2[i][j]);
+                                needLoadDifNode2[i].splice(j,1);
+                                break;
+                            }
+                        }
+                        needLoadDifNode2[i].push(p2[i]);
+                    }
+                    this.multiMax = [-1, max, p.level,[p, ...p2]];
+                }
             }
         }
     }
