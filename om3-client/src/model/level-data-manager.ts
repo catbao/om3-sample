@@ -2156,8 +2156,8 @@ export default class LevelDataManager {
         databaseT += new Date().getTime() - start_databaseT;
 
         let testT = 0;
-        let alternativeNodes = Array.from({ length: 11 }, () => []);
-        let alternativeNodes2 = Array.from({ length: 2 }, () => Array.from({ length: 11 }, () => []));
+        let alternativeNodes:TrendTree[][] = Array.from({ length: 11 }, () => []);
+        let alternativeNodes2:TrendTree[][][] = Array.from({ length: 2 }, () => Array.from({ length: 11 }, () => []));
 
         while (needLoadDifNode.length > 0) { //如果需要继续向下获取系数，则一直向下查询，直到最后一层
             colIndex = 0;
@@ -2460,22 +2460,22 @@ export default class LevelDataManager {
             }
         }
 
-        // for(let i=0; i<alternativeNodes.length;i++){
-        //     for(let j=0; j<alternativeNodes[i].length; j++){
-        //         let level = i + 10;
-        //         let col = (65566 / 2**(level) * alternativeNodes[i][j]!.index)/(65536/600);
-        //         if((alternativeNodes[i][j].yArray[1] + alternativeNodes2[0][i][j].yArray[1] > nonUniformColObjs[col].addMin[1]) && (alternativeNodes[i][j].yArray[2] + alternativeNodes2[0][i][j].yArray[2] > nonUniformColObjs[col].addMax[1])){
-        //             alternativeNodes[i].splice(j,1);
-        //             alternativeNodes2[0][i].splice(j,1);
-        //         }
-        //     }
-        //     // let losedDataInfo = computeLosedDataRangeV1(alternativeNodes[i]);
-        //     // if (losedDataInfo.length > 0) {
-        //     //     await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this); 
-        //     //     for(let i=0; i<otherDataManager.length; i++)
-        //     //         await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, otherDataManager[i]); 
-        //     // }
-        // }
+        for(let i=0; i<alternativeNodes.length;i++){
+            for(let j=0; j<alternativeNodes[i].length; j++){
+                let level = i + 10;
+                let col = Math.floor((timeRange[1] / 2**(level) * alternativeNodes[i][j].index)/(timeRange[1]/width));
+                if((alternativeNodes[i][j].yArray[1] + alternativeNodes2[0][i][j].yArray[1] > nonUniformColObjs[col].addMin[1]) && (alternativeNodes[i][j].yArray[2] + alternativeNodes2[0][i][j].yArray[2] < nonUniformColObjs[col].addMax[1])){
+                    alternativeNodes[i].splice(j,1);
+                    alternativeNodes2[0][i].splice(j,1);
+                }
+            }
+            // let losedDataInfo = computeLosedDataRangeV1(alternativeNodes[i]);
+            // if (losedDataInfo.length > 0) {
+            //     await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this); 
+            //     for(let i=0; i<otherDataManager.length; i++)
+            //         await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, otherDataManager[i]); 
+            // }
+        }
 
         let maxValue = -Infinity, minValue = Infinity, finalValue = 0;
         for (let i = 0; i < nonUniformColObjs.length; i++) {

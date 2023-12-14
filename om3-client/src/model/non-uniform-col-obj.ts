@@ -562,7 +562,7 @@ export default class NoUniformColObj {
                 if(max > this.addMax[1]){
                     // flag++;
                     for(let i=needLoadDifNode.length-1;i>=0;i--){
-                        if(needLoadDifNode[i] == this.addMin[3][0]){
+                        if(needLoadDifNode[i] == this.addMax[3][0]){
                             
                             alternativeNodes[p.level-10].push(needLoadDifNode[i]);
                             needLoadDifNode.splice(i,1);
@@ -572,7 +572,7 @@ export default class NoUniformColObj {
                     needLoadDifNode.push(p);
                     for(let i=0; i<needLoadDifNode2.length; i++){
                         for(let j=needLoadDifNode.length-1;j>=0;j--){
-                            if(needLoadDifNode2[i][j] == this.addMin[3][i+1]){
+                            if(needLoadDifNode2[i][j] == this.addMax[3][i+1]){
                                 
                                 alternativeNodes2[i][p.level-10].push(needLoadDifNode2[i][j]);
                                 needLoadDifNode2[i].splice(j,1);
@@ -706,7 +706,7 @@ export default class NoUniformColObj {
                 if(max > this.subMax[1]){
                     // flag++;
                     for(let i=needLoadDifNode.length-1;i>=0;i--){
-                        if(needLoadDifNode[i] == this.subMin[3][0]){
+                        if(needLoadDifNode[i] == this.subMax[3][0]){
                             
                             alternativeNodes[p.level-10].push(needLoadDifNode[i]);
                             needLoadDifNode.splice(i,1);
@@ -716,7 +716,7 @@ export default class NoUniformColObj {
                     needLoadDifNode.push(p);
                     for(let i=0; i<needLoadDifNode2.length; i++){
                         for(let j=needLoadDifNode.length-1;j>=0;j--){
-                            if(needLoadDifNode2[i][j] == this.subMin[3][i+1]){
+                            if(needLoadDifNode2[i][j] == this.subMax[3][i+1]){
                                 
                                 alternativeNodes2[i][p.level-10].push(needLoadDifNode2[i][j]);
                                 needLoadDifNode2[i].splice(j,1);
@@ -853,7 +853,7 @@ export default class NoUniformColObj {
                 if(max > this.multiMax[1]){
                     // flag++;
                     for(let i=needLoadDifNode.length-1;i>=0;i--){
-                        if(needLoadDifNode[i] == this.multiMin[3][0]){
+                        if(needLoadDifNode[i] == this.multiMax[3][0]){
                             
                             alternativeNodes[p.level-10].push(needLoadDifNode[i]);
                             needLoadDifNode.splice(i,1);
@@ -863,7 +863,7 @@ export default class NoUniformColObj {
                     needLoadDifNode.push(p);
                     for(let i=0; i<needLoadDifNode2.length; i++){
                         for(let j=needLoadDifNode.length-1;j>=0;j--){
-                            if(needLoadDifNode2[i][j] == this.multiMin[3][i+1]){
+                            if(needLoadDifNode2[i][j] == this.multiMax[3][i+1]){
                                 
                                 alternativeNodes2[i][p.level-10].push(needLoadDifNode2[i][j]);
                                 needLoadDifNode2[i].splice(j,1);
