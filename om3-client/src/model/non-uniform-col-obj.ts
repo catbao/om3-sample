@@ -717,7 +717,7 @@ export default class NoUniformColObj {
                 let pop:any = alternativeNodes.pop();
                 // if(pop === undefined ) continue;
                 // console.log("pop:", pop);
-                // if(Number(pop[pop.length-1]) > min) continue;
+                if(Number(pop[pop.length-1]) > this.addMin[1]) continue;
                 // min = this.updateMinValue(p![0], min, alternativeNodes);
                 let len = pop.length;
                 let temp_minL = 0, temp_minR = 0;
@@ -760,7 +760,7 @@ export default class NoUniformColObj {
                     for(let i = index; i < index * 2; ++i){
                         temp_minL += pop[i]._leftChild.yArray[1];
                     }
-                    if(temp_minL < min){
+                    if(temp_minL < this.addMin[1]){
                         let tempNode = [];
                         for(let i = index; i < index * 2; ++i){
                             tempNode.push(pop[i]);
@@ -781,7 +781,7 @@ export default class NoUniformColObj {
                     for(let i = index; i < index * 2; ++i){
                         temp_minR += pop[i]._rightChild.yArray[1];
                     }
-                    if(temp_minR < min){
+                    if(temp_minR < this.addMin[1]){
                         let tempNode = [];
                         for(let i = index; i < index * 2; ++i){
                             tempNode.push(pop[i]);
@@ -799,7 +799,7 @@ export default class NoUniformColObj {
             while(alternativeNodes2.length > 0){
                 let pop:any = alternativeNodes2.pop();
                 // if(pop === undefined) continue;
-                // if(Number(pop[pop.length-1]) < max) continue;
+                if(Number(pop[pop.length-1]) < this.addMax[1]) continue;
                 let len = pop.length;
                 let temp_maxL = 0, temp_maxR = 0;
                 if(!pop[Math.floor(len/2)]._leftChild && !pop[Math.floor(len/2)]._rightChild){
@@ -881,7 +881,7 @@ export default class NoUniformColObj {
                     for(let i = index; i < index * 2; ++i){
                         temp_maxL += pop[i]._leftChild.yArray[2];
                     }
-                    if(temp_maxL > max){
+                    if(temp_maxL > this.addMax[1]){
                         let tempNode = [];
                         for(let i = index; i < index * 2; ++i){
                             tempNode.push(pop[i]);
@@ -902,7 +902,7 @@ export default class NoUniformColObj {
                     for(let i = index; i < index * 2; ++i){
                         temp_maxR += pop[i]._rightChild.yArray[2];
                     }
-                    if(temp_maxR > max){
+                    if(temp_maxR > this.addMax[1]){
                         let tempNode = [];
                         for(let i = index; i < index * 2; ++i){
                             tempNode.push(pop[i]);
