@@ -2460,22 +2460,22 @@ export default class LevelDataManager {
             }
         }
 
-        for(let i=0; i<alternativeNodes.length;i++){
-            for(let j=0; j<alternativeNodes[i].length; j++){
-                let level = i + 10;
-                let col = Math.floor((timeRange[1] / 2**(level) * alternativeNodes[i][j].index)/(timeRange[1]/width));
-                if((alternativeNodes[i][j].yArray[1] + alternativeNodes2[0][i][j].yArray[1] > nonUniformColObjs[col].addMin[1]) && (alternativeNodes[i][j].yArray[2] + alternativeNodes2[0][i][j].yArray[2] < nonUniformColObjs[col].addMax[1])){
-                    alternativeNodes[i].splice(j,1);
-                    alternativeNodes2[0][i].splice(j,1);
-                }
-            }
-            // let losedDataInfo = computeLosedDataRangeV1(alternativeNodes[i]);
-            // if (losedDataInfo.length > 0) {
-            //     await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this); 
-            //     for(let i=0; i<otherDataManager.length; i++)
-            //         await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, otherDataManager[i]); 
-            // }
-        }
+        // for(let i=0; i<alternativeNodes.length;i++){
+        //     for(let j=0; j<alternativeNodes[i].length; j++){
+        //         let level = i + 10;
+        //         let col = Math.floor((timeRange[1] / 2**(level) * alternativeNodes[i][j].index)/(timeRange[1]/width));
+        //         if((alternativeNodes[i][j].yArray[1] + alternativeNodes2[0][i][j].yArray[1] > nonUniformColObjs[col].addMin[1]) && (alternativeNodes[i][j].yArray[2] + alternativeNodes2[0][i][j].yArray[2] < nonUniformColObjs[col].addMax[1])){
+        //             alternativeNodes[i].splice(j,1);
+        //             alternativeNodes2[0][i].splice(j,1);
+        //         }
+        //     }
+        //     let losedDataInfo = computeLosedDataRangeV1(alternativeNodes[i]);
+        //     if (losedDataInfo.length > 0) {
+        //         await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this); 
+        //         for(let i=0; i<otherDataManager.length; i++)
+        //             await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, otherDataManager[i]); 
+        //     }
+        // }
 
         let maxValue = -Infinity, minValue = Infinity, finalValue = 0;
         for (let i = 0; i < nonUniformColObjs.length; i++) {
@@ -2513,7 +2513,360 @@ export default class LevelDataManager {
         return myDict;
     }
 
-    // ifPrune()
+    async viewTransformFinal_testNoPrune(otherDataManager: Array<LevelDataManager>, currentLevel: number, width: number, timeRange: Array<number>, yScale: any, drawer: any, transform_symbol:any){
+        const currentFlagInfo = getFlag(this.dataName);
+        // const currentFlagInfo = getFlag("custom_number8_test2_om3_test.flagz");
+        if (currentFlagInfo === undefined) {
+            throw new Error(this.dataName + " get flag faild")
+        } else {
+            console.log("flag info:", currentFlagInfo);
+            console.log("flag length:", currentFlagInfo.length)
+        }
+        const currentFlagInfo2 = [];
+        const dataNames = [];
+        for(let i=0;i<otherDataManager.length;++i){
+            currentFlagInfo2.push(getFlag(otherDataManager[i].dataName));
+            dataNames.push(otherDataManager[i].dataName);
+            // const currentFlagInfo2 = getFlag("custom_number8_test1_om3_test.flagz");
+            if (currentFlagInfo2[i] === undefined) {
+                throw new Error(otherDataManager[i].dataName + " get flag faild")
+            } else {
+                console.log("flag2 info:", currentFlagInfo2[i]);
+                console.log("flag2 length:", currentFlagInfo2[i].length)
+            }
+        }
+        const maxLevel = Math.ceil(Math.log2(timeRange[1]));
+
+        allTimes = []
+        const nonUniformColObjs = computeTimeSE(currentLevel, width, timeRange, this.realDataRowNum, this.maxLevel);
+        let needLoadDifNode: Array<TrendTree> = [];
+        let needLoadDifNode2: Array<Array<TrendTree>> = new Array(otherDataManager.length).fill([]).map(() => new Array<TrendTree>());
+        let colIndex = 0;
+        let count_obj = {count: 0};
+
+        let total_time = 0;
+        let databaseT = 0;
+        let startT = new Date().getTime();
+        //假设对于dataset1
+        for(let i=0; i<this.levelIndexObjs[currentLevel].firstNodes.length; ++i){
+            const firstIndexTimeRange = this.getIndexTime(currentLevel, this.levelIndexObjs[currentLevel].loadedDataRange[i][0], this.maxLevel);
+            const lastIndexTimeRange = this.getIndexTime(currentLevel, this.levelIndexObjs[currentLevel].loadedDataRange[i][1], this.maxLevel);
+            let p = this.levelIndexObjs[currentLevel].firstNodes[i];
+            let p2 = [];
+            for(let k=0;k<otherDataManager.length;++k){
+                p2.push(otherDataManager[k].levelIndexObjs[currentLevel].firstNodes[i])
+            }
+            // let p2 = otherDataManager.levelIndexObjs[currentLevel].firstNodes[i];//测试
+            let data;
+            let resChild;
+            if (firstIndexTimeRange.startT <= timeRange[0] && lastIndexTimeRange.endT >= timeRange[1]) {
+                while(p != null){
+                    needLoadDifNode.push(p);
+                    for(let i=0; i<p2.length; i++){
+                        needLoadDifNode2[i].push(p2[i]);
+                    }
+                    p = p.nextSibling!;
+                    for(let i=0;i<p2.length;i++){
+                        p2[i] = p2[i].nextSibling!
+                    }
+                }
+            }
+        }
+        
+        if(needLoadDifNode.length === 0){
+             return nonUniformColObjs;
+        }
+
+        needLoadDifNode = [...new Set(needLoadDifNode)];
+        for(let i=0;i<needLoadDifNode2.length;i++){
+            needLoadDifNode2[i] = [...new Set(needLoadDifNode2[i])];
+        }
+        console.log("get data");
+        let start_databaseT = new Date().getTime();
+        let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
+        if (losedDataInfo.length > 0) {
+            await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);  //取得系数
+            for(let i=0; i<otherDataManager.length; i++)
+                await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, otherDataManager[i]);
+        }
+        databaseT += new Date().getTime() - start_databaseT;
+
+        let testT = 0;
+        let alternativeNodes:TrendTree[][] = Array.from({ length: 11 }, () => []);
+        let alternativeNodes2:TrendTree[][][] = Array.from({ length: 2 }, () => Array.from({ length: 11 }, () => []));
+
+        while (needLoadDifNode.length > 0) { //如果需要继续向下获取系数，则一直向下查询，直到最后一层
+            colIndex = 0;
+            let tempNeedLoadDifNodes = [];
+            let tempQue: Array<TrendTree> = [];
+            let tempNeedLoadDifNodes2 : Array<Array<TrendTree>> = new Array(otherDataManager.length).fill([]).map(() => new Array<TrendTree>());
+            let tempQue2: Array<Array<TrendTree>> = new Array(otherDataManager.length).fill([]).map(() => new Array<TrendTree>());
+
+            needLoadDifNode.forEach(v => {
+                if(v._leftChild != null && v._rightChild != null){
+                    this.lruCache.has(v._leftChild.level + "_" + v._leftChild.index);
+                    this.lruCache.has(v._rightChild.level + "_" + v._rightChild.index);
+                    if (v._leftChild.nodeType !== 'NULL') {
+                        tempQue.push(v._leftChild!);
+                    }
+                    if (v._rightChild.nodeType !== 'NULL') {
+                        tempQue.push(v._rightChild!);
+                    }
+                }
+            });
+            for(let i=0;i<needLoadDifNode2.length;++i){
+                needLoadDifNode2[i].forEach(v => {
+                    if(v._leftChild != null && v._rightChild != null){
+                        this.lruCache.has(v._leftChild.level + "_" + v._leftChild.index);
+                        this.lruCache.has(v._rightChild.level + "_" + v._rightChild.index);
+                        if (v._leftChild.nodeType !== 'NULL') {
+                            tempQue2[i].push(v._leftChild!);
+                        }
+                        if (v._rightChild.nodeType !== 'NULL') {
+                            tempQue2[i].push(v._rightChild!);
+                        }
+                    }
+                });
+            }
+            
+            for (let i = 0; i < tempQue.length; i++) {
+                if (colIndex >= nonUniformColObjs.length) {
+                    break;
+                    //throw new Error("col index out range");
+                }
+                tempNeedLoadDifNodes.push(tempQue[i]);
+            }
+            for(let i=0; i<tempQue2.length; i++){
+                for(let j=0; j<tempQue2[i].length; j++){
+                    tempNeedLoadDifNodes2[i].push(tempQue2[i][j]);
+                }
+            }
+            let testTime = new Date().getTime();
+            tempNeedLoadDifNodes = [...new Set(tempNeedLoadDifNodes)];
+            needLoadDifNode = tempNeedLoadDifNodes;
+            for(let i=0;i<tempNeedLoadDifNodes2.length;i++){
+                tempNeedLoadDifNodes2[i] = [...new Set(tempNeedLoadDifNodes2[i])];
+            }
+            let testTime2 = new Date().getTime() - testTime;
+            testT += testTime2;
+            needLoadDifNode2 = tempNeedLoadDifNodes2;
+            if (needLoadDifNode.length > 0 && needLoadDifNode[0].level === maxLevel - 1) {
+                if(transform_symbol === '+'){
+                    for (let i = 0; i < needLoadDifNode.length; i++) {
+                        let maxL = 0, maxR = 0;
+                        const nodeFlag1 = currentFlagInfo[2 * needLoadDifNode[i].index + 1];
+                        if(nodeFlag1 === 0){
+                            maxL += needLoadDifNode[i].yArray[1];
+                            maxR += needLoadDifNode[i].yArray[2];
+                        } 
+                        else{
+                            maxL += needLoadDifNode[i].yArray[2];
+                            maxR += needLoadDifNode[i].yArray[1];
+                        }
+                        //const nodeFlag2 = currentFlagInfo2[2 * needLoadDifNode[i].index + 1];
+                        for(let k=0; k<currentFlagInfo2.length;++k){
+                            if(currentFlagInfo2[k][needLoadDifNode[i].index * 2 + 1] === 0){
+                                maxL += needLoadDifNode2[k][i].yArray[1];
+                                maxR += needLoadDifNode2[k][i].yArray[2];
+                            }
+                            else{
+                                maxL += needLoadDifNode2[k][i].yArray[2];
+                                maxR += needLoadDifNode2[k][i].yArray[1];
+                            }
+                        }
+                        // if (needLoadDifNode[i].gapFlag === 'NO') {
+                        //     // nonUniformColObjs[i].addLastVal(maxL, needLoadDifNode[i]);
+                        //     nonUniformColObjs[i].forceMerge(maxL);
+                        //     if (i + 1 < nonUniformColObjs.length) {
+                        //         // nonUniformColObjs[i + 1].addFirstVal(maxR, needLoadDifNode[i]);
+                        //         nonUniformColObjs[i + 1].forceMerge(maxR);
+                        //     }
+                        // } else {
+                        //     // nonUniformColObjs[i].addLastVal(maxL, needLoadDifNode[i]);
+                        //     nonUniformColObjs[i].forceMerge(maxL);
+
+                        //     // nonUniformColObjs[i + 1].addFirstVal(maxR, needLoadDifNode[i]);
+                        //     nonUniformColObjs[i + 1].forceMerge(maxR);
+                        // }
+                        
+                    }
+                }
+                else if(transform_symbol === '-'){
+                    for (let i = 0; i < needLoadDifNode.length; i++) {
+                        let maxL = 0, maxR = 0;
+                        const nodeFlag1 = currentFlagInfo[2 * needLoadDifNode[i].index + 1];
+                        if(nodeFlag1 === 0){
+                            maxL += needLoadDifNode[i].yArray[1];
+                            maxR += needLoadDifNode[i].yArray[2];
+                        } 
+                        else{
+                            maxL += needLoadDifNode[i].yArray[2];
+                            maxR += needLoadDifNode[i].yArray[1];
+                        }
+                        //const nodeFlag2 = currentFlagInfo2[2 * needLoadDifNode[i].index + 1];
+                        for(let k=0; k<currentFlagInfo2.length;++k){
+                            if(currentFlagInfo2[k][needLoadDifNode[i].index * 2 + 1] === 0){
+                                maxL -= needLoadDifNode2[k][i].yArray[1];
+                                maxR -= needLoadDifNode2[k][i].yArray[2];
+                            }
+                            else{
+                                maxL -= needLoadDifNode2[k][i].yArray[2];
+                                maxR -= needLoadDifNode2[k][i].yArray[1];
+                            }
+                        }
+                        if (needLoadDifNode[i].gapFlag === 'NO') {
+                            nonUniformColObjs[i].addLastVal(maxL, needLoadDifNode[i]);
+                            nonUniformColObjs[i].forceMerge(maxL);
+                            if (i + 1 < nonUniformColObjs.length) {
+                                nonUniformColObjs[i + 1].addFirstVal(maxR, needLoadDifNode[i]);
+                                nonUniformColObjs[i + 1].forceMerge(maxR);
+                            }
+                        } else {
+                            nonUniformColObjs[i].addLastVal(maxL, needLoadDifNode[i]);
+                            nonUniformColObjs[i].forceMerge(maxL);
+
+                            nonUniformColObjs[i + 1].addFirstVal(maxR, needLoadDifNode[i]);
+                            nonUniformColObjs[i + 1].forceMerge(maxR);
+                        }
+                        
+                    }
+                }
+                else if(transform_symbol === '*'){
+                    for (let i = 0; i < needLoadDifNode.length; i++) {
+                        let maxL = 0, maxR = 0;
+                        const nodeFlag1 = currentFlagInfo[2 * needLoadDifNode[i].index + 1];
+                        if(nodeFlag1 === 0){
+                            maxL += needLoadDifNode[i].yArray[1];
+                            maxR += needLoadDifNode[i].yArray[2];
+                        } 
+                        else{
+                            maxL += needLoadDifNode[i].yArray[2];
+                            maxR += needLoadDifNode[i].yArray[1];
+                        }
+                        //const nodeFlag2 = currentFlagInfo2[2 * needLoadDifNode[i].index + 1];
+                        for(let k=0; k<currentFlagInfo2.length;++k){
+                            if(currentFlagInfo2[k][needLoadDifNode[i].index * 2 + 1] === 0){
+                                maxL *= needLoadDifNode2[k][i].yArray[1];
+                                maxR *= needLoadDifNode2[k][i].yArray[2];
+                            }
+                            else{
+                                maxL *= needLoadDifNode2[k][i].yArray[2];
+                                maxR *= needLoadDifNode2[k][i].yArray[1];
+                            }
+                        }
+                        if (needLoadDifNode[i].gapFlag === 'NO') {
+                            nonUniformColObjs[i].addLastVal(maxL, needLoadDifNode[i]);
+                            nonUniformColObjs[i].forceMerge(maxL);
+                            if (i + 1 < nonUniformColObjs.length) {
+                                nonUniformColObjs[i + 1].addFirstVal(maxR, needLoadDifNode[i]);
+                                nonUniformColObjs[i + 1].forceMerge(maxR);
+                            }
+                        } else {
+                            nonUniformColObjs[i].addLastVal(maxL, needLoadDifNode[i]);
+                            nonUniformColObjs[i].forceMerge(maxL);
+
+                            nonUniformColObjs[i + 1].addFirstVal(maxR, needLoadDifNode[i]);
+                            nonUniformColObjs[i + 1].forceMerge(maxR);
+                        }
+                        
+                    }
+                }
+                else if(transform_symbol === '/'){
+                    for (let i = 0; i < needLoadDifNode.length; i++) {
+                        let maxL = 0, maxR = 0;
+                        const nodeFlag1 = currentFlagInfo[2 * needLoadDifNode[i].index + 1];
+                        if(nodeFlag1 === 0){
+                            maxL += needLoadDifNode[i].yArray[1];
+                            maxR += needLoadDifNode[i].yArray[2];
+                        } 
+                        else{
+                            maxL += needLoadDifNode[i].yArray[2];
+                            maxR += needLoadDifNode[i].yArray[1];
+                        }
+                        //const nodeFlag2 = currentFlagInfo2[2 * needLoadDifNode[i].index + 1];
+                        for(let k=0; k<currentFlagInfo2.length;++k){
+                            if(currentFlagInfo2[k][needLoadDifNode[i].index * 2 + 1] === 0){
+                                maxL /= needLoadDifNode2[k][i].yArray[1];
+                                maxR /= needLoadDifNode2[k][i].yArray[2];
+                            }
+                            else{
+                                maxL /= needLoadDifNode2[k][i].yArray[2];
+                                maxR /= needLoadDifNode2[k][i].yArray[1];
+                            }
+                        }
+                        if (needLoadDifNode[i].gapFlag === 'NO') {
+                            // nonUniformColObjs[i].addLastVal(maxL, needLoadDifNode[i]);
+                            nonUniformColObjs[i].forceMerge(maxL);
+                            if (i + 1 < nonUniformColObjs.length) {
+                                // nonUniformColObjs[i + 1].addFirstVal(maxR, needLoadDifNode[i]);
+                                nonUniformColObjs[i + 1].forceMerge(maxR);
+                            }
+                        } else {
+                            // nonUniformColObjs[i].addLastVal(maxL, needLoadDifNode[i]);
+                            nonUniformColObjs[i].forceMerge(maxL);
+
+                            // nonUniformColObjs[i + 1].addFirstVal(maxR, needLoadDifNode[i]);
+                            nonUniformColObjs[i + 1].forceMerge(maxR);
+                        }
+                        
+                    }
+                }
+                break;
+            }
+            if (needLoadDifNode.length === 0) {
+                break;
+            }
+
+            let start_databaseT2 = new Date().getTime();
+            let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
+            if (losedDataInfo.length > 0) {
+                await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this); //每一层都需要判断子节点是否需要获取，需要的话要从数据库获取系数
+                for(let i=0; i<otherDataManager.length; i++)
+                    await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, otherDataManager[i]); 
+            }
+            databaseT += new Date().getTime() - start_databaseT2;
+
+        }
+       
+        // console.log("The time to get all coefficients:" + (new Date().getTime() - startT - testT));
+        console.log("The final count:", count_obj.count);
+        console.log("The time to get total coefficients:", databaseT);
+
+        let maxValue = -Infinity, minValue = Infinity, finalValue = 0;
+        for (let i = 0; i < nonUniformColObjs.length; i++) {
+            nonUniformColObjs[i].checkIsMis();
+            if(transform_symbol === '+'){
+                maxValue = Math.max(maxValue, nonUniformColObjs[i].addMax[1]);
+                minValue = Math.min(minValue, nonUniformColObjs[i].addMin[1]);
+                // maxValue = 2000;
+                // minValue = 2000;
+            }
+            else if(transform_symbol === '-'){
+                maxValue = Math.max(maxValue, nonUniformColObjs[i].subMax[1]);
+                minValue = Math.min(minValue, nonUniformColObjs[i].subMin[1]);
+                // maxValue = 1000;
+                // minValue = -2000;
+            }
+            else if(transform_symbol === '*'){
+                maxValue = Math.max(maxValue, nonUniformColObjs[i].multiMax[1]);
+                minValue = Math.min(minValue, nonUniformColObjs[i].multiMin[1]);
+            }
+            else if(transform_symbol === '/'){
+                maxValue = Math.max(maxValue, nonUniformColObjs[i].divMax[1]);
+                minValue = Math.min(minValue, nonUniformColObjs[i].divMin[1]);
+            }
+            else if(transform_symbol === 'avg'){
+                maxValue = Math.max(maxValue, nonUniformColObjs[i].addMax[1]);
+                minValue = Math.min(minValue, nonUniformColObjs[i].addMin[1]);
+            }
+            finalValue = Math.max(Math.abs(maxValue), Math.abs(minValue));
+        }
+        const myDict: { a: NoUniformColObj[]; b: number; } = {
+            a: nonUniformColObjs,
+            b: finalValue
+        }
+        return myDict;
+    }
 
 }
 
