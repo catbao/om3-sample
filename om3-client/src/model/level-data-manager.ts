@@ -2464,6 +2464,11 @@ export default class LevelDataManager {
             }
         }
 
+        const itemsToRemove = 4;
+        if (this.levelIndexObjs.length >= itemsToRemove) {
+            this.levelIndexObjs.splice(this.levelIndexObjs.length - itemsToRemove, itemsToRemove);
+        }
+
         for(let i=0; i<alternativeNodes.length;i++){
             for(let j=0; j<alternativeNodes[i].length; j++){
                 if(alternativeNodes.length === 0) continue;
@@ -2480,8 +2485,8 @@ export default class LevelDataManager {
             console.log("tempLosedDataInfo's length:", tempLosedDataInfo.length);
             if (tempLosedDataInfo.length > 0) {
                 await batchLoadDataForRangeLevel1MinMaxMiss(tempLosedDataInfo, this); 
-                for(let i=0; i<otherDataManager.length; i++)
-                    await batchLoadDataForRangeLevel1MinMaxMiss(tempLosedDataInfo, otherDataManager[i]); 
+                for(let j=0; j<otherDataManager.length; j++)
+                    await batchLoadDataForRangeLevel1MinMaxMiss(tempLosedDataInfo, otherDataManager[j]); 
             }
         }
 
