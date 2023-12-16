@@ -487,7 +487,7 @@ export async function batchLoadDataForRangeLevel1WS(losedRange: Array<Array<numb
 }
 
 //here
-export async function batchLoadDataForRangeLevel1MinMaxMiss(losedRange: Array<Array<number>>, manager: any, tagName?: string){
+export async function batchLoadDataForRangeLevel1MinMaxMiss(losedRange: Array<Array<number>>, manager: any, tempArray?: any, tagName?: string){
     let difVals: Array<{ l: number, i: number, dif?: Array<number> }>
     if(store.state.controlParams.currentLineType==='Single'){
         difVals= await batchLoadMinMaxMissWithWs(losedRange, manager.dataName, "level_load_data_min_max_miss", manager.maxLevel, tagName) as Array<{ l: number, i: number }>;
@@ -496,12 +496,27 @@ export async function batchLoadDataForRangeLevel1MinMaxMiss(losedRange: Array<Ar
     }
 
     let count = 0;
+    losedRange.sort(function(a, b) {
+        return a[1] - b[1];
+    });
+    for(let i=0;i<losedRange.length-1;i++){
+        if(losedRange[i][1]>losedRange[i+1][1]){
+            console.log("losedRange[i][1],losedRange[i+1][1]:", losedRange[i][1],losedRange[i+1][1])
+        }
+        if(losedRange[i][1] === losedRange[i+1][1] && losedRange[i][2] === losedRange[i+1][2]){
+            losedRange.splice(i, 1);
+        }
+    }
+    // losedRange = [...new Set(losedRange)];
     for (let i = 0; i < losedRange.length; i++) {
         const levelRange = losedRange[i];
         const startNode = manager.levelIndexObjs[losedRange[i][0]].getTreeNodeStartIndex(losedRange[i][1]);
         let p: TrendTree = startNode;
         const newTreeNode = [];
         for (let j = losedRange[i][1]; j <= losedRange[i][2];j++) {
+            if(losedRange[i][1] === 652){
+                console.log("到652了。");
+            }
             if (p?.index === j && j === difVals[count].i && p.level === difVals[count].l) {
                 let dif = difVals[count].dif!;
                 let curNodeType: "O" | "NULL" | "LEFTNULL" | "RIGHTNULL" = 'O';
@@ -572,6 +587,10 @@ export async function batchLoadDataForRangeLevel1MinMaxMiss(losedRange: Array<Ar
                 // }
                 newTreeNode.push(firstNode);
                 newTreeNode.push(secondNode);
+                if(tempArray){
+                    tempArray.push(firstNode);
+                    tempArray.push(secondNode);
+                }
                 manager.lruCache.set(firstNode.level+"_"+firstNode.index,firstNode);
                 manager.lruCache.set(secondNode.level+"_"+secondNode.index,secondNode);
                 p = p.nextSibling!;
@@ -581,11 +600,12 @@ export async function batchLoadDataForRangeLevel1MinMaxMiss(losedRange: Array<Ar
                 }
 
             } else {
+                console.log("这个没有父节点");
                 console.log(losedRange[i][0] - 1, Math.floor(losedRange[i][1] / 2))
-                console.log("lose range:", losedRange, p, p?.index, j);
-                console.log(manager.levelIndexObjs);
-                debugger
-                throw new Error("dif not match node");
+                // console.log("lose range:", losedRange, p, p?.index, j);
+                // console.log(manager.levelIndexObjs);
+                // debugger
+                // throw new Error("dif not match node");
             }
         }
         for (let j = 0; j < newTreeNode.length - 1; j++) {
@@ -728,8 +748,8 @@ export async function batchLoadDataForRangeLevel2MinMaxMiss(losedRange: Array<Ar
                 console.log(losedRange[i][0] - 1, Math.floor(losedRange[i][1] / 2))
                 console.log("lose range:", losedRange, p, p?.index, j);
                 console.log(manager.levelIndexObjs);
-                debugger
-                throw new Error("dif not match node");
+                // debugger
+                // throw new Error("dif not match node");
             }
         }
         for (let j = 0; j < newTreeNode.length - 1; j++) {
