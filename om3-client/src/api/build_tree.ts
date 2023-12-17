@@ -514,9 +514,9 @@ export async function batchLoadDataForRangeLevel1MinMaxMiss(losedRange: Array<Ar
         let p: TrendTree = startNode;
         const newTreeNode = [];
         for (let j = losedRange[i][1]; j <= losedRange[i][2];j++) {
-            if(losedRange[i][1] === 652){
-                console.log("到652了。");
-            }
+            // if(losedRange[i][1] === 652){
+            //     console.log("到652了。");
+            // }
             if (p?.index === j && j === difVals[count].i && p.level === difVals[count].l) {
                 let dif = difVals[count].dif!;
                 let curNodeType: "O" | "NULL" | "LEFTNULL" | "RIGHTNULL" = 'O';

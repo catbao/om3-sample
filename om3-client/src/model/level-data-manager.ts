@@ -2159,7 +2159,7 @@ export default class LevelDataManager {
 
         let testT = 0;
         let alternativeNodes:TrendTree[][] = Array.from({ length: 11 }, () => []);
-        let alternativeNodes2:TrendTree[][][] = Array.from({ length: 2 }, () => Array.from({ length: 11 }, () => []));
+        let alternativeNodes2:TrendTree[][][] = Array.from({ length: 1 }, () => Array.from({ length: 11 }, () => []));
 
         while (needLoadDifNode.length > 0) { //如果需要继续向下获取系数，则一直向下查询，直到最后一层
             colIndex = 0;
@@ -2202,6 +2202,7 @@ export default class LevelDataManager {
             }
             
             const preColIndex = [];
+            let alterNodes = {value: 0};
             for (let i = 0; i < tempQue.length; i++) {
                 if (colIndex >= nonUniformColObjs.length) {
                     break;
@@ -2217,7 +2218,7 @@ export default class LevelDataManager {
                 nonUniformColObjs[colIndex].containColumnRange(tempQue[i], type);
                 // nonUniformColObjs[colIndex].computeTransform(tempQue[i], array, this.dataName, dataNames, this, otherDataManager, type, currentFlagInfo, currentFlagInfo2, transform_symbol);
                 let start_t = new Date().getTime(); 
-                nonUniformColObjs[colIndex].computeTransform2(tempQue[i], array, type, currentFlagInfo, currentFlagInfo2, transform_symbol, count_obj, tempNeedLoadDifNodes, tempNeedLoadDifNodes2, alternativeNodes, alternativeNodes2, maxLevel);
+                nonUniformColObjs[colIndex].computeTransform2(tempQue[i], array, type, currentFlagInfo, currentFlagInfo2, transform_symbol, count_obj, tempNeedLoadDifNodes, tempNeedLoadDifNodes2, alternativeNodes, alternativeNodes2, maxLevel, alterNodes);
                 let end_t = new Date().getTime();
                 total_time += end_t - start_t;
                 if (type === 1) {
@@ -2239,6 +2240,7 @@ export default class LevelDataManager {
                     // throw new Error("node time is little than col");
                 }
             }
+            console.log("alterNodes:", alterNodes.value);
             // if (preColIndex.length != tempNeedLoadDifNodes.length) {
             //     throw new Error("cannot memory index");
             // }
@@ -2453,7 +2455,6 @@ export default class LevelDataManager {
         // console.log("The time to get all coefficients:" + (new Date().getTime() - startT - testT));
         // console.log("The final count:", count_obj.count);
         console.log("The prune time to get coefficients:", databaseT);
-        console.log("The final load:", sumOfNeedLoadDifNodes);
 
         for(let i=0; i<alternativeNodes.length;i++){
             alternativeNodes[i] = [...new Set(alternativeNodes[i])];
@@ -2469,14 +2470,67 @@ export default class LevelDataManager {
         //     this.levelIndexObjs.splice(this.levelIndexObjs.length - itemsToRemove, itemsToRemove);
         // }
 
+        //first prune
         for(let i=0; i<alternativeNodes.length;i++){
             for(let j=0; j<alternativeNodes[i].length; j++){
-                if(alternativeNodes.length === 0) continue;
-                let level = i + 10;
-                let col = Math.floor((timeRange[1] / 2**(level) * alternativeNodes[i][j].index)/(timeRange[1]/width));
-                if((alternativeNodes[i][j].yArray[1] + alternativeNodes2[0][i][j].yArray[1] > nonUniformColObjs[col].addMin[1]) && (alternativeNodes[i][j].yArray[2] + alternativeNodes2[0][i][j].yArray[2] < nonUniformColObjs[col].addMax[1])){
-                    alternativeNodes[i].splice(j,1);
-                    alternativeNodes2[0][i].splice(j,1);
+                if(transform_symbol === '+'){
+                    let min=0, max=0;
+                    for(let len=0; len<alternativeNodes2.length; len++){
+                        min += alternativeNodes2[len][i][j].yArray[1];
+                        max += alternativeNodes2[len][i][j].yArray[2];
+                    }
+                    if(alternativeNodes.length === 0) continue;
+                    let level = alternativeNodes[i][j].level;
+                    let col = Math.floor((timeRange[1] / 2**(level) * alternativeNodes[i][j].index)/(timeRange[1]/width));
+                    if((alternativeNodes[i][j].yArray[1] + min > nonUniformColObjs[col].addMin[1]) && (alternativeNodes[i][j].yArray[2] + max < nonUniformColObjs[col].addMax[1])){
+                        alternativeNodes[i].splice(j,1);
+                        for(let len=0; len<alternativeNodes2.length; len++){
+                            alternativeNodes2[len][i].splice(j,1);
+                        }
+                    }
+                }
+                else if(transform_symbol === '-'){
+                    let min=0, max=0;
+                    for(let len=0; len<alternativeNodes2.length; len++){
+                        min += alternativeNodes2[len][i][j].yArray[1];
+                        max += alternativeNodes2[len][i][j].yArray[2];
+                    }
+                    if(alternativeNodes.length === 0) continue;
+                    let level = alternativeNodes[i][j].level;
+                    let col = Math.floor((timeRange[1] / 2**(level) * alternativeNodes[i][j].index)/(timeRange[1]/width));
+                    if((alternativeNodes[i][j].yArray[1] - max > nonUniformColObjs[col].subMin[1]) && (alternativeNodes[i][j].yArray[2] - min < nonUniformColObjs[col].subMax[1])){
+                        alternativeNodes[i].splice(j,1);
+                        for(let len=0; len<alternativeNodes2.length; len++){
+                            alternativeNodes2[len][i].splice(j,1);
+                        }
+                    }
+                }
+                else if(transform_symbol === '*'){
+                    let min, max;
+                    let temp = [];
+                    temp.push(alternativeNodes[i][j].yArray[1]);
+                    temp.push(alternativeNodes[i][j].yArray[2]);
+                    for(let k = 0; k<alternativeNodes2.length; ++k){
+                        let len = temp.length;
+                        for(let l = 0; l<len; ++l){
+                            temp.push(temp[l] * alternativeNodes2[k][i][j].yArray[1]);
+                            temp.push(temp[l] * alternativeNodes2[k][i][j].yArray[2]);
+                        }   
+                        for(let m = 0; m<len; ++m){
+                            temp.shift();
+                        }   
+                    }
+                    min = Math.min(...temp);
+                    max = Math.max(...temp);
+                    if(alternativeNodes.length === 0) continue;
+                    let level = alternativeNodes[i][j].level;
+                    let col = Math.floor((timeRange[1] / 2**(level) * alternativeNodes[i][j].index)/(timeRange[1]/width));
+                    if((min > nonUniformColObjs[col].multiMin[1]) && (max < nonUniformColObjs[col].multiMax[1])){
+                        alternativeNodes[i].splice(j,1);
+                        for(let len=0; len<alternativeNodes2.length; len++){
+                            alternativeNodes2[len][i].splice(j,1);
+                        }
+                    }
                 }
             }
         }
@@ -2484,71 +2538,162 @@ export default class LevelDataManager {
         let start_noPruneTime = new Date().getTime();
         let tempArray: Array<TrendTree> = [];
         let tempArray2: Array<Array<TrendTree>> = new Array(otherDataManager.length).fill([]).map(() => new Array<TrendTree>());
-        // for(let i=0;i<alternativeNodes.length;i++){
-        //     let tempLosedDataInfo = computeLosedDataRangeV1(alternativeNodes[i]);
-        //     // tempLosedDataInfo = [...new Set(tempLosedDataInfo)];
-        //     console.log("tempLosedDataInfo's length:", tempLosedDataInfo.length);
-        //     if (tempLosedDataInfo.length > 0) {
-        //         await batchLoadDataForRangeLevel1MinMaxMiss(tempLosedDataInfo, this, tempArray); 
-        //         console.log("tempArray's length", tempArray.length);
-        //         for(let j=0; j<otherDataManager.length; j++)
-        //             await batchLoadDataForRangeLevel1MinMaxMiss(tempLosedDataInfo, otherDataManager[j], tempArray2[j]); 
-        //     }
+        if(store.state.controlParams.stopEarly === false){
+            for(let i=0;i<alternativeNodes.length;i++){
+                let tempLosedDataInfo = computeLosedDataRangeV1(alternativeNodes[i]);
+                // console.log("tempLosedDataInfo's length:", tempLosedDataInfo.length);
+                if (tempLosedDataInfo.length > 0) {
+                    await batchLoadDataForRangeLevel1MinMaxMiss(tempLosedDataInfo, this, tempArray); 
+                    // console.log("tempArray's length", tempArray.length);
+                    for(let j=0; j<otherDataManager.length; j++)
+                        await batchLoadDataForRangeLevel1MinMaxMiss(tempLosedDataInfo, otherDataManager[j], tempArray2[j]); 
+                }
 
-        //     // compare with current pixel column
-        //     for(let k=0; k<tempArray.length;k++){
-        //         let min = 0, max = 0;
-        //         for(let j=0; j<tempArray2.length; j++){
-        //             min += tempArray2[j][k].yArray[1];
-        //             max += tempArray2[j][k].yArray[2];
-        //         }
-        //         let level = tempArray[0].level;
-        //         let col = Math.floor((timeRange[1] / 2**(level) * tempArray[k].index)/(timeRange[1]/width));
-        //         if((tempArray[k].yArray[1] + min > nonUniformColObjs[col].addMin[1]) && (tempArray[k].yArray[2] + max < nonUniformColObjs[col].addMax[1])){
-        //             tempArray.splice(k,1);
-        //             for(let j=0; j<tempArray2.length; j++){
-        //                 tempArray2[j].splice(k,1);
-        //             }
-        //         }
-        //     }
-
-            
-        //     if(tempArray.length === 0) continue;
-        //     //arrive the last layer
-        //     if(alternativeNodes[i+1].length === 0){
-        //         for(let j=0; j<tempArray.length; j++){
-        //             let min = tempArray[j].yArray[1];
-        //             let max = tempArray[j].yArray[2];
-        //             for(let c=0; c<tempArray2.length; c++){
-        //                 min += tempArray2[c][j].yArray[1];
-        //                 max += tempArray2[c][j].yArray[2];
-        //             }
-        //             let level = tempArray[0].level;
-        //             // console.log("level:", level);
-        //             let col = Math.floor((timeRange[1] / 2**(level) * tempArray[j].index)/(timeRange[1]/width));
-        //             // console.log("col:", col);
-        //             if(min < nonUniformColObjs[col].addMin[1]){
-        //                 nonUniformColObjs[col].addMin = [tempArray[j].index, min, level, [tempArray[j]]];
-        //             }
-        //             if(max > nonUniformColObjs[col].addMax[1]){
-        //                 nonUniformColObjs[col].addMax = [tempArray[j].index, max, level, [tempArray[j]]];
-        //             }
-        //         }
-        //         break;
-        //     }
-        //     //update to next layer
-        //     alternativeNodes[i+1] = [...alternativeNodes[i+1], ...tempArray];
-        //     // alternativeNodes[i+1] = [...new Set(alternativeNodes[i+1])];
-        //     for(let l=0; l<tempArray2.length; l++){
-        //         alternativeNodes2[l][i+1] = [...alternativeNodes2[l][i+1], ...tempArray2[l]];
-        //         // alternativeNodes2[l][i+1] = [...new Set(alternativeNodes2[l][i+1])];
-        //     }
-        //     tempArray= [];
-        //     for(let l=0; l<tempArray2.length; l++)
-        //         tempArray2[l] = [];
-        // }
+                // compare with current pixel column, prune
+                for(let k=0; k<tempArray.length;k++){
+                    if(transform_symbol === '+'){
+                        let min = 0, max = 0;
+                        for(let j=0; j<tempArray2.length; j++){
+                            min += tempArray2[j][k].yArray[1];
+                            max += tempArray2[j][k].yArray[2];
+                        }
+                        let level = tempArray[0].level;
+                        let col = Math.floor((timeRange[1] / 2**(level) * tempArray[k].index)/(timeRange[1]/width));
+                        if((tempArray[k].yArray[1] + min > nonUniformColObjs[col].addMin[1]) && (tempArray[k].yArray[2] + max < nonUniformColObjs[col].addMax[1])){
+                            tempArray.splice(k,1);
+                            for(let j=0; j<tempArray2.length; j++){
+                                tempArray2[j].splice(k,1);
+                            }
+                        }
+                    }
+                    else if(transform_symbol === '-'){
+                        let min = 0, max = 0;
+                        for(let j=0; j<tempArray2.length; j++){
+                            min += tempArray2[j][k].yArray[1];
+                            max += tempArray2[j][k].yArray[2];
+                        }
+                        let level = tempArray[0].level;
+                        let col = Math.floor((timeRange[1] / 2**(level) * tempArray[k].index)/(timeRange[1]/width));
+                        if((tempArray[k].yArray[1] - max > nonUniformColObjs[col].subMin[1]) && (tempArray[k].yArray[2] - min < nonUniformColObjs[col].subMax[1])){
+                            tempArray.splice(k,1);
+                            for(let j=0; j<tempArray2.length; j++){
+                                tempArray2[j].splice(k,1);
+                            }
+                        }
+                    }
+                    else if(transform_symbol === '*'){
+                        let min, max;
+                        let temp = [];
+                        temp.push(tempArray[k].yArray[1]);
+                        temp.push(tempArray[k].yArray[2]);
+                        for(let i = 0; i<tempArray2.length; ++i){
+                            let len = temp.length;
+                            for(let j = 0; j<len; ++j){
+                                temp.push(temp[j] * tempArray2[i][k].yArray[1]);
+                                temp.push(temp[j] * tempArray2[i][k].yArray[2]);
+                            }   
+                            for(let j = 0; j<len; ++j){
+                                temp.shift();
+                            }   
+                        }
+                        min = Math.min(...temp);
+                        max = Math.max(...temp);
+                        let level = tempArray[0].level;
+                        let col = Math.floor((timeRange[1] / 2**(level) * tempArray[k].index)/(timeRange[1]/width));
+                        if((min > nonUniformColObjs[col].multiMin[1]) && (max < nonUniformColObjs[col].multiMax[1])){
+                            tempArray.splice(k,1);
+                            for(let j=0; j<tempArray2.length; j++){
+                                tempArray2[j].splice(k,1);
+                            }
+                        }
+                    }
+                }
+                
+                if(tempArray.length === 0) continue;
+                if(tempArray[0].level !== maxLevel - 1)
+                    sumOfNeedLoadDifNodes += tempArray.length;
+                //arrive the last layer, update
+                if(alternativeNodes[i+1].length === 0){
+                    console.log("The last level:", tempArray[0].level);
+                    for(let k=0; k<tempArray.length; k++){
+                        if(transform_symbol === '+'){
+                            let min = tempArray[k].yArray[1];
+                            let max = tempArray[k].yArray[2];
+                            for(let c=0; c<tempArray2.length; c++){
+                                min += tempArray2[c][k].yArray[1];
+                                max += tempArray2[c][k].yArray[2];
+                            }
+                            let level = tempArray[0].level;
+                            // console.log("level:", level);
+                            let col = Math.floor((timeRange[1] / 2**(level) * tempArray[k].index)/(timeRange[1]/width));
+                            // console.log("col:", col);
+                            if(min < nonUniformColObjs[col].addMin[1]){
+                                nonUniformColObjs[col].addMin = [tempArray[k].index, min, level, [tempArray[k]]];
+                            }
+                            if(max > nonUniformColObjs[col].addMax[1]){
+                                nonUniformColObjs[col].addMax = [tempArray[k].index, max, level, [tempArray[k]]];
+                            }
+                        }
+                        else if(transform_symbol === '-'){
+                            let min = tempArray[k].yArray[1];
+                            let max = tempArray[k].yArray[2];
+                            for(let c=0; c<tempArray2.length; c++){
+                                min -= tempArray2[c][k].yArray[2];
+                                max -= tempArray2[c][k].yArray[1];
+                            }
+                            let level = tempArray[0].level;
+                            let col = Math.floor((timeRange[1] / 2**(level) * tempArray[k].index)/(timeRange[1]/width));
+                            if(min < nonUniformColObjs[col].subMin[1]){
+                                nonUniformColObjs[col].subMin = [tempArray[k].index, min, level, [tempArray[k]]];
+                            }
+                            if(max > nonUniformColObjs[col].subMax[1]){
+                                nonUniformColObjs[col].subMax = [tempArray[k].index, max, level, [tempArray[k]]];
+                            }
+                        }
+                        else if(transform_symbol === '*'){
+                            let min, max;
+                            let temp = [];
+                            temp.push(tempArray[k].yArray[1]);
+                            temp.push(tempArray[k].yArray[2]);
+                            for(let i = 0; i<tempArray2.length; ++i){
+                                let len = temp.length;
+                                for(let j = 0; j<len; ++j){
+                                    temp.push(temp[j] * tempArray2[i][k].yArray[1]);
+                                    temp.push(temp[j] * tempArray2[i][k].yArray[2]);
+                                }   
+                                for(let j = 0; j<len; ++j){
+                                    temp.shift();
+                                }   
+                            }
+                            min = Math.min(...temp);
+                            max = Math.max(...temp);
+                            let level = tempArray[0].level;
+                            let col = Math.floor((timeRange[1] / 2**(level) * tempArray[k].index)/(timeRange[1]/width));
+                            if(min < nonUniformColObjs[col].multiMin[1]){
+                                nonUniformColObjs[col].multiMin = [tempArray[k].index, min, level, [tempArray[k]]];
+                            }
+                            if(max > nonUniformColObjs[col].multiMax[1]){
+                                nonUniformColObjs[col].multiMax = [tempArray[k].index, max, level, [tempArray[k]]];
+                            }
+                        }
+                    }
+                    break;
+                }
+                //update to next layer
+                alternativeNodes[i+1] = [...alternativeNodes[i+1], ...tempArray];
+                // alternativeNodes[i+1] = [...new Set(alternativeNodes[i+1])];
+                for(let l=0; l<tempArray2.length; l++){
+                    alternativeNodes2[l][i+1] = [...alternativeNodes2[l][i+1], ...tempArray2[l]];
+                    // alternativeNodes2[l][i+1] = [...new Set(alternativeNodes2[l][i+1])];
+                }
+                tempArray= [];
+                for(let l=0; l<tempArray2.length; l++)
+                    tempArray2[l] = [];
+            }
+        }
         databaseT += new Date().getTime() - start_noPruneTime;
         console.log("No Prune Time:", databaseT);
+        console.log("The final load:", sumOfNeedLoadDifNodes);
         let maxValue = -Infinity, minValue = Infinity, finalValue = 0;
         for (let i = 0; i < nonUniformColObjs.length; i++) {
             nonUniformColObjs[i].checkIsMis();
