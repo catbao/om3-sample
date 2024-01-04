@@ -90,13 +90,13 @@ class CustomCache {
     }
   }
   
-  // 使用示例：
+  //test
   const cache = new CustomCache(3);
   cache.add('key1', 'value1', 1, 0);
   cache.add('key2', 'value2', 2, 1);
   cache.add('key3', 'value3', 3, 4);
-  console.log(cache.get('key1')); // 返回 'value1'
+  console.log(cache.get('key1')); 
   cache.add('key4', 'value4', 4, 1); 
   cache.add('key5', 'value5', 3, 2); 
-//   cache.add('key5', 'value5', 3, 5); 
+  cache.add('key5', 'value5', 1, 5); 
   console.log(cache); 
