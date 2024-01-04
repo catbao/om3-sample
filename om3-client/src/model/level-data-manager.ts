@@ -2203,6 +2203,7 @@ export default class LevelDataManager {
             
             const preColIndex = [];
             let alterNodes = {value: 0};
+            console.log("level:", tempQue[0].level);
             for (let i = 0; i < tempQue.length; i++) {
                 if (colIndex >= nonUniformColObjs.length) {
                     break;
@@ -2265,6 +2266,8 @@ export default class LevelDataManager {
             let testTime2 = new Date().getTime() - testTime;
             testT += testTime2;
             needLoadDifNode2 = tempNeedLoadDifNodes2;
+            console.log("needLoadDifNode:", needLoadDifNode.length);
+
             if (needLoadDifNode.length > 0 && needLoadDifNode[0].level === maxLevel - 1) {
                 if(transform_symbol === '+'){
                     for (let i = 0; i < needLoadDifNode.length; i++) {
