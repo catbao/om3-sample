@@ -12,8 +12,11 @@ export default class TrendTree {
     difference: [number, number, number, number, number] | null;
     level: number;
     index: number;
+    freq: number;
     previousSibling: TrendTree | null;
     nextSibling: TrendTree | null;
+    linkedListnext: TrendTree | null;
+    linkedListPrev: TrendTree | null;
     trendRange: Array<number>
     timeRange: Array<number>
     nodeType:'O'|'NULL'|'LEFTNULL'|'RIGHTNULL';
@@ -32,8 +35,11 @@ export default class TrendTree {
         this.difference = null;
 
         this.level = 0;
+        this.freq = 0;
         this.previousSibling = null;
-        this.nextSibling = null
+        this.nextSibling = null;
+        this.linkedListPrev = null;
+        this.linkedListnext = null;
         this.nextP = null;
         this.preP = null
         this.trendRange = [0, 0];

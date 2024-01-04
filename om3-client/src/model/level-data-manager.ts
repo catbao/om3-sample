@@ -13,9 +13,9 @@ import { constructMinMaxMissTrendTree, constructMinMaxMissTrendTreeMulti, constr
 import Cache from "lru-cache"
 import { getFlag } from "@/global_state/state";
 import { START_LOCATION } from "vue-router";
+import CustomCache from "./customCache"; 
 
 async function get(url: string) {
-
     url = 'postgres' + url;
 
     //const loading = openLoading();
@@ -42,6 +42,10 @@ export default class LevelDataManager {
     cacheTail: TrendTree | null
     maxCacheNodeNum: number
     lruCache: any
+    customCache: Array<TrendTree>
+    customCacheMap: Map<number, TrendTree>
+    customCacheHead: TrendTree | null
+    customCacheTail: TrendTree | null
     deleteQueue: Array<TrendTree>
     isIntering: boolean
     isEvicting: boolean
@@ -57,9 +61,14 @@ export default class LevelDataManager {
         this.cacheMap = new Map<number, TrendTree>();
         this.cacheHead = null;
         this.cacheTail = null;
+        this.customCache = new Array<TrendTree>();
+        this.customCacheMap = new Map<number, TrendTree>();
+        this.customCacheHead = null;
+        this.customCacheTail = null;
         this.maxCacheNodeNum = 100000
         this.lruCache = null;
         this.initCache();
+        this.initCustomCache();
         this.deleteQueue = [];
         this.isIntering = false;
         this.isEvicting = false
@@ -978,7 +987,10 @@ export default class LevelDataManager {
         this.evictTreeNode()
         return
     }
+    initCustomCache() {
+        this.customCache = new CustomCache(this.maxCacheNodeNum);
 
+    }
 
     evictTreeNode() {
         setInterval(() => {
