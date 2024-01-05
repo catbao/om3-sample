@@ -21,7 +21,7 @@ class CacheNode {
     get(key) {
       if (this.cacheMap.has(key)) {
         const node = this.cacheMap.get(key);
-        // 查询时不会改变节点位置
+        node.freq++;
         return node.value;
       }
       return null;
@@ -33,33 +33,35 @@ class CacheNode {
         // 如果缓存中已存在该键，更新值并调整顺序
         const node = this.cacheMap.get(key);
         node.value = value;
-        this.updateNodeOrder(node);
+        // this.updateNodeOrder(node);
       } else {
-        // 如果缓存满了，先移出最不符合条件的数据
-        if (this.cacheMap.size >= this.capacity) {
-          this.evict();
-        }
-  
         // 插入新数据并调整顺序
         const newNode = new CacheNode(key, value, level, freq);
         this.cacheMap.set(key, newNode);
         this.addToSortedPosition(newNode);
+        // 如果缓存满了，先移出最不符合条件的数据
+        if (this.cacheMap.size >= this.capacity) {
+          this.evict();
+        }
       }
     }
   
     evict() {
-        if (this.head) {
-        // 移除第一个节点
-        this.cacheMap.delete(this.head.key);
-        if (this.head.next) {
-            // 如果有后一个节点，将头部指向后一个节点
-            this.head.next.prev = null;
-            this.head = this.head.next;
-        } else {
-            // 如果只有一个节点，则头尾都为null
-            this.head = null;
-            this.tail = null;
-        }
+        while(this.cacheMap.size >= this.capacity)
+        {
+          if (this.head) {
+            // 移除第一个节点
+            this.cacheMap.delete(this.head.key);
+            if (this.head.next) {
+                // 如果有后一个节点，将头部指向后一个节点
+                this.head.next.prev = null;
+                this.head = this.head.next;
+            } else {
+                // 如果只有一个节点，则头尾都为null
+                this.head = null;
+                this.tail = null;
+            }
+          }
         }
     }
   
@@ -71,7 +73,7 @@ class CacheNode {
       while (
         current &&
         (current.level > node.level ||
-          (current.level === node.level && current.freq <= node.freq))
+          (current.level === node.level && current.freq < node.freq))
       ) {
         current = current.next;
       }
@@ -111,15 +113,24 @@ class CacheNode {
     }
   }
   
-  const cache = new CustomCache(3);
-  
-  cache.insert("key1", "value1", 1, 3);
-  cache.insert("key2", "value2", 2, 1);
-  cache.insert("key3", "value3", 3, 2);
-  
-  cache.insert("key4", "value4", 2, 4);
-  cache.insert("key5", "value5", 2, 3);
-  cache.insert("key6", "value6", 0, 2);
-  cache.insert("key7", "value7", 5, 4);
+  const cache = new CustomCache(20);
+  const randomData = generateRandomData(50);
+  randomData.forEach(item => {
+    cache.insert(item.key, item.value, item.level, item.freq);
+  });
+  console.log(cache)
+
+  function generateRandomData(num) {
+    const data = [];
+    for (let i = 0; i < num; i++) {
+      const level = Math.floor(Math.random() * 11); // 在0-5之间随机
+      const freq = Math.floor(Math.random() * 21); // 在0-10之间随机
+      const key = `${level}_${freq}`;
+      const value = `value${i + 1}`;
+      
+      data.push({ key, value, level, freq });
+    }
+    return data;
+  }
 
   
