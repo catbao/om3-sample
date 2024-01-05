@@ -68,7 +68,7 @@ export default class LevelDataManager {
         this.maxCacheNodeNum = 100000
         this.lruCache = null;
         this.initCache();
-        this.initCustomCache();
+        // this.initCustomCache();
         this.deleteQueue = [];
         this.isIntering = false;
         this.isEvicting = false
@@ -987,11 +987,6 @@ export default class LevelDataManager {
         this.evictTreeNode()
         return
     }
-    initCustomCache() {
-        this.customCache = new CustomCache(this.maxCacheNodeNum);
-
-    }
-
     evictTreeNode() {
         setInterval(() => {
             if (this.isIntering) {

@@ -17,7 +17,6 @@ class CacheNode {
       this.tail = null;
     }
   
-    // 查询数据
     get(key) {
       if (this.cacheMap.has(key)) {
         const node = this.cacheMap.get(key);
@@ -26,8 +25,7 @@ class CacheNode {
       }
       return null;
     }
-  
-    // 插入数据
+  0
     insert(key, value, level, freq) {
       if (this.cacheMap.has(key)) {
         // 如果缓存中已存在该键，更新值并调整顺序
