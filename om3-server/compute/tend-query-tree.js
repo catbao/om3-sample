@@ -1,28 +1,28 @@
-import store from "@/store";
-import axios from "axios";
+// import store from "@/store";
+// import axios from "axios";
 
 const TOTAL_LEVELS = 31
-export default class TrendTree {
-    parent: TrendTree | null;
-    _leftChild: TrendTree | null;
-    _rightChild: TrendTree | null;
-    preP: TrendTree | null;
-    nextP: TrendTree | null;
-    yArray: [any, any, any, any, any];
-    difference: [any, any, any, any, any] | null;
-    level: number;
-    index: number;
-    freq: number;
-    previousSibling: TrendTree | null;
-    nextSibling: TrendTree | null;
-    linkedListnext: TrendTree | null;
-    linkedListPrev: TrendTree | null;
-    trendRange: Array<number>
-    timeRange: Array<number>
-    nodeType:'O'|'NULL'|'LEFTNULL'|'RIGHTNULL';
-    gapFlag:'NO'|'L'|'R';//L miss data in left; R  miss data in right
+class TrendTree {
+    parent;
+    _leftChild;
+    _rightChild;
+    preP;
+    nextP;
+    yArray
+    difference
+    level
+    index
+    freq
+    previousSibling
+    nextSibling
+    linkedListnext
+    linkedListPrev
+    trendRange
+    timeRange
+    nodeType
+    gapFlag
     //fetcher: TreeNodeFetchers
-    constructor(parent: TrendTree | null, leftChild = true, index = 0, yArray: [any, any, any, any, any], dif: [any, any, any, any, any] | null,nodeType?:'O'|'NULL'|'LEFTNULL'|'RIGHTNULL') {
+    constructor(parent, leftChild = true, index = 0, yArray, dif, nodeType) {
         this.nodeType='O'
         if(nodeType){
             this.nodeType=nodeType
@@ -114,7 +114,7 @@ export default class TrendTree {
         return Math.pow(2, this.level);
     }
 
-    getTimeRange(globalDataLen: number) {
+    getTimeRange(globalDataLen) {
         if (this.timeRange.length > 0) {
             return [this.timeRange[0], this.timeRange[1]];
         }
@@ -123,7 +123,7 @@ export default class TrendTree {
         this.timeRange[1] = this.timeRange[0] + nodeDataRange - 1;
         return [this.timeRange[0], this.timeRange[1]];
     }
-    data(startIndex: number) {
+    data(startIndex) {
         if (this.level <= TOTAL_LEVELS) {
             return this.yArray.map((y, i) => {
                 return {
@@ -137,52 +137,5 @@ export default class TrendTree {
     }
    
 }
-    // get leftChild(): TrendTree | null {
-    //     if (this._leftChild) return this._leftChild
-    //     try {
-    //         const child = new TrendTree(this, true, this.index);
-    //         if (!this.difference) {
-    //             this.fetcher.fetch(child);
-    //         }
-    //         return child;
-    //     } catch (e) {
-    //         return null;
-    //     }
-    // }
 
-    // get rightChild(): TrendTree | null {
-    //     if (this._rightChild) {
-    //         return this._rightChild;
-    //     }
-    //     try {
-    //         const child = new TrendTree(this, false, this.index);
-    //         if (!this.difference) {
-    //             this.fetcher.fetch(child);
-    //         }
-    //         return child;
-    //     } catch (e) {
-    //         return null;
-    //     }
-    // }
-
-//     get previousSibling(): TrendTree | null {
-//         return (
-//             this.parent && (this.parent._leftChild === this ? this.parent.previousSibling && this.parent.previousSibling.rightChild : this.parent.leftChild)
-//         );
-//     }
-//     get nextSibling(): TrendTree | null {
-//         return (
-//             this.parent && (this.parent._rightChild === this ? this.parent.nextSibling && this.parent.nextSibling.leftChild : this.parent.rightChild)
-//         );
-//     }
-// }
-
-
-// export class TreeNodeFetcher {
-//     constructor() {
-
-//     }
-//     fetch(child: TrendTree) {
-
-//     }
-// }
+module.exports = {TrendTree}

@@ -3103,3 +3103,5 @@ export default class LevelDataManager {
 
 }
 
+// module.exports = {LevelDataManager}
+

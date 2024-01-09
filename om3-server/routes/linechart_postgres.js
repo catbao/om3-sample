@@ -9,6 +9,8 @@ const { randomUUID } = require('crypto');
 const { nonuniformMinMaxEncode } = require('../compute/om_compute');
 const { resolve } = require('path');
 const { rejects } = require('assert');
+const { testCache } = require('../compute/cache');
+const { constructMinMaxMissTrendTree } = require('../compute/wavlet-decoder2')
 
 const stockTableMap = [];
 const mockTableMap = [];
@@ -186,17 +188,17 @@ function initWaveletBenchMinMaxMissHandler(req, res) {
     let maxLevel = levelMap[splitArray[splitArray.length - 1]];
     console.log(maxLevel)
     let sqlStr = '';
-    sqlStr = `select i,minvd,maxvd,avevd from om3.${query.table_name} where i<$1 order by i asc`;
-    const params = [];
-    console.log(query.width)
-    params.push(2 ** Math.ceil(Math.log2(query.width)));
-    const sqlQuery = {
-        text: sqlStr,
-        values: params
-    }
+    sqlStr = `select i,minvd,maxvd,avevd from om3.${query.table_name} where i<${30} order by i asc`;
+    // const params = [];
+    // console.log(query.width)
+    // params.push(2 ** Math.ceil(Math.log2(query.width)));
+    // const sqlQuery = {
+    //     text: sqlStr,
+    //     values: params
+    // }
     const startT = new Date().getTime();
     try {
-        currentPool.query(sqlQuery, function (err, result) {
+        currentPool.query(sqlStr, function (err, result) {
             if (err) {
                 //currentPool.end();
                 console.log(sqlStr)
@@ -215,6 +217,15 @@ function initWaveletBenchMinMaxMissHandler(req, res) {
             if (result.rows.length > 0) {
                 finalRes.push({ l: -1, i: 0, minvd: result.rows[0]['minvd'], maxvd: result.rows[0]['maxvd'], avevd: result.rows[0]['avevd'] });
             }
+            console.log("finalRes:", finalRes);
+            const {trendTree, dataManager} = constructMinMaxMissTrendTree(finalRes, 600);
+            console.log("testCache:", testCache);
+            for(let i=0; i<dataManager.levelIndexObjs.length; i++){
+                for(let j=0; j<dataManager.levelIndexObjs[i].length; j++){
+                    testCache.insert(i+'_'+j, dataManager.levelIndexObjs[i][j]);
+                }
+            }
+            console.log("testCache:", testCache);
             // printT(startT)
             console.log("w i t", new Date().getTime() - startT);
             res.send({ code: 200, msg: 'success', data: { result: finalRes } });
