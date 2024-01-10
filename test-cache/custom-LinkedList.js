@@ -12,22 +12,23 @@ class CacheNode {
 class CustomCache {
   constructor(capacity) {
     this.capacity = capacity;
-    this.cacheMap = new Map();
+    // this.cacheMap = new Map();
     this.head = null;
     this.tail = null;
+    this.indexHead = [];
   }
 
-  // 查询数据
   get(key) {
-    if (this.cacheMap.has(key)) {
-      const node = this.cacheMap.get(key);
-      node.freq++;
-      return node.value;
-    }
+    // if (this.cacheMap.has(key)) {
+    //   const node = this.cacheMap.get(key);
+    //   node.freq++;
+    //   return node.value;
+    // }
+    let head = this.indexHead[Number(key[0])];
+    let i = head.index;
     return null;
   }
 
-  // 插入数据
   insert(key, value, level, freq) {
     if (this.cacheMap.has(key)) {
       // 如果缓存中已存在该键，更新值并调整顺序
@@ -50,7 +51,6 @@ class CustomCache {
       while(this.cacheMap.size >= this.capacity)
       {
         if (this.head) {
-          // 移除第一个节点
           this.cacheMap.delete(this.head.key);
           if (this.head.next) {
               // 如果有后一个节点，将头部指向后一个节点

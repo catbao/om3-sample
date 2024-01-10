@@ -13,6 +13,7 @@ function constructMinMaxMissTrendTree(data, width, tableName) {
     // const initLevel = Math.ceil(Math.log2(width));
     // const initLevel = 2;
     //debugger
+    console.log("initLevel:", initLevel);
     const levelIndex = new Array<LevelIndexObj>(Math.ceil(Math.log2(data.length)) + 1);
 
     const minvd = [];
@@ -39,7 +40,7 @@ function constructMinMaxMissTrendTree(data, width, tableName) {
     const root = new TrendTree(null, true, 0, [undefined, minvd[0], maxvd[0], avevd[0], undefined], [undefined, minvd[1], maxvd[1], avevd[1], undefined]);
     lastLevelNodes.push(root);
     levelIndex[0] = new LevelIndexObj(0, true);
-    levelIndex[0].addLoadedDataRange(root, [0, 0]);
+    // levelIndex[0].addLoadedDataRange(root, [0, 0]);
 
     let difIndex = 1;
     for (let i = 1; i <= initLevel; i++) {
@@ -126,7 +127,7 @@ function constructMinMaxMissTrendTree(data, width, tableName) {
 
         }
         levelIndex[i] = new LevelIndexObj(currentLevelNodes[0].level, true);
-        levelIndex[i].addLoadedDataRange(currentLevelNodes[0], [currentLevelNodes[0].index, currentLevelNodes[currentLevelNodes.length-1].index]);
+        // levelIndex[i].addLoadedDataRange(currentLevelNodes[0], [currentLevelNodes[0].index, currentLevelNodes[currentLevelNodes.length-1].index]);
         for (let i = 0; i < currentLevelNodes.length - 1; i++) {
             currentLevelNodes[i].nextSibling = currentLevelNodes[i + 1];
             currentLevelNodes[i + 1].previousSibling = currentLevelNodes[i];
