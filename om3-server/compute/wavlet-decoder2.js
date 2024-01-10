@@ -141,7 +141,7 @@ function constructMinMaxMissTrendTree(data, width, tableName) {
         throw new Error("diff not uesed")
     }
 
-    const levelDataManager = new LevelDataManager(levelIndex, tableName ? tableName : store.state.controlParams.currentTable);
+    const levelDataManager = new LevelDataManager(levelIndex, tableName ? tableName : "test");
     return {
         dataManager: levelDataManager,
         trendTree: root

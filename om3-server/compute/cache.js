@@ -39,7 +39,7 @@ class CustomCache {
             this.cacheMap.delete(this.head.key);
             if (this.head.next) {
                 // 如果有后一个节点，将头部指向后一个节点
-                this.head.next.prev = null;
+                // this.head.next.prev = null;
                 this.head = this.head.next;
             } else {
                 // 如果只有一个节点，则头尾都为null
@@ -58,7 +58,7 @@ class CustomCache {
       while (
         current &&
         (current.level > node.level ||
-          (current.level === node.level && current.freq < node.freq))
+          (current.level === node.level && current.freq <= node.freq))
       ) {
         current = current.next;
       }
@@ -68,16 +68,17 @@ class CustomCache {
         this.addToEnd(node);
       } else {
         // 插入到链表中间
-        node.prev = current.prev;
-        node.next = current;
+        // node.prev = current.prev;
+        node.next = current.next;
+        current.next = node;
   
-        if (current.prev) {
-          current.prev.next = node;
-        } else {
-          this.head = node;
-        }
+        // if (current.prev) {
+        //   current.prev.next = node;
+        // } else {
+        //   this.head = node;
+        // }
   
-        current.prev = node;
+        // current.prev = node;
       }
     }
   
@@ -87,7 +88,7 @@ class CustomCache {
         this.head = node;
         this.tail = node;
       } else {
-        node.prev = this.tail;
+        // node.prev = this.tail;
         this.tail.next = node;
         this.tail = node;
       }
@@ -99,5 +100,6 @@ class CustomCache {
 }
 
 const testCache = new CustomCache(20);
+// testCache.insert("key1", "value1");
 
 module.exports = { testCache }

@@ -220,13 +220,15 @@ function initWaveletBenchMinMaxMissHandler(req, res) {
             }
             console.log("finalRes's length:", finalRes.length);
             const {trendTree, dataManager} = constructMinMaxMissTrendTree(finalRes, 600);
+            console.log("dataManager:", dataManager);
             console.log("testCache:", testCache);
-            for(let i=0; i<dataManager.levelIndexObjs.length; i++){
-                for(let j=0; j<dataManager.levelIndexObjs[i].length; j++){
-                    testCache.insert(i+'_'+j, dataManager.levelIndexObjs[i][j]);
+            // for(let i=0; i<dataManager.levelIndexObjs.length; i++){
+            //     for(let j=0; j<dataManager.levelIndexObjs[i].length; j++){
+            //         testCache.insert(i+'_'+j, dataManager.levelIndexObjs[i][j]);
                 
-                }
-            }
+            //     }
+            // }
+            testCache.insert('dataManager', dataManager);
             console.log("testCache:", testCache);
             // printT(startT)
             console.log("w i t", new Date().getTime() - startT);

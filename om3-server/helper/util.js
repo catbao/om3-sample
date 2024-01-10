@@ -109,7 +109,7 @@ function getPool() {
         });
     } else {
         const dbConfig = JSON.parse(fs.readFileSync("./initdb/dbconfig.json").toString());
-        console.log(dbConfig)
+        // console.log(dbConfig)
         if (!dbConfig['username'] || !dbConfig['hostname'] || !dbConfig['password'] || !dbConfig['db']) {
             throw new Error("db config error");
         }
