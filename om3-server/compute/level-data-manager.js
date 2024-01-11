@@ -1,14 +1,14 @@
 class LevelDataManager {
-    levelIndexObjs
-    maxLevel
-    realDataRowNum
-    dataName
-    md5Num
-    isShow
-    columnInfos
-    curNodeNum
-    maxCacheNodeNum
-    isIntering
+    // levelIndexObjs
+    // maxLevel
+    // realDataRowNum
+    // dataName
+    // md5Num
+    // isShow
+    // columnInfos
+    // curNodeNum
+    // maxCacheNodeNum
+    // isIntering
     constructor(levelIndexObjs, dataName, maxLevel) {
         this.levelIndexObjs = levelIndexObjs;
         // this.maxLevel = maxLevel ? maxLevel : store.state.controlParams.tableMaxLevel;

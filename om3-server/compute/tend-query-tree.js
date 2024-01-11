@@ -3,24 +3,24 @@
 
 const TOTAL_LEVELS = 31
 class TrendTree {
-    parent;
-    _leftChild;
-    _rightChild;
-    preP;
-    nextP;
-    yArray
-    difference
-    level
-    index
-    freq
-    previousSibling
-    nextSibling
-    linkedListnext
-    linkedListPrev
-    trendRange
-    timeRange
-    nodeType
-    gapFlag
+    // parent;
+    // _leftChild;
+    // _rightChild;
+    // preP;
+    // nextP;
+    // yArray
+    // difference
+    // level
+    // index
+    // freq
+    // previousSibling
+    // nextSibling
+    // linkedListnext
+    // linkedListPrev
+    // trendRange
+    // timeRange
+    // nodeType
+    // gapFlag
     //fetcher: TreeNodeFetchers
     constructor(parent, leftChild = true, index = 0, yArray, dif, nodeType) {
         this.nodeType='O'

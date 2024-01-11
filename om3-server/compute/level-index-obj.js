@@ -1,11 +1,11 @@
 // import TrendTree from "@/helper/tend-query-tree";
 // import { checkSetType, computeNeedLoadDataRange, isIntersect } from "../helper/util"
 class LevelIndexObj {
-    level;
-    isFull;
-    loadedDataRange;
-    firstNodes;
-    isSelfCheck;
+    // level;
+    // isFull;
+    // loadedDataRange;
+    // firstNodes;
+    // isSelfCheck;
     constructor(level, isFull = false) {
         this.level = level;
         this.isFull = isFull;
@@ -321,4 +321,5 @@ class LevelIndexObj {
     }
 
 }
+
 module.exports = {LevelIndexObj}

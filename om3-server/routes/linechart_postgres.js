@@ -10,7 +10,8 @@ const { nonuniformMinMaxEncode } = require('../compute/om_compute');
 const { resolve } = require('path');
 const { rejects } = require('assert');
 const { testCache } = require('../compute/cache');
-const { constructMinMaxMissTrendTree } = require('../compute/wavlet-decoder2')
+const { constructMinMaxMissTrendTree } = require('../compute/wavlet-decoder2');
+const { LevelDataManager } = require('../compute/level-data-manager');
 
 const stockTableMap = [];
 const mockTableMap = [];
@@ -184,7 +185,7 @@ function initWaveletBenchMinMaxMissHandler(req, res) {
         }
         currentPool = customDBPoolMap().get(userCookie);
     }
-    console.log(query.tableName)
+    // console.log(query.tableName)
     const splitArray = query.table_name.split("_");
     let maxLevel = levelMap[splitArray[splitArray.length - 1]];
     // console.log(maxLevel)
@@ -220,16 +221,20 @@ function initWaveletBenchMinMaxMissHandler(req, res) {
             }
             console.log("finalRes's length:", finalRes.length);
             const {trendTree, dataManager} = constructMinMaxMissTrendTree(finalRes, 600);
-            console.log("dataManager:", dataManager);
+            console.log("dataManager:", dataManager.levelIndexObjs);
             console.log("testCache:", testCache);
-            // for(let i=0; i<dataManager.levelIndexObjs.length; i++){
-            //     for(let j=0; j<dataManager.levelIndexObjs[i].length; j++){
-            //         testCache.insert(i+'_'+j, dataManager.levelIndexObjs[i][j]);
-                
-            //     }
-            // }
-            testCache.insert('dataManager', dataManager);
-            console.log("testCache:", testCache);
+            // console.log(dataManager.levelIndexObjs[0]);
+            for(let i=0; i<dataManager.levelIndexObjs.length; i++){
+                for(let j=0; j<dataManager.levelIndexObjs[i].firstNodes.length; j++){
+                    let currentNode = dataManager.levelIndexObjs[i].firstNodes[j];
+                    while(currentNode.nextSibling){
+                        testCache.insert(i+'_'+currentNode.yArray[1], currentNode);
+                        currentNode = currentNode.nextSibling;
+                    }
+                }
+            }
+            // testCache.insert('dataManager', dataManager);
+            console.log("testCache:", testCache.cacheMap.keys());
             // printT(startT)
             console.log("w i t", new Date().getTime() - startT);
             res.send({ code: 200, msg: 'success', data: { result: finalRes } });
