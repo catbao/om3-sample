@@ -99,7 +99,7 @@ class CustomCache {
     }
 }
 
-const testCache = new CustomCache(20);
+const testCache = new CustomCache(64);
 // testCache.insert("key1", "value1");
 
 module.exports = { testCache }

@@ -221,23 +221,27 @@ function initWaveletBenchMinMaxMissHandler(req, res) {
             }
             console.log("finalRes's length:", finalRes.length);
             const {trendTree, dataManager} = constructMinMaxMissTrendTree(finalRes, 600);
-            // console.log("dataManager:", dataManager.levelIndexObjs);
+            // console.log("dataManager:", dataManager.levelIndexObjs[0]);
             console.log("testCache:", testCache);
-            // console.log(dataManager.levelIndexObjs[0]);
+            // console.log(dataManager);
             for(let i=0; i<dataManager.levelIndexObjs.length; i++){
+                // console.log("length1:", dataManager.levelIndexObjs.length);
                 for(let j=0; j<dataManager.levelIndexObjs[i].firstNodes.length; j++){
+                    // console.log("length2:", dataManager.levelIndexObjs[i].firstNodes.length);
                     let currentNode = dataManager.levelIndexObjs[i].firstNodes[j];
-                    console.log("currentNode:", i+'_'+currentNode.yArray[1]);
-                    if(i === 1)
-                        console.log("currentNode's nextSibing:", currentNode.nextSibling);
+                    // console.log("currentNode:", i+'_'+currentNode.yArray[1]);
+                    // if(i === 1)
+                        // console.log("currentNode's nextSibing:", currentNode.nextSibling);
                     while(currentNode.nextSibling !== null){
+                        // console.log(i+'_'+currentNode.yArray[1]+'_');
                         testCache.insert(i+'_'+currentNode.yArray[1], currentNode);
                         currentNode = currentNode.nextSibling;
                     }
+                    testCache.insert(i+'_'+currentNode.yArray[1], currentNode);
                 }
             }
-            // testCache.insert('dataManager', dataManager);
-            console.log("testCache:", testCache.cacheMap.keys());
+            console.log("testCache's head:", testCache.head.level)
+            // console.log("testCache:", testCache.cacheMap.keys());
             // printT(startT)
             console.log("w i t", new Date().getTime() - startT);
             res.send({ code: 200, msg: 'success', data: { result: finalRes } });
