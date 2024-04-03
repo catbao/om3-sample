@@ -11,7 +11,7 @@ const fileMap={
 router.get("/download",function(req,res){
     const query=req.query
     const fileName=query['filename'];
-    console.log(query)
+    // console.log(query)
     if(fileName===undefined||fileMap[fileName]===undefined){
         res.status(404).send('File not found');
     }

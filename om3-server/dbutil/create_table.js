@@ -2,7 +2,7 @@ const fs = require('fs')
 const { Pool } = require('pg');
 
 const dbConfig = JSON.parse(fs.readFileSync("../initdb/dbconfig.json").toString());
-console.log(dbConfig)
+// console.log(dbConfig)
 if (!dbConfig['username'] || !dbConfig['hostname'] || !dbConfig['password'] || !dbConfig['db']) {
     throw new Error("db config error");
 }
@@ -45,7 +45,7 @@ async function syncData() {
             if (v.table_fullname.includes("m4rawdata")) {
                 const curTableName = "raw_data_multi.stock_" + v.table_fullname.split(".")[1].split("_")[1] + "_4m"
                 const curSQL = `insert into ${curTableName} select t,v from ${v.table_fullname}`
-                console.log(curSQL)
+                // console.log(curSQL)
                 await pool.query(curSQL);
             }
         }

@@ -26,7 +26,7 @@ const pool =getPool()
 function queryMinMaxMissData(req, ws){
     const query = { table_name: req.tn ,line_type:req.line_type,mode:req.mode,user_cookie:req.user_cookie};
    
-    console.log(query);
+    // console.log(query);
     let currentPool=pool
     const userCookie=req.user_cookie;
     if(query.mode==='Custom'){

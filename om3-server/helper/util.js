@@ -96,7 +96,7 @@ function getPool() {
         const dbUser = process.env.POSTGRES_USER;
         const dbPassword = process.env.POSTGRES_PASSWORD;
         const dbName = process.env.POSTGRES_DB;
-        console.log(dbHost,dbUser,dbPassword,dbName);
+        // console.log(dbHost,dbUser,dbPassword,dbName);
         if (dbHost === undefined || dbUser === undefined || dbPassword === undefined || dbName === undefined) {
             throw new Error("cannot create db connection")
         }

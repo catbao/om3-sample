@@ -198,6 +198,18 @@ function initWaveletBenchMinMaxMissHandler(req, res) {
     //     text: sqlStr,
     //     values: params
     // }
+    for(let idx=0; idx<=32; idx++){
+        let l = Math.floor(Math.log2(idx));
+        let i = idx - 2**l;
+        let value = null;
+        if(testCache.cacheMap.has(l+'_'+i)){
+            value = testCache.cacheMap.get(l+'_'+i);
+            console.log(value);
+            value.freq+=1;
+            if(idx === 14) value.freq+=1;
+            testCache.changeFreq(value);
+        }     
+    }
     const startT = new Date().getTime();
     try {
         currentPool.query(sqlStr, function (err, result) {
@@ -234,13 +246,13 @@ function initWaveletBenchMinMaxMissHandler(req, res) {
                         // console.log("currentNode's nextSibing:", currentNode.nextSibling);
                     while(currentNode.nextSibling !== null){
                         // console.log(i+'_'+currentNode.yArray[1]+'_');
-                        testCache.insert(i+'_'+currentNode.yArray[1], currentNode);
+                        testCache.insert(currentNode.level+'_'+currentNode.index, currentNode);
                         currentNode = currentNode.nextSibling;
                     }
-                    testCache.insert(i+'_'+currentNode.yArray[1], currentNode);
+                    testCache.insert(currentNode.level+'_'+currentNode.index, currentNode);
                 }
             }
-            console.log("testCache's head:", testCache.head.level)
+            console.log("testCache's head:", testCache.indexPointsMap)
             // console.log("testCache:", testCache.cacheMap.keys());
             // printT(startT)
             console.log("w i t", new Date().getTime() - startT);
