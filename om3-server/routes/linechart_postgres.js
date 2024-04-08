@@ -785,34 +785,35 @@ function init_transform_timeseries2(req, res){
                 l: curTableLevel,
             }
 
-            const sqlStr1 = `select i,minvd,maxvd,avevd from ${allMultiSeriesTables[i]} where i in (`;
-                let array = new Array(maxL+1);
-                array[maxL] = new Array(1);
-                array[maxL][0] = 2 ** (maxL-1) - 1;
-                let tempStr1 = `${array[maxL][0]},`
-                // console.log(tempStr1)
-                let width = 16;
-                for(let i = maxL - 1; i > Math.max(1,maxL-width); --i){ //maxL-1-width和maxL-width
-                    array[i] = new Array(2**(maxL - i));
-                    for(let j = 0; j < array[i+1].length; ++j){
-                        array[i][2*j] = array[i+1][j] - 2**(i-1);
-                        tempStr1 += `${array[i][2*j]},`
-                        // console.log(array[i][2*j]);
-                        array[i][2*j+1] = array[i+1][j] - 1;
-                        tempStr1 += `${array[i][2*j+1]},`
-                    }
-                    // console.log(tempStr1)
-                }
-                // console.log(tempStr1)
-                tempStr1 += `-1) order by array_positions(array[`
-                for(let i = maxL - 1; i > Math.max(1,maxL-width); --i){
-                    for(let j = 0; j < array[i+1].length; ++j){
-                        tempStr1 += `${array[i][2*j]},`
-                        tempStr1 += `${array[i][2*j+1]},`
-                    }
-                }
-                let sqlQuery1 = sqlStr1 + tempStr1 + `-1],i)`;
-                currentPool.query(sqlQuery1,(err, result) => {
+            // const sqlStr1 = `select i,minvd,maxvd,avevd from ${allMultiSeriesTables[i]} where i in (`;
+            // let array = new Array(maxL+1);
+            // array[maxL] = new Array(1);
+            // array[maxL][0] = 2 ** (maxL-1) - 1;
+            // let tempStr1 = `${array[maxL][0]},`
+            // // console.log(tempStr1)
+            // let width = 16;
+            // for(let i = maxL - 1; i > Math.max(1,maxL-width); --i){ //maxL-1-width和maxL-width
+            //     array[i] = new Array(2**(maxL - i));
+            //     for(let j = 0; j < array[i+1].length; ++j){
+            //         array[i][2*j] = array[i+1][j] - 2**(i-1);
+            //         tempStr1 += `${array[i][2*j]},`
+            //         // console.log(array[i][2*j]);
+            //         array[i][2*j+1] = array[i+1][j] - 1;
+            //         tempStr1 += `${array[i][2*j+1]},`
+            //     }
+            //     // console.log(tempStr1)
+            // }
+            // // console.log(tempStr1)
+            // tempStr1 += `-1) order by array_positions(array[`
+            // for(let i = maxL - 1; i > Math.max(1,maxL-width); --i){
+            //     for(let j = 0; j < array[i+1].length; ++j){
+            //         tempStr1 += `${array[i][2*j]},`
+            //         tempStr1 += `${array[i][2*j+1]},`
+            //     }
+            // }
+            // let sqlQuery1 = sqlStr1 + tempStr1 + `-1],i)`;
+            const sqlStr1 = `select i,minvd,maxvd,avevd from ${allMultiSeriesTables[i]} order by i asc`;
+            currentPool.query(sqlStr1,(err, result) => {
                 if(err){
                     console.log(sqlStr1);
                     console.log(err);
