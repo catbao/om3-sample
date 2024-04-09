@@ -491,6 +491,14 @@ export default defineComponent({
       console.log("currentMultiClassALine:",currentMultiClassALine.value);
       console.log(Array.from(currentMultiClassLines.value));
       // console.log("Current Symbol:", selectedOption);
+      const payload = {
+          startTime: 0,
+          endTime: 2 ** 16 - 1,
+          width: 600,
+          height: 600,
+          name: "load_shape_search",
+        };
+      // store.dispatch("loadMultiTimeSeriesInitData", payload);
       store.dispatch("computeLineTransform", [currentMultiClassALine.value, Array.from(currentMultiClassLines.value), selectedOption.value]);
     }
 

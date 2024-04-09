@@ -79,6 +79,7 @@ export default defineComponent({
           name: "load_shape_search",
         };
         store.dispatch("loadMultiTimeSeriesInitData", payload);
+        // store.dispatch("computeLineTransform", payload);
         return;
       }else{
         console.log("multi wavle");

@@ -132,6 +132,8 @@ function addMultiTimeSeriesObj(state: GlobalState, info: {
     lineAmount: number,
     startTimeStamp: number,
     endTimeStamp: number,
+    transform_symbol: string,
+    finalValue: number,
     timeIntervalMs: number, dataManagers: Array<LevelDataManager>, powRenderData: Array<{ renderData: Array<any>, minv: number, maxv: number }>, columnInfos: Array<Array<NoUniformColObj>>, url: string, startTime: number, endTime: number, algorithm: string, width: number, height: number, pow: boolean, minv: number, maxv: number, maxLevel: number
 }) {
     const multiTImeSeriesObj: MultiTimeSeriesObj = {
@@ -155,7 +157,9 @@ function addMultiTimeSeriesObj(state: GlobalState, info: {
         lineAmount: info.lineAmount,
         startTimeStamp: info.startTimeStamp,
         endTimeStamp: info.endTimeStamp,
-        timeIntervalMs: info.timeIntervalMs
+        timeIntervalMs: info.timeIntervalMs,
+        transform_symbol: info.transform_symbol,
+        finalValue: info.finalValue
     }
     if (info.dataManagers.length > 0) {
         emitter.emit("add_multi_timeseries_obj", multiTImeSeriesObj);

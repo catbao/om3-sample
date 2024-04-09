@@ -81,17 +81,20 @@ export async function batchViewChange(multiTimeSeriesObj: MultiTimeSeriesObj, pa
         if(!dataManager.isShow){
             continue;
         }
+        // if(i == 0){
+        //     await dataManager.viewChangeInteractionFinal1(10, width, timeRange, null, null).then((nonCol) => {
+        //         multiTimeSeriesObj.columnInfos[i] = nonCol;
+        //     });
+        // }
         allPromises.push(new Promise((resolve,rej)=>{
             dataManager.viewChangeInteractionFinal1(10,width,timeRange,null,null).then((nonCol)=>{
                 multiTimeSeriesObj.columnInfos[i]=nonCol;
                 resolve(null)
             })
-        }))
+        }));
     }
     await Promise.all(allPromises);
     return multiTimeSeriesObj.columnInfos;
-
-    
 }
 
 async function batchLoadDataForMultiLine1(allLoedData: Array<{ tn: string, lr: Array<Array<number>> }>, maxLevel: number, dataManagers: Map<string, LevelDataManager>) {

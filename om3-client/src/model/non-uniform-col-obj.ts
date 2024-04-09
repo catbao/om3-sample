@@ -622,7 +622,7 @@ export class NoUniformColObj {
                 }
             }
             // console.log("The bottom max(+):", maxIndex);
-            console.log("store.state.controlParams.stopEarly:", store.state.controlParams.stopEarly);
+            // console.log("store.state.controlParams.stopEarly:", store.state.controlParams.stopEarly);
             if(store.state.controlParams.stopEarly === true){
                 alternativeNodes = [];
                 alternativeNodes2 = [];
@@ -1030,7 +1030,7 @@ export class NoUniformColObj {
                     alternativeNodes.push(tempNode);
                 }
             }
-            console.log("The bottom min(-):", minIndex);
+            // console.log("The bottom min(-):", minIndex);
             p = pp, p2 = pp2;
             while(max > -100000){
                 let temp_maxL = 0, temp_maxR = 0;
@@ -1140,7 +1140,7 @@ export class NoUniformColObj {
                     }
                 }
             }
-            console.log("The bottom max(-):", maxIndex);
+            // console.log("The bottom max(-):", maxIndex);
             if(store.state.controlParams.stopEarly === true){
                 alternativeNodes = [];
                 alternativeNodes2 = [];
@@ -1346,8 +1346,8 @@ export class NoUniformColObj {
                 }
             }
                      
-            console.log("The final min(-):", minIndex);
-            console.log("The final max(-):", maxIndex); 
+            // console.log("The final min(-):", minIndex);
+            // console.log("The final max(-):", maxIndex); 
             if(min < this.subMin[1]){
                 this.subMin = minIndex;
             }
@@ -1802,8 +1802,8 @@ export class NoUniformColObj {
                     }
                 }
             }
-            console.log("The final min(*):", minIndex);
-            console.log("The final max(*):", maxIndex);
+            // console.log("The final min(*):", minIndex);
+            // console.log("The final max(*):", maxIndex);
             if(min < this.multiMin[1]){
                 this.multiMin = minIndex;
             }

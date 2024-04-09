@@ -473,7 +473,9 @@ function init_multi_timeseries2(req, res) {
         }
     }).then(() => {
         const allPromises = new Array();
-        let amout = allMultiSeriesTables.length
+        allMultiSeriesTables = [allMultiSeriesTables[0]];
+        let amout = allMultiSeriesTables.length;
+
         console.log("allMultiSeriesTables:", allMultiSeriesTables);
 
         for (let i = 0; i < amout; i++) {
@@ -821,16 +823,39 @@ function init_transform_timeseries2(req, res){
                     throw err;
                 }
                 const finalRes = [];
-                for (let i = 0; i < result.rows.length; i++) {
-                    const tempVal = result.rows[i];
-                    // const tempL = Math.floor(Math.log2(tempVal['i']));
-                    // const tempI = tempVal['i'] - 2 ** tempL;
-                    // finalRes.push({ l: curTableLevel - tempL, i: tempI, minvd: tempVal['minvd'], maxvd: tempVal['maxvd'], avevd: tempVal['avevd'] });
-                    finalRes.push({minvd:tempVal['minvd'],maxvd:tempVal['maxvd'],avevd:tempVal['avevd']});
+
+                let array = new Array(maxL+1);
+                array[maxL] = new Array(1);
+                array[maxL][0] = 2 ** (maxL-1) - 1;
+                finalRes.push(result.rows[array[maxL][0]]);
+                let width = 16;
+                for(let i = maxL - 1; i > Math.max(1,maxL-width); --i){ //maxL-1-width和maxL-width
+                    array[i] = new Array(2**(maxL - i));
+                    for(let j = 0; j < array[i+1].length; ++j){
+                        array[i][2*j] = array[i+1][j] - 2**(i-1);
+                        array[i][2*j+1] = array[i+1][j] - 1;
+                    }
                 }
-                // if (result.rows.length > 0) {
-                //     finalRes.push({ l: -1, i: 0, minvd: result.rows[0]['minvd'], maxvd: result.rows[0]['maxvd'], avevd:result.rows[0]['avevd'] });
+                for(let i = maxL - 1; i > Math.max(1,maxL-width); --i){
+                    for(let j = 0; j < array[i+1].length; ++j){
+                        const tempVal = result.rows[array[i][2*j]];
+                        finalRes.push({ minvd:tempVal['minvd'],maxvd:tempVal['maxvd'],avevd:tempVal['avevd']});
+                        const tempVal2 = result.rows[array[i][2*j+1]];
+                        finalRes.push({ minvd:tempVal2['minvd'],maxvd:tempVal2['maxvd'],avevd:tempVal2['avevd']});
+                    }
+                }
+
+                // for (let i = 0; i < result.rows.length; i++) {
+                //     const tempVal = result.rows[i];
+                //     // const tempL = Math.floor(Math.log2(tempVal['i']));
+                //     // const tempI = tempVal['i'] - 2 ** tempL;
+                //     // finalRes.push({ l: curTableLevel - tempL, i: tempI, minvd: tempVal['minvd'], maxvd: tempVal['maxvd'], avevd: tempVal['avevd'] });
+                //     finalRes.push({i:tempVal['i'], minvd:tempVal['minvd'],maxvd:tempVal['maxvd'],avevd:tempVal['avevd']});
                 // }
+
+                if (result.rows.length > 0) {
+                    finalRes.push({minvd: result.rows[0]['minvd'], maxvd: result.rows[0]['maxvd'], avevd:result.rows[0]['avevd'] });
+                }
                 timeSeriresRes.d = finalRes;
                 //console.log(timeSeriresRes)
                 retureRes.push(timeSeriresRes);

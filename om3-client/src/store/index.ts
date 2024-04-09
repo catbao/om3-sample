@@ -178,6 +178,8 @@ export interface MultiTimeSeriesObj {
   startTimeStamp: number,
   endTimeStamp: number,
   timeIntervalMs: number,
+  transform_symbol: string,
+  finalValue: number
 }
 
 export interface MultiHaarTimeSeriesObj {

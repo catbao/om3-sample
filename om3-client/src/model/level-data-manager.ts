@@ -1795,7 +1795,6 @@ export default class LevelDataManager {
 
 
     async viewChangeInteractionFinal1(currentLevel: number, width: number, timeRange: Array<number>, yScale: any, drawer: any) {
-        
         const inputString = this.dataName;
         let dotIndex = inputString.indexOf('.');
         let beforeDot = inputString.substring(0, dotIndex);
@@ -1890,7 +1889,6 @@ export default class LevelDataManager {
             colIndex = 0;
             const tempNeedLoadDifNodes = [];
             const tempQue: Array<TrendTree> = [];
-
             needLoadDifNode.forEach(v => {
                 if ((v._leftChild === null || v._rightChild === null) && v.nodeType === 'O') {
                     debugger
@@ -2018,9 +2016,10 @@ export default class LevelDataManager {
             if (needLoadDifNode.length === 0) {
                 break;
             }
-            let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
-            if (losedDataInfo.length > 0) {
-                await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);
+            let losedDataInfo2 = computeLosedDataRangeV1(needLoadDifNode);
+            console.log("losedDataInfo2", losedDataInfo2);
+            if (losedDataInfo2.length > 0) {
+                await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo2, this);
             }
 
         }
@@ -2032,23 +2031,229 @@ export default class LevelDataManager {
         return nonUniformColObjs;
     }
 
+    async viewChangeInteractionFinal2(currentLevel: number, width: number, timeRange: Array<number>, yScale: any, drawer: any) {
+        
+        const inputString = this.dataName;
+        let dotIndex = inputString.indexOf('.');
+        let beforeDot = inputString.substring(0, dotIndex);
+        beforeDot = beforeDot.replace('stream', 'multi');
+        let afterDot = inputString.substring(dotIndex + 1);
+        afterDot = afterDot.replace('_stream', '');
+        let result = beforeDot + '.' + afterDot;
+        console.log(result);
+
+        const currentFlagInfo = getFlag(result);
+        // const currentFlagInfo = getFlag(this.dataName);
+        // const currentFlagInfo = getFlag("mock_guassian_sin_8m_om3_8m");
+        if (currentFlagInfo === undefined) {
+            throw new Error(this.dataName + " get flag faild")
+        } else {
+            console.log("flag length:", currentFlagInfo.length)
+        }
+
+        allTimes = []
+        // console.time("v_c")
+        const nonUniformColObjs = computeTimeSE(currentLevel, width, timeRange, this.realDataRowNum, this.maxLevel);
+        let needLoadDifNode: Array<TrendTree> = [];
+        let colIndex = 0;
+        for (let i = 0; i < this.levelIndexObjs[currentLevel].firstNodes.length; i++) {
+            const firtIndexTimeRange = this.getIndexTime(currentLevel, this.levelIndexObjs[currentLevel].loadedDataRange[i][0], this.maxLevel);
+            const lastIndexTimeRange = this.getIndexTime(currentLevel, this.levelIndexObjs[currentLevel].loadedDataRange[i][1], this.maxLevel);
+            let p = this.levelIndexObjs[currentLevel].firstNodes[i];
+
+            if (firtIndexTimeRange.startT <= timeRange[0] && lastIndexTimeRange.endT >= timeRange[1]) {
+                while (p != null) {
+                    if (colIndex >= nonUniformColObjs.length) {
+                        break;
+                        //throw new Error("col index out range");
+                    }
+                    const type = nonUniformColObjs[colIndex].isMissContain(p);
+                    nonUniformColObjs[colIndex].containColumnRange(p, type);
+                    if (type === 1) {
+                        p = p.nextSibling!;
+                    } else if (type === 2 || type === 7 || type === 8 || type === 9 || type === 10) {
+                        if (type === 2) {
+                            needLoadDifNode.push(p);
+                        }
+                        if(type === 7 || type === 9){
+                            colIndex++;
+                        }
+                        p = p.nextSibling!;
+                    } else if (type === 3) {
+                        colIndex++;
+                    } else if (type === 5) {
+                        p = p.nextSibling!
+                    } else if (type === 6) {
+                        break;
+                    } else {
+                        p = p.nextSibling!;
+                        //throw new Error("node time is little than col");
+                    }
+                }
+            }else{
+                debugger
+            }
+        }
+        // debugger
+        if (needLoadDifNode.length === 0) {
+            return nonUniformColObjs;
+        }
+        let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
+        // debugger
+        if (losedDataInfo.length > 0) {
+            await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);
+        }
+
+        while (needLoadDifNode.length > 0) {
+            colIndex = 0;
+            const tempNeedLoadDifNodes = [];
+            const tempQue: Array<TrendTree> = [];
+            needLoadDifNode.forEach(v => {
+                if ((v._leftChild === null || v._rightChild === null) && v.nodeType === 'O') {
+                    debugger
+                    throw new Error("cannot find next level node");
+                }
+                if (v.nodeType === 'NULL') {
+                    //
+                } else {
+                    this.lruCache.has(v._leftChild!.level + "_" + v._leftChild!.index);
+                    this.lruCache.has(v._rightChild!.level + "_" + v._rightChild!.index);
+                    if (v._leftChild!.nodeType !== 'NULL') {
+                        tempQue.push(v._leftChild!);
+                    }
+                    if (v._rightChild!.nodeType !== 'NULL') {
+                        tempQue.push(v._rightChild!);
+                    }
+                }
+
+            });
+
+            const preColIndex = [];
+            for (let i = 0; i < tempQue.length; i++) {
+                if (colIndex >= nonUniformColObjs.length) {
+                    break;
+                    //throw new Error("col index out range");
+                }
+                const type = nonUniformColObjs[colIndex].isMissContain(tempQue[i]);
+                nonUniformColObjs[colIndex].containColumnRange(tempQue[i], type);
+                if (type === 1) {
+                    continue;
+                } else if (type === 2 || type === 7 || type === 8 || type === 9 || type === 10) {
+                    if (type === 2) {
+                        tempNeedLoadDifNodes.push(tempQue[i]);
+                        preColIndex.push(colIndex);
+                    }
+                } else if (type === 3) {
+                    colIndex++;
+                    i--;
+                } else if (type === 6) {
+                    break;
+                } else {
+                    continue;
+                    // throw new Error("node time is little than col");
+                }
+            }
+            if (preColIndex.length != tempNeedLoadDifNodes.length) {
+                throw new Error("cannot memory index");
+            }
+            needLoadDifNode = tempNeedLoadDifNodes;
+            if (needLoadDifNode.length > 0 && needLoadDifNode[0].level === this.maxLevel - 1) {
+                for (let i = 0; i < needLoadDifNode.length; i++) {
+                    const nodeFlag2 = currentFlagInfo[2 * needLoadDifNode[i].index + 1]
+                    if (needLoadDifNode[i].gapFlag === 'NO') {
+                        if (nodeFlag2 === 0) {
+                            nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[1], needLoadDifNode[i]);
+                            nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[1]);
+                            if (preColIndex[i] + 1 < nonUniformColObjs.length) {
+                                nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[2], needLoadDifNode[i]);
+                                nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[2]);
+                            }
+                        } else {
+                            nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[2], needLoadDifNode[i]);
+                            nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[2]);
+                            if (preColIndex[i] + 1 < nonUniformColObjs.length) {
+                                nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[1], needLoadDifNode[i]);
+                                nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[1]);
+                            }
+                        }
+                    } else {
+                        if (nodeFlag2 === 0) {
+                            nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[1], needLoadDifNode[i]);
+                            nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[1]);
+
+                            nonUniformColObjs[preColIndex[i]].addFirstVal(needLoadDifNode[i].yArray[2], needLoadDifNode[i]);
+                            nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[2]);
+
+                        } else {
+                            nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[2], needLoadDifNode[i]);
+                            nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[2]);
+
+                            nonUniformColObjs[preColIndex[i]].addFirstVal(needLoadDifNode[i].yArray[1], needLoadDifNode[i]);
+                            nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[1]);
+                        }
+                    }
+
+                }
+                break;
+            }
+            if (store.state.controlParams.progressive && drawer) {
+                drawer(nonUniformColObjs, "progressive")
+            }
+            if (needLoadDifNode.length === 0) {
+                break;
+            }
+            let losedDataInfo2 = computeLosedDataRangeV1(needLoadDifNode);
+            console.log("losedDataInfo2", losedDataInfo2);
+            if (losedDataInfo2.length > 0) {
+                await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo2, this);
+            }
+
+        }
+        for (let i = 0; i < nonUniformColObjs.length; i++) {
+            nonUniformColObjs[i].checkIsMis();
+        }
+        return nonUniformColObjs;
+    }
+
     async viewTransformFinal(otherDataManager: Array<LevelDataManager>, currentLevel: number, width: number, timeRange: Array<number>, yScale: any, drawer: any, transform_symbol:any){
-        const currentFlagInfo = getFlag(this.dataName);
+        const inputString = this.dataName;
+        let dotIndex = inputString.indexOf('.');
+        let beforeDot = inputString.substring(0, dotIndex);
+        beforeDot = beforeDot.replace('stream', 'multi');
+        let afterDot = inputString.substring(dotIndex + 1);
+        afterDot = afterDot.replace('_stream', '');
+        let result = beforeDot + '.' + afterDot;
+        console.log(result);
+        const currentFlagInfo = getFlag(result);
         // const currentFlagInfo = getFlag("custom_number8_test2_om3_test.flagz");
         if (currentFlagInfo === undefined) {
             throw new Error(this.dataName + " get flag faild")
         } else {
-            console.log("flag info:", currentFlagInfo);
+            // console.log("flag info:", currentFlagInfo);
             console.log("flag length:", currentFlagInfo.length)
         }
+
         const currentFlagInfo2 = [];
         for(let i=0;i<otherDataManager.length;++i){
-            currentFlagInfo2.push(getFlag(otherDataManager[i].dataName));
-            // const currentFlagInfo2 = getFlag("custom_number8_test1_om3_test.flagz");
+            if(otherDataManager[i].dataName === this.dataName){
+                currentFlagInfo2.push([]);
+                continue;
+            }
+            let dataName2 = otherDataManager[i].dataName;
+            const inputString2 = dataName2;
+            let dotIndex2 = inputString2.indexOf('.');
+            let beforeDot2 = inputString2.substring(0, dotIndex);
+            beforeDot2 = beforeDot2.replace('stream', 'multi');
+            let afterDot2 = inputString2.substring(dotIndex2 + 1);
+            afterDot2 = afterDot2.replace('_stream', '');
+            let result2 = beforeDot2 + '.' + afterDot2;
+            console.log(result2);
+            // currentFlagInfo2.push(getFlag(otherDataManager[i].dataName));
+            currentFlagInfo2.push(getFlag(result2));
             if (currentFlagInfo2[i] === undefined) {
                 throw new Error(otherDataManager[i].dataName + " get flag faild")
             } else {
-                console.log("flag2 info:", currentFlagInfo2[i]);
+                // console.log("flag2 info:", currentFlagInfo2[i]);
                 console.log("flag2 length:", currentFlagInfo2[i].length)
             }
         }

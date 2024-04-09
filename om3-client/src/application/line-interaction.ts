@@ -53,7 +53,8 @@ export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
         .attr("width", lineChartObj.width + pading.left + pading.right)
         .attr("height", lineChartObj.height + pading.top + pading.bottom)
         .attr("transform", `translate(${lineChartObj.x},${lineChartObj.y})`)
-        .style("background-color", "#fff");
+        .style("background-color", "#fff")
+        .style("visibility", "hidden");
     const foreignId = `foreign${lineChartObj.width + Math.random()}`;
     const foreigG = svg.append("g").attr("transfrom", `translate(${pading.left},${pading.top})`)
     let foreignObj: any = foreigG.append("foreignObject").attr("id", foreignId).attr("x", pading.left).attr("y", pading.top).attr('width', lineChartObj.width).attr('height', lineChartObj.height);

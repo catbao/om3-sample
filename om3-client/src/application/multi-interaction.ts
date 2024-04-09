@@ -226,7 +226,15 @@ export function drawMultiTimeSeries(multiTimeSeriesObj: MultiTimeSeriesObj) {
         // .attr("transform", `translate(${multiTimeSeriesObj.x},${multiTimeSeriesObj.y})`)
         .style("background-color", "#fff")
         .attr("id", "my_svg");
-
+    
+    svg
+        .append("text") 
+        .attr("x", pading.left+200) 
+        // .attr("y", multiTimeSeriesObj.height + padding.bottom)
+        .style("font-size", "14px") 
+        .style("text-anchor", "start") 
+        .text("steelblue: result after transformation")
+        .attr("y", pading.top);
     const foreignId = `foreign${multiTimeSeriesObj.width + Math.random()}`;
     const foreigG = svg.append("g").attr("transfrom", `translate(${pading.left},${pading.top})`)
     let foreignObj: any = foreigG.append("foreignObject").attr("id", foreignId).attr("x", pading.left).attr("y", pading.top).attr('width', multiTimeSeriesObj.width).attr('height', multiTimeSeriesObj.height);
@@ -278,12 +286,7 @@ export function drawMultiTimeSeries(multiTimeSeriesObj: MultiTimeSeriesObj) {
 
 
     //@ts-ignore
-
-
-
-
     function updateCanvasWidth() {
-
         //@ts-ignore
         canvas.style.width = multiTimeSeriesObj.width;
         svg
@@ -366,10 +369,15 @@ export function drawMultiTimeSeries(multiTimeSeriesObj: MultiTimeSeriesObj) {
 
         drawLengend(multiTimeSeriesObj.width + pading.left + 10, multiTimeSeriesObj, colorArray1)
         canvas.width = multiTimeSeriesObj.width;
-
-        const curMinMax = computeMinMax(multiTimeSeriesObj);
+        let finalValue = multiTimeSeriesObj.finalValue;
+        let minVa = -1 * finalValue - 500;
+        let maxVa = finalValue + 500;
+        // const curMinMax = computeMinMax(multiTimeSeriesObj);
         // yScale = d3.scaleLinear().domain([curMinMax.min, curMinMax.max]).range([multiTimeSeriesObj.height, 0]);
-        yScale = d3.scaleLinear().domain([-2000,2000]).range([multiTimeSeriesObj.height, 0]);
+        if(multiTimeSeriesObj.transform_symbol !== undefined)
+            yScale = d3.scaleLinear().domain([minVa, maxVa]).range([multiTimeSeriesObj.height, 0]);
+        else
+            yScale = d3.scaleLinear().domain([-2000, 2000]).range([multiTimeSeriesObj.height, 0]);
         yAxis = d3.axisLeft(yScale);
         if (store.state.controlParams.currentMode === 'Default') {
             yAxis = d3.axisLeft(yScale).tickFormat((val) => {
@@ -381,7 +389,6 @@ export function drawMultiTimeSeries(multiTimeSeriesObj: MultiTimeSeriesObj) {
             yAxisG.remove();
         }
         yAxisG = svg.append("g").attr('style', 'user-select:none').attr("transform", `translate(${pading.left},${pading.top})`).attr("class", 'y axis').call(yAxis);
-
 
 
         showXTimeScale = d3.scaleTime().domain([new Date(Math.floor(indexToTimeStampScale(multiTimeSeriesObj.timeRange[0]))), new Date(Math.floor(indexToTimeStampScale(multiTimeSeriesObj.timeRange[1])))]).range([0, multiTimeSeriesObj.width]);
@@ -399,8 +406,10 @@ export function drawMultiTimeSeries(multiTimeSeriesObj: MultiTimeSeriesObj) {
                 formatNonPowDataForViewChange(columnInfos[i], multiTimeSeriesObj.width, 2 ** multiTimeSeriesObj.maxLevel, null);
                 if (multiTimeSeriesObj.dataManagers[i]) {
                     ctx?.beginPath();
-
-                    if (store.state.controlParams.currentMode === 'Default') {
+                    if(i === columnInfos.length - 1 && multiTimeSeriesObj.transform_symbol !== undefined){
+                        ctx!.strokeStyle = colorArray1[5];
+                    }
+                    else if (store.state.controlParams.currentMode === 'Default') {
                         //ctx.strokeStyle = colorArray1[i];
                         const dataManager = multiTimeSeriesObj.dataManagers[i];
                         let nameStrs = dataManager.dataName.split(".")[1].split("_")
@@ -418,45 +427,140 @@ export function drawMultiTimeSeries(multiTimeSeriesObj: MultiTimeSeriesObj) {
                     //@ts-ignore
                     ctx.strokeWidth = 1;
                     const columnInfo = columnInfos[i];
-                    for (let i = 0; i < columnInfo.length; i++) {
-                        if (columnInfo[i].isMis) {
-                            continue
-                        }
-                        if (columnInfo[i].minVTimeRange[0] < columnInfo[i].maxVTimeRange[0]) {
-                            ctx?.moveTo(columnInfo[i].positionInfo.minX, yScale(columnInfo[i].vRange[0]));
-                            ctx?.lineTo(columnInfo[i].positionInfo.maxX, yScale(columnInfo[i].vRange[1]));
+                    //for the transformation
+                    if(i === columnInfos.length - 1 && multiTimeSeriesObj.transform_symbol !== undefined){
+                        let transform_symbol = multiTimeSeriesObj.transform_symbol;
+                        let lenOfLines = 2;
+                        let nonUniformColObjs = columnInfos[i];
+                        if (nonUniformColObjs && ctx) {
+                            formatNonPowDataForViewChange(columnInfos[i], multiTimeSeriesObj.width, 2 ** multiTimeSeriesObj.maxLevel, null);
+                            // console.log(nonUniformColObjs);
+                            // ctx.clearRect(0, 0, 600, 600);
+                            ctx.beginPath();
+                
+                            ctx.strokeStyle = 'steelblue';
+                            if(transform_symbol === '+'){
+                                for(let i=0; i<nonUniformColObjs.length; i++){
+                                    if(nonUniformColObjs[i].addMin[0] < nonUniformColObjs[i].addMin[1]){
+                                        ctx.moveTo(nonUniformColObjs[i].positionInfo.minX, yScale(nonUniformColObjs[i].addMin[1]));
+                                        ctx.lineTo(nonUniformColObjs[i].positionInfo.maxX, yScale(nonUniformColObjs[i].addMax[1]));
+                                    }
+                                    else{
+                                        ctx.moveTo(nonUniformColObjs[i].positionInfo.minX, yScale(nonUniformColObjs[i].addMax[1]));
+                                        ctx.lineTo(nonUniformColObjs[i].positionInfo.maxX, yScale(nonUniformColObjs[i].addMin[1]));
+                                    }
+                                    if (i <= nonUniformColObjs.length - 2 && nonUniformColObjs[i].endV !== undefined && nonUniformColObjs[i + 1] !== undefined) {
+                                        ctx.moveTo(nonUniformColObjs[i].positionInfo.endX, yScale(nonUniformColObjs[i].endV!));
+                                        ctx.lineTo(nonUniformColObjs[i + 1].positionInfo.startX, yScale(nonUniformColObjs[i + 1].startV!));
+                                    }
+                                    // ctx.moveTo(nonUniformColObjs[i].positionInfo.startX, yScale(nonUniformColObjs[i].addMin));
+                                    // ctx.lineTo(nonUniformColObjs[i+1].positionInfo.startX, yScale(nonUniformColObjs[i+1].addMin));
+                                }
+                            }
+                            else if(transform_symbol === '-'){
+                                for(let i=0; i<nonUniformColObjs.length; i++){
+                                    if(nonUniformColObjs[i].addMin[0] < nonUniformColObjs[i].addMin[1]){
+                                        ctx.moveTo(nonUniformColObjs[i].positionInfo.minX, yScale(nonUniformColObjs[i].subMin[1]));
+                                        ctx.lineTo(nonUniformColObjs[i].positionInfo.maxX, yScale(nonUniformColObjs[i].subMax[1]));
+                                    }
+                                    else{
+                                        ctx.moveTo(nonUniformColObjs[i].positionInfo.minX, yScale(nonUniformColObjs[i].subMax[1]));
+                                        ctx.lineTo(nonUniformColObjs[i].positionInfo.maxX, yScale(nonUniformColObjs[i].subMin[1]));
+                                    }
+                                    if (i <= nonUniformColObjs.length - 2 && nonUniformColObjs[i].endV !== undefined && nonUniformColObjs[i + 1] !== undefined) {
+                                        ctx.moveTo(nonUniformColObjs[i].positionInfo.endX, yScale(nonUniformColObjs[i].endV!));
+                                        ctx.lineTo(nonUniformColObjs[i + 1].positionInfo.startX, yScale(nonUniformColObjs[i + 1].startV!));
+                                    }
+                                    // ctx.moveTo(nonUniformColObjs[i].positionInfo.startX, yScale(nonUniformColObjs[i].addMin));
+                                    // ctx.lineTo(nonUniformColObjs[i+1].positionInfo.startX, yScale(nonUniformColObjs[i+1].addMin));
+                                }
+                            }
+                            else if(transform_symbol === '*'){
+                                for(let i=0; i<nonUniformColObjs.length; i++){
+                                    if(nonUniformColObjs[i].addMin[0] < nonUniformColObjs[i].addMin[1]){
+                                        ctx.moveTo(nonUniformColObjs[i].positionInfo.minX, yScale(nonUniformColObjs[i].multiMin[1]));
+                                        ctx.lineTo(nonUniformColObjs[i].positionInfo.maxX, yScale(nonUniformColObjs[i].multiMax[1]));
+                                    }
+                                    else{
+                                        ctx.moveTo(nonUniformColObjs[i].positionInfo.minX, yScale(nonUniformColObjs[i].multiMax[1]));
+                                        ctx.lineTo(nonUniformColObjs[i].positionInfo.maxX, yScale(nonUniformColObjs[i].multiMin[1]));
+                                    }
+                                    if (i <= nonUniformColObjs.length - 2 && nonUniformColObjs[i].endV !== undefined && nonUniformColObjs[i + 1] !== undefined) {
+                                        ctx.moveTo(nonUniformColObjs[i].positionInfo.endX, yScale(nonUniformColObjs[i].endV!));
+                                        ctx.lineTo(nonUniformColObjs[i + 1].positionInfo.startX, yScale(nonUniformColObjs[i + 1].startV!));
+                                    }
+                                    // ctx.moveTo(nonUniformColObjs[i].positionInfo.startX, yScale(nonUniformColObjs[i].addMin));
+                                    // ctx.lineTo(nonUniformColObjs[i+1].positionInfo.startX, yScale(nonUniformColObjs[i+1].addMin));
+                                }
+                            }
+                            else if(transform_symbol === 'avg'){
+                                // for(let i=0; i<nonUniformColObjs.length-1; i++){
+                                //     ctx.moveTo(nonUniformColObjs[i].positionInfo.startX, yScale(nonUniformColObjs[i].multiAve));
+                                //     ctx.lineTo(nonUniformColObjs[i+1].positionInfo.startX, yScale(nonUniformColObjs[i+1].multiAve));
+                                // }
+                                for(let i=0; i<nonUniformColObjs.length; i++){
+                                    if(nonUniformColObjs[i].addMin[0] < nonUniformColObjs[i].addMin[1]){
+                                        ctx.moveTo(nonUniformColObjs[i].positionInfo.minX, yScale(nonUniformColObjs[i].addMin[1]/lenOfLines!));
+                                        ctx.lineTo(nonUniformColObjs[i].positionInfo.maxX, yScale(nonUniformColObjs[i].addMax[1]/lenOfLines!));
+                                    }
+                                    else{
+                                        ctx.moveTo(nonUniformColObjs[i].positionInfo.minX, yScale(nonUniformColObjs[i].addMax[1]/lenOfLines!));
+                                        ctx.lineTo(nonUniformColObjs[i].positionInfo.maxX, yScale(nonUniformColObjs[i].addMin[1]/lenOfLines!));
+                                    }
+                                    if (i <= nonUniformColObjs.length - 2 && nonUniformColObjs[i].endV !== undefined && nonUniformColObjs[i + 1] !== undefined) {
+                                        ctx.moveTo(nonUniformColObjs[i].positionInfo.endX, yScale(nonUniformColObjs[i].endV!));
+                                        ctx.lineTo(nonUniformColObjs[i + 1].positionInfo.startX, yScale(nonUniformColObjs[i + 1].startV!));
+                                    }
+                                    // ctx.moveTo(nonUniformColObjs[i].positionInfo.startX, yScale(nonUniformColObjs[i].addMin));
+                                    // ctx.lineTo(nonUniformColObjs[i+1].positionInfo.startX, yScale(nonUniformColObjs[i+1].addMin));
+                                }
+                            }
+                            ctx.stroke();
                         } else {
-                            ctx?.moveTo(columnInfo[i].positionInfo.minX, yScale(columnInfo[i].vRange[1]));
-                            ctx?.lineTo(columnInfo[i].positionInfo.maxX, yScale(columnInfo[i].vRange[0]));
+                            console.log("error")
                         }
-                        if (i <= columnInfo.length - 2 && columnInfo[i].endV !== undefined && columnInfo[i + 1] !== undefined) {
-                            ctx?.moveTo(columnInfo[i].positionInfo.endX, yScale(columnInfo[i].endV!));
-                            ctx?.lineTo(columnInfo[i + 1].positionInfo.startX, yScale(columnInfo[i + 1].startV!));
-                        }
-
                     }
-                    const stack = [];
-                    for (let i = 0; i < columnInfo.length - 1; i++) {
-                        if (!columnInfo[i].isMis && columnInfo[i + 1].isMis) {
-                            stack.push(columnInfo[i]);
-                            for (let j = i + 1; j < columnInfo.length; j++) {
-                                if (columnInfo[j - 1].isMis && !columnInfo[j].isMis) {
-                                    const co = stack.pop()
-                                    if (columnInfo[j].startV === undefined || co?.endV === undefined) {
-                                        console.error("error nonUniform");
-                                    }
-                                    ctx?.moveTo(co!.positionInfo.endX, yScale(co!.endV));
-                                    if (columnInfo[j].startV !== undefined) {
-                                        ctx?.lineTo(columnInfo[j].positionInfo.startX, yScale(columnInfo[j].startV!))
-                                    } else {
-                                        ctx?.lineTo(columnInfo[j].positionInfo.minX, yScale((columnInfo[j].vRange[0] + columnInfo[j].vRange[1]) / 2))
-                                    }
+                    else{
+                        for (let i = 0; i < columnInfo.length; i++) {
+                            if (columnInfo[i].isMis) {
+                                continue
+                            }
+                            if (columnInfo[i].minVTimeRange[0] < columnInfo[i].maxVTimeRange[0]) {
+                                ctx?.moveTo(columnInfo[i].positionInfo.minX, yScale(columnInfo[i].vRange[0]));
+                                ctx?.lineTo(columnInfo[i].positionInfo.maxX, yScale(columnInfo[i].vRange[1]));
+                            } else {
+                                ctx?.moveTo(columnInfo[i].positionInfo.minX, yScale(columnInfo[i].vRange[1]));
+                                ctx?.lineTo(columnInfo[i].positionInfo.maxX, yScale(columnInfo[i].vRange[0]));
+                            }
+                            if (i <= columnInfo.length - 2 && columnInfo[i].endV !== undefined && columnInfo[i + 1] !== undefined) {
+                                ctx?.moveTo(columnInfo[i].positionInfo.endX, yScale(columnInfo[i].endV!));
+                                ctx?.lineTo(columnInfo[i + 1].positionInfo.startX, yScale(columnInfo[i + 1].startV!));
+                            }
 
+                        }
+                        const stack = [];
+                        for (let i = 0; i < columnInfo.length - 1; i++) {
+                            if (!columnInfo[i].isMis && columnInfo[i + 1].isMis) {
+                                stack.push(columnInfo[i]);
+                                for (let j = i + 1; j < columnInfo.length; j++) {
+                                    if (columnInfo[j - 1].isMis && !columnInfo[j].isMis) {
+                                        const co = stack.pop()
+                                        if (columnInfo[j].startV === undefined || co?.endV === undefined) {
+                                            console.error("error nonUniform");
+                                        }
+                                        ctx?.moveTo(co!.positionInfo.endX, yScale(co!.endV));
+                                        if (columnInfo[j].startV !== undefined) {
+                                            ctx?.lineTo(columnInfo[j].positionInfo.startX, yScale(columnInfo[j].startV!))
+                                        } else {
+                                            ctx?.lineTo(columnInfo[j].positionInfo.minX, yScale((columnInfo[j].vRange[0] + columnInfo[j].vRange[1]) / 2))
+                                        }
+
+                                    }
                                 }
                             }
                         }
+                        ctx?.stroke();
                     }
-                    ctx?.stroke();
                 }
 
             }
@@ -479,13 +583,10 @@ export function drawMultiTimeSeries(multiTimeSeriesObj: MultiTimeSeriesObj) {
         //@ts-ignore
         canvas.style.width = multiTimeSeriesObj.width
         batchGetData(multiTimeSeriesObj.dataManagers, multiTimeSeriesObj.currentLevel, 0, nodeIndexRange[1], multiTimeSeriesObj.maxLevel, width, { inter: "resize", noRet: true }).then(res => {
-     
+    
             batchViewChange(multiTimeSeriesObj, { inter: "resize" }).then((allColumnInfos) => {
                 multiTimeSeriesObj.pow = false;
                 multiTimeSeriesObj.columnInfos = allColumnInfos;
-
-
-
                 draw();
             })
         })
@@ -495,7 +596,6 @@ export function drawMultiTimeSeries(multiTimeSeriesObj: MultiTimeSeriesObj) {
     }
 
     function zoomIn(timeRange: Array<number>) {
-
         //timeboxStack = [];
         const currentLevel = multiTimeSeriesObj.currentLevel;
         multiTimeSeriesObj.currentLevel = 10;//currentLevel + 1
@@ -506,25 +606,18 @@ export function drawMultiTimeSeries(multiTimeSeriesObj: MultiTimeSeriesObj) {
             return
         }
 
-
         const needLoadLevel = 2 ** Math.ceil(Math.log2(width))
         batchGetData(multiTimeSeriesObj.dataManagers, 10, 0, 2 ** 10 - 1, multiTimeSeriesObj.maxLevel, width, { inter: "zoom_in", noRet: true }).then(res => {
-
             batchViewChange(multiTimeSeriesObj, { inter: "zoom_in" }).then((allColumnInfos) => {
                 multiTimeSeriesObj.pow = false;
                 multiTimeSeriesObj.columnInfos = allColumnInfos;
                 draw();
             })
         });
-
-
-
     }
-
 
     //@ts-ignore
     function brushed({ selection }) {
-       
         if (!isInit) {
             isInit = true
             return;
@@ -549,10 +642,6 @@ export function drawMultiTimeSeries(multiTimeSeriesObj: MultiTimeSeriesObj) {
         interactionStack.push(interInfo);
         zoomIn([timeRange[0], timeRange[1]])
     }
-
-
-
-
 
     let timeboxStack: Array<Array<boolean>> = [];
 

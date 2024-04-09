@@ -131,6 +131,85 @@ const loadViewChangeQueryWSMinMaxMissDataInitData: ActionHandler<GlobalState, Gl
     });
 }
 
+async function loadMultiTimeSeriesInitData2(context: ActionContext<GlobalState, GlobalState>, payload: { width: number, height: number, type: string }){
+    const currentLevel = Math.ceil(Math.log2(payload.width));
+    let maxLevel = 0
+    const currentMulitLineClass = context.state.controlParams.currentMultiLineClass;
+    let lineClassInfo: any = null
+    if (context.state.controlParams.currentMode === 'Default') {
+        lineClassInfo = context.state.allMultiLineClassInfoMap.get(currentMulitLineClass);
+    } else {
+        lineClassInfo = context.state.allCustomMultiLineClassInfoMap.get(currentMulitLineClass);
+    }
+
+    if (lineClassInfo === undefined) {
+        throw new Error("cannot get class info");
+    }
+    maxLevel = lineClassInfo['level'];
+    const combinedUrl = `/line_chart/init_multi_timeseries2?width=${2 ** currentLevel}&class_name=${currentMulitLineClass}&mode=${context.state.controlParams.currentMode}`;
+    const data = get(context.state, combinedUrl);
+
+    data.then(async res => {
+        let dataManagers: Array<LevelDataManager> = [];
+        let globalMaxV = -Infinity;
+        let globalMinV = Infinity;
+        for (let i = 0; i < res.length; i++) {
+            const { dataManager } = constructMinMaxMissTrendTreeMulti(res[i].d, payload.width, res[i].tn);
+
+            dataManager.maxLevel = maxLevel;
+            dataManager.realDataRowNum = lineClassInfo['max_len'];
+
+            const { minv, maxv } = getGlobalMinMaxInfo(getLevelData(dataManager.levelIndexObjs[dataManager.levelIndexObjs.length - 1].firstNodes[0]));
+            globalMaxV = Math.max(maxv!, globalMaxV);
+            globalMinV = Math.min(minv!, globalMinV);
+            dataManager.md5Num = parseInt("0x" + md5(dataManager.dataName).slice(0, 8))
+            dataManagers.push(dataManager);
+        }
+
+        dataManagers = dataManagers.sort((a, b) => {
+            return parseInt("0x" + md5(a.dataName).slice(0, 8)) - parseInt("0x" + md5(b.dataName).slice(0, 8))
+        })
+        // let tdataManagers = _.cloneDeep(dataManagers);
+        for(let time=0; time<10; time++){
+            // let temp_dataManagers: Array<LevelDataManager> = [];
+            // for(let i=0; i<dataManagers.length; i++){
+            //     temp_dataManagers.push(dataManagers[i]);
+            // }
+            let temp_dataManagers = _.cloneDeep(dataManagers);
+            // let temp_dataManagers = dataManagers;
+            // let temp_dataManagers = JSON.parse(JSON.stringify(dataManagers));
+            // let temp_dataManagers = Object.assign({}, dataManagers);
+            const allPromises = [];
+            const columnsInfoArray: Array<Array<NoUniformColObj>> = new Array(temp_dataManagers.length);
+            for (let i = 0; i < temp_dataManagers.length; i++) {
+                const noUniformColObjs = await temp_dataManagers[i].viewChangeInteractionFinal1(currentLevel, payload.width, [time*4000, time*4000+15000], null, null);
+                columnsInfoArray[i] = noUniformColObjs;
+                temp_dataManagers[i].columnInfos = noUniformColObjs;
+            }
+            console.log(columnsInfoArray);
+
+            const startTimeStamp = new Date(lineClassInfo.start_time).getTime();
+            let endTimeStamp = 0
+            if (lineClassInfo.end_time !== '') {
+                endTimeStamp = new Date(lineClassInfo.end_time).getTime();
+            }
+            let timeInterval = 0;
+            if (lineClassInfo.interval !== 0) {
+                timeInterval = lineClassInfo.interval;
+            }
+            context.commit("addMultiTimeSeriesObj", {
+                className: lineClassInfo.name,
+                lineAmount: lineClassInfo.amount,
+                startTimeStamp: startTimeStamp,
+                endTimeStamp: endTimeStamp,
+                timeIntervalMs: timeInterval, dataManagers: temp_dataManagers, columnInfos: columnsInfoArray, startTime: 0, endTime: dataManagers[0].realDataRowNum - 1, algorithm: "multitimeseries", width: payload.width, height: payload.height, pow: false, minv: globalMinV, maxv: globalMaxV, maxLevel
+            });
+            // await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+    }).catch(error => {
+        throw error
+    });
+}
 async function loadMultiTimeSeriesInitData(context: ActionContext<GlobalState, GlobalState>, payload: { width: number, height: number, type: string }){
     const currentLevel = Math.ceil(Math.log2(payload.width));
     let maxLevel = 0
@@ -170,18 +249,19 @@ async function loadMultiTimeSeriesInitData(context: ActionContext<GlobalState, G
             return parseInt("0x" + md5(a.dataName).slice(0, 8)) - parseInt("0x" + md5(b.dataName).slice(0, 8))
         })
         // let tdataManagers = _.cloneDeep(dataManagers);
-        for(let time=0; time<20; time++){
+        for(let time=0; time<1; time++){
             // let temp_dataManagers: Array<LevelDataManager> = [];
             // for(let i=0; i<dataManagers.length; i++){
             //     temp_dataManagers.push(dataManagers[i]);
             // }
-            let temp_dataManagers = _.cloneDeep(dataManagers);
+            // let temp_dataManagers = _.cloneDeep(dataManagers);
+            let temp_dataManagers = dataManagers;
             // let temp_dataManagers = JSON.parse(JSON.stringify(dataManagers));
             // let temp_dataManagers = Object.assign({}, dataManagers);
             const allPromises = [];
             const columnsInfoArray: Array<Array<NoUniformColObj>> = new Array(temp_dataManagers.length);
             for (let i = 0; i < temp_dataManagers.length; i++) {
-                const noUniformColObjs = await temp_dataManagers[i].viewChangeInteractionFinal1(currentLevel, payload.width, [time*2000, time*2000+15000], null, null);
+                const noUniformColObjs = await temp_dataManagers[i].viewChangeInteractionFinal1(currentLevel, payload.width, [0, 65535], null, null);
                 columnsInfoArray[i] = noUniformColObjs;
                 temp_dataManagers[i].columnInfos = noUniformColObjs;
             }
@@ -232,11 +312,18 @@ async function computeLineTransform(context: ActionContext<GlobalState, GlobalSt
     dataset2 = 'om3_stream.mock_mock_guassian_stream_sin4_6ht_om3_6ht';
 
     maxLevel = lineClassInfo['level'];
+    console.log("1:", currentLevel, currentMulitLineClass);
     const combinedUrl = `/line_chart/init_transform_timeseries2?width=${2 ** currentLevel}&class_name=${currentMulitLineClass}&dataset1=${dataset1}&dataset2=${dataset2}&mode=${context.state.controlParams.currentMode}`;
     const data = get(context.state, combinedUrl);
     let trend:any = null;
     let minn:any,maxx:any;
-    data.then(async res => {
+    let resultObject:any;
+    let temp_dataManager:LevelDataManager;
+    let temp_dataManagers:Array<LevelDataManager>;
+    let dataManager2:LevelDataManager;
+    let dataManagers2:Array<LevelDataManager> = [];
+    let yScale:any;
+    await data.then(async res => {
         let dataManagers: Array<LevelDataManager> = [];
         let globalMaxV = -Infinity;
         let globalMinV = Infinity;
@@ -275,11 +362,11 @@ async function computeLineTransform(context: ActionContext<GlobalState, GlobalSt
             root: trend,
             data: { powRenderData: [], noPowRenderData: [], minv: minn!, maxv: maxx! },
             // timeRange: [0, lineInfo['max_len']],
-            timeRange: [0, 65536],
+            timeRange: [0, dataManagers[0].realDataRowNum - 1],
             // startTime: startTimeStamp,
             startTime: 0,
             // endTime: endTimeStamp,
-            endTime: 65536,
+            endTime: dataManagers[0].realDataRowNum - 1,
             algorithm: "",
             dataManager: dataManagers[0],
             params: [0, 0],
@@ -288,21 +375,113 @@ async function computeLineTransform(context: ActionContext<GlobalState, GlobalSt
             isPow: false,
             nonUniformColObjs: [],
             // maxLen: lineInfo['max_len']
-            maxLen: 65536
+            maxLen: dataManagers[0].realDataRowNum - 1
         }
-        const drawer = drawViewChangeLineChart(viewChangeQueryObj);
-        const yScale = d3.scaleLinear().domain([-1000, 1000]).range([600, 0]);
-        for(let time=0; time<20; time++){
+        // const drawer = drawViewChangeLineChart(viewChangeQueryObj);
+        yScale = d3.scaleLinear().domain([-1000, 1000]).range([600, 0]);
+        temp_dataManagers = dataManagers;
+        temp_dataManager = temp_dataManagers[0];
+        temp_dataManagers.shift();
+        for(let time1=0; time1<10; time1++){
             // let temp_dataManagers = _.cloneDeep(dataManagers);
-            let temp_dataManagers = dataManagers;
-            let temp_dataManager = temp_dataManagers[0];
-            const columnsInfoArray: Array<Array<NoUniformColObj>> = new Array(temp_dataManagers.length);
-            const res = await temp_dataManager.viewTransformFinal(temp_dataManagers, currentLevel, payload.width, [time*2000, time*2000+15000], yScale, drawer, transform_symbol);
-            console.log(res);
-            const resultObject = res as { a: NoUniformColObj[]; b: number; };
-            drawer(resultObject.a, resultObject.b, transform_symbol, dataManagers.length+1);
+            
+
+            // const columnsInfoArray: Array<Array<NoUniformColObj>> = new Array(temp_dataManagers.length);
+            // const res = await temp_dataManager.viewTransformFinal(temp_dataManagers, currentLevel, payload.width, [time*2000, time*2000+15000], yScale, null, transform_symbol);
+            // // const res = await temp_dataManager.viewTransformFinal(temp_dataManagers, currentLevel, payload.width, [0, 65535], yScale, drawer, transform_symbol);
+            // console.log("res:", res);
+            // resultObject = res as { a: NoUniformColObj[]; b: number; };
+            // console.log("resultObject:", resultObject);
+
+
+            // drawer(resultObject.a, resultObject.b, transform_symbol, dataManagers.length+1);
+            // await new Promise(resolve => setTimeout(resolve, 1000));
         }
     });
+    
+
+    if (context.state.controlParams.currentMode === 'Default') {
+        lineClassInfo = context.state.allMultiLineClassInfoMap.get(currentMulitLineClass);
+    } else {
+        lineClassInfo = context.state.allCustomMultiLineClassInfoMap.get(currentMulitLineClass);
+    }
+
+    if (lineClassInfo === undefined) {
+        throw new Error("cannot get class info");
+    }
+    maxLevel = lineClassInfo['level'];
+    const combinedUrl2 = `/line_chart/init_multi_timeseries2?width=${2 ** currentLevel}&class_name=${currentMulitLineClass}&mode=${context.state.controlParams.currentMode}`;
+    const data2 = get(context.state, combinedUrl2);
+
+    data2.then(async res => {
+        let dataManagers: Array<LevelDataManager> = [];
+        let globalMaxV = -Infinity;
+        let globalMinV = Infinity;
+        for (let i = 0; i < res.length; i++) {
+            const { dataManager } = constructMinMaxMissTrendTreeMulti(res[i].d, payload.width, res[i].tn);
+            dataManager2 = dataManager;
+            dataManager2.maxLevel = maxLevel;
+            dataManager2.realDataRowNum = lineClassInfo['max_len'];
+
+            const { minv, maxv } = getGlobalMinMaxInfo(getLevelData(dataManager2.levelIndexObjs[dataManager2.levelIndexObjs.length - 1].firstNodes[0]));
+            globalMaxV = Math.max(maxv!, globalMaxV);
+            globalMinV = Math.min(minv!, globalMinV);
+            dataManager2.md5Num = parseInt("0x" + md5(dataManager2.dataName).slice(0, 8))
+            dataManagers2.push(dataManager2);
+        }
+
+        dataManagers2 = dataManagers2.sort((a, b) => {
+            return parseInt("0x" + md5(a.dataName).slice(0, 8)) - parseInt("0x" + md5(b.dataName).slice(0, 8))
+        })
+        // let tdataManagers = _.cloneDeep(dataManagers);
+        for(let time=0; time<20; time++){
+
+            console.log("temp_dataManager:", temp_dataManager);
+            // const columnsInfoArray: Array<Array<NoUniformColObj>> = new Array(temp_dataManagers.length);
+            const res2 = await temp_dataManager.viewTransformFinal(temp_dataManagers, currentLevel, payload.width, [time*2000, time*2000+15000], null, null, transform_symbol);
+            // const res = await temp_dataManager.viewTransformFinal(temp_dataManagers, currentLevel, payload.width, [0, 65535], yScale, drawer, transform_symbol);
+            console.log("res2:", res2);
+            resultObject = res2 as { a: NoUniformColObj[]; b: number; };
+            console.log("resultObject:", resultObject);
+
+            let temp_dataManagers2 = _.cloneDeep(dataManagers2);
+            const allPromises = [];
+            const columnsInfoArray2: Array<Array<NoUniformColObj>> = new Array(temp_dataManagers2.length);
+            for (let i = 0; i < temp_dataManagers2.length; i++) {
+                const noUniformColObjs = await temp_dataManagers2[i].viewChangeInteractionFinal1(currentLevel, payload.width, [time*2000, time*2000+15000], null, null);
+                columnsInfoArray2[i] = noUniformColObjs;
+                temp_dataManagers2[i].columnInfos = noUniformColObjs;
+            }
+            // temp_dataManager.dataName = "om3_stream.mock_mock_guassian_stream_sin6_6ht_om3_6ht";
+            temp_dataManagers2.push(temp_dataManager);
+            columnsInfoArray2.push(resultObject.a);
+            console.log(columnsInfoArray2);
+
+            const startTimeStamp = new Date(lineClassInfo.start_time).getTime();
+            let endTimeStamp = 0
+            if (lineClassInfo.end_time !== '') {
+                endTimeStamp = new Date(lineClassInfo.end_time).getTime();
+            }
+            let timeInterval = 0;
+            if (lineClassInfo.interval !== 0) {
+                timeInterval = lineClassInfo.interval;
+            }
+
+            context.commit("addMultiTimeSeriesObj", {
+                className: lineClassInfo.name,
+                lineAmount: lineClassInfo.amount,
+                startTimeStamp: startTimeStamp,
+                endTimeStamp: endTimeStamp,
+                transform_symbol: transform_symbol,
+                finalValue: resultObject.b,
+                timeIntervalMs: timeInterval, dataManagers: temp_dataManagers2, columnInfos: columnsInfoArray2, startTime: 0, endTime: temp_dataManager.realDataRowNum - 1, algorithm: "multitimeseries", width: payload.width, height: payload.height, pow: false, minv: globalMinV, maxv: globalMaxV, maxLevel
+            });
+            // await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+    }).catch(error => {
+        throw error
+    });
+
 }
 const computeLineTransform2: ActionHandler<GlobalState, GlobalState> = (context: ActionContext<GlobalState, GlobalState>, line1:any) =>{
     // const dataset1 = "om3_multi.mock_mock_guassian_sin1_6ht_om3_6ht";
