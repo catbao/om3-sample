@@ -615,22 +615,9 @@ export async function batchLoadDataForRangeLevel1MinMaxMiss(losedRange: Array<Ar
     }
 }
 export async function batchLoadDataForRangeLevel1MinMaxMiss2(losedRange: Array<Array<number>>, manager: any, tagName?: string){
-    // let difVals: Array<{ l: number, i: number, dif?: Array<number> }>
-    let difVals: Array<{ l: number, dif?: Array<number> }>
-    if(store.state.controlParams.currentLineType==='Single'){
-        difVals= await batchLoadMinMaxMissWithWs(losedRange, manager.dataName, "level_load_data_min_max_miss", manager.maxLevel, tagName) as Array<{ l: number, i: number }>;
-    }else{
-        // const inputString = manager.dataName;
-        // let dotIndex = inputString.indexOf('.');
-        // let beforeDot = inputString.substring(0, dotIndex);
-        // beforeDot = beforeDot.replace('stream', 'multi');
-        // let afterDot = inputString.substring(dotIndex + 1);
-        // afterDot = afterDot.replace('_stream', '');
-        // let result = beforeDot + '.' + afterDot;
-        // console.log(result);
-        // difVals = await batchLoadMinMaxMissWithPostForMultiLineType(losedRange, result, "level_load_data_min_max_miss", manager.maxLevel, tagName)
-        difVals= await batchLoadMinMaxMissWithWs(losedRange, manager.dataName, "level_load_data_min_max_miss", manager.maxLevel, tagName) as Array<{ l: number, i: number }>;
-    }
+    let difVals: Array<{ l: number, i: number, dif?: Array<number> }>
+    // let difVals: Array<{ l: number, dif?: Array<number> }>
+    difVals= await batchLoadMinMaxMissWithWs(losedRange, manager.dataName, "level_load_data_min_max_miss", manager.maxLevel, tagName) as Array<{ l: number, i: number }>;
 
     let count = 0;
     for (let i = 0; i < losedRange.length; i++) {
@@ -639,8 +626,8 @@ export async function batchLoadDataForRangeLevel1MinMaxMiss2(losedRange: Array<A
         let p: TrendTree = startNode;
         const newTreeNode = [];
         for (let j = losedRange[i][1]; j <= losedRange[i][2];j++) {
-            // if (p?.index === j && j === difVals[count].i && p.level === difVals[count].l) {
-            if (p?.index === j && p.level === difVals[count].l) {
+            if (p?.index === j && j === difVals[count].i && p.level === difVals[count].l) {
+            // if (p?.index === j && p.level === difVals[count].l) {
                 let dif = difVals[count].dif!;
                 let curNodeType: "O" | "NULL" | "LEFTNULL" | "RIGHTNULL" = 'O';
                 if (dif[1] === null && dif[2] === null) {
@@ -681,17 +668,13 @@ export async function batchLoadDataForRangeLevel1MinMaxMiss2(losedRange: Array<A
                         yArray2[3] = (p.yArray[3] * 2 - p.difference![3]) / 2; 
                     }
                 } else if (curNodeType == "LEFTNULL") {
-                   
                     yArray2[1] = p.yArray[1];
                     yArray2[2] = p.yArray[2];
                     yArray2[3] = p.yArray[3] / 2;
-                  
                 } else if (curNodeType == "RIGHTNULL") {
-                 
                     yArray1[1] = p.yArray[1];
                     yArray1[2] = p.yArray[2];
                     yArray1[3] = p.yArray[3] / 2;
-                  
                 } 
 
                 const firstNode = new TrendTree(p, true, p.index, yArray1, null);
@@ -717,7 +700,6 @@ export async function batchLoadDataForRangeLevel1MinMaxMiss2(losedRange: Array<A
                 if (p === null || count >= difVals.length) {
                     break;
                 }
-
             } else {
                 console.log(losedRange[i][0] - 1, Math.floor(losedRange[i][1] / 2))
                 console.log("lose range:", losedRange, p, p?.index, j);
@@ -732,7 +714,6 @@ export async function batchLoadDataForRangeLevel1MinMaxMiss2(losedRange: Array<A
             if (newTreeNode[j].index != newTreeNode[j + 1].index - 1) {
                 throw new Error("sibling index error");
             }
-
         }
         if (manager.levelIndexObjs[losedRange[i][0] + 1]) {
             manager.levelIndexObjs[losedRange[i][0] + 1].addLoadedDataRange(newTreeNode[0], [newTreeNode[0].index, newTreeNode[newTreeNode.length - 1].index]);

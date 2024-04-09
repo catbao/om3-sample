@@ -1881,6 +1881,7 @@ export default class LevelDataManager {
         }
         let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
         // debugger
+        console.log("currentLineType:", store.state.controlParams.currentLineType);
         if(losedDataInfo.length > 0 && store.state.controlParams.currentLineType==='Single'){
             await batchLoadDataForRangeLevel1MinMaxMiss2(losedDataInfo, this);
         }
@@ -2021,10 +2022,10 @@ export default class LevelDataManager {
             }
             let losedDataInfo2 = computeLosedDataRangeV1(needLoadDifNode);
             console.log("losedDataInfo2", losedDataInfo2);
-            if(losedDataInfo.length > 0 && store.state.controlParams.currentLineType==='Single'){
-                await batchLoadDataForRangeLevel1MinMaxMiss2(losedDataInfo, this);
+            if(losedDataInfo2.length > 0 && store.state.controlParams.currentLineType==='Single'){
+                await batchLoadDataForRangeLevel1MinMaxMiss2(losedDataInfo2, this);
             }
-            if (losedDataInfo2.length > 0) {
+            else if (losedDataInfo2.length > 0) {
                 await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo2, this);
             }
         }
