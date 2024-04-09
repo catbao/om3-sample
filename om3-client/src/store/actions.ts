@@ -80,6 +80,7 @@ const loadViewChangeQueryWSMinMaxMissDataInitData: ActionHandler<GlobalState, Gl
     if (lineInfo.interval !== 0) {
         timeInterval = lineInfo.interval;
     }
+    console.log("abc");
     //@ts-ignore
     const combinedUrl = `/line_chart/init_wavelet_bench_min_max_miss?width=${2 ** (Math.ceil(Math.log2(payload.width)))}&table_name=${context.state.controlParams.currentTable}&mode=${context.state.controlParams.currentMode}`;
     const data = get(context.state, combinedUrl);
@@ -88,7 +89,7 @@ const loadViewChangeQueryWSMinMaxMissDataInitData: ActionHandler<GlobalState, Gl
             const finalRes = tempRes['data']['result'];
             const currentLevel = Math.ceil(Math.log2(payload.width));
 
-            const { trendTree, dataManager } = constructMinMaxMissTrendTree(finalRes, payload.width);
+            const { trendTree, dataManager } = constructMinMaxMissTrendTreeMulti(finalRes, payload.width);
             dataManager.maxLevel = maxLevel
             dataManager.realDataRowNum = lineInfo['max_len']
             const { minv, maxv } = getGlobalMinMaxInfo(getLevelData(dataManager.levelIndexObjs[dataManager.levelIndexObjs.length - 1].firstNodes[0]));
@@ -118,7 +119,7 @@ const loadViewChangeQueryWSMinMaxMissDataInitData: ActionHandler<GlobalState, Gl
                 const maxV = dataManager.levelIndexObjs[0].firstNodes[0].yArray[2];
                 const yScale = d3.scaleLinear().domain([minV, maxV]).range([payload.height, 0]);
 
-                dataManager.viewChangeInteractionFinal1(Math.ceil(Math.log2(payload.width)), payload.width, [0, lineInfo['max_len'] - 1], yScale, drawer).then(res => {
+                dataManager.viewChangeInteractionFinal2(Math.ceil(Math.log2(payload.width)), payload.width, [0, lineInfo['max_len']], yScale, drawer).then(res => {
                     drawer(res)
                     //context.commit("addViewChangeQueryNoPowLineChartObj", { trendTree, dataManager, data: res, startTime: payload.startTime, endTime: payload.endTime, algorithm: "trendtree", width: payload.width, height: payload.height });
                 });
@@ -385,14 +386,12 @@ async function computeLineTransform(context: ActionContext<GlobalState, GlobalSt
         for(let time1=0; time1<10; time1++){
             // let temp_dataManagers = _.cloneDeep(dataManagers);
             
-
             // const columnsInfoArray: Array<Array<NoUniformColObj>> = new Array(temp_dataManagers.length);
             // const res = await temp_dataManager.viewTransformFinal(temp_dataManagers, currentLevel, payload.width, [time*2000, time*2000+15000], yScale, null, transform_symbol);
             // // const res = await temp_dataManager.viewTransformFinal(temp_dataManagers, currentLevel, payload.width, [0, 65535], yScale, drawer, transform_symbol);
             // console.log("res:", res);
             // resultObject = res as { a: NoUniformColObj[]; b: number; };
             // console.log("resultObject:", resultObject);
-
 
             // drawer(resultObject.a, resultObject.b, transform_symbol, dataManagers.length+1);
             // await new Promise(resolve => setTimeout(resolve, 1000));
@@ -444,7 +443,10 @@ async function computeLineTransform(context: ActionContext<GlobalState, GlobalSt
             resultObject = res2 as { a: NoUniformColObj[]; b: number; };
             console.log("resultObject:", resultObject);
 
-            let temp_dataManagers2 = _.cloneDeep(dataManagers2);
+            let temp_dataManagers2 = _.clone(dataManagers2);
+            // let temp_dataManagers2 = [];
+            // temp_dataManagers2.push(dataManagers2[0]);
+            // temp_dataManagers2.push(dataManagers2[1]);
             const allPromises = [];
             const columnsInfoArray2: Array<Array<NoUniformColObj>> = new Array(temp_dataManagers2.length);
             for (let i = 0; i < temp_dataManagers2.length; i++) {

@@ -2021,7 +2021,7 @@ export default class LevelDataManager {
                 break;
             }
             let losedDataInfo2 = computeLosedDataRangeV1(needLoadDifNode);
-            console.log("losedDataInfo2", losedDataInfo2);
+            // console.log("losedDataInfo2", losedDataInfo2);
             if(losedDataInfo2.length > 0 && store.state.controlParams.currentLineType==='Single'){
                 await batchLoadDataForRangeLevel1MinMaxMiss2(losedDataInfo2, this);
             }
@@ -2102,11 +2102,13 @@ export default class LevelDataManager {
         if (needLoadDifNode.length === 0) {
             return nonUniformColObjs;
         }
-        let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
-        // debugger
-        if (losedDataInfo.length > 0) {
-            await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);
-        }
+        // let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
+        // if(losedDataInfo.length > 0 && store.state.controlParams.currentLineType==='Single'){
+        //     await batchLoadDataForRangeLevel1MinMaxMiss2(losedDataInfo, this);
+        // }
+        // else if (losedDataInfo.length > 0) {
+        //     await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);
+        // }
 
         while (needLoadDifNode.length > 0) {
             colIndex = 0;
@@ -2114,18 +2116,18 @@ export default class LevelDataManager {
             const tempQue: Array<TrendTree> = [];
             needLoadDifNode.forEach(v => {
                 if ((v._leftChild === null || v._rightChild === null) && v.nodeType === 'O') {
-                    debugger
-                    throw new Error("cannot find next level node");
+                    // debugger
+                    // throw new Error("cannot find next level node");
                 }
                 if (v.nodeType === 'NULL') {
                     //
                 } else {
-                    this.lruCache.has(v._leftChild!.level + "_" + v._leftChild!.index);
-                    this.lruCache.has(v._rightChild!.level + "_" + v._rightChild!.index);
-                    if (v._leftChild!.nodeType !== 'NULL') {
+                    // this.lruCache.has(v._leftChild!.level + "_" + v._leftChild!.index);
+                    // this.lruCache.has(v._rightChild!.level + "_" + v._rightChild!.index);
+                    if (v._leftChild && v._leftChild!.nodeType !== 'NULL') {
                         tempQue.push(v._leftChild!);
                     }
-                    if (v._rightChild!.nodeType !== 'NULL') {
+                    if (v._rightChild && v._rightChild!.nodeType !== 'NULL') {
                         tempQue.push(v._rightChild!);
                     }
                 }
@@ -2208,7 +2210,10 @@ export default class LevelDataManager {
             }
             let losedDataInfo2 = computeLosedDataRangeV1(needLoadDifNode);
             console.log("losedDataInfo2", losedDataInfo2);
-            if (losedDataInfo2.length > 0) {
+            if(losedDataInfo2.length > 0 && store.state.controlParams.currentLineType==='Single'){
+                await batchLoadDataForRangeLevel1MinMaxMiss2(losedDataInfo2, this);
+            }
+            else if (losedDataInfo2.length > 0) {
                 await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo2, this);
             }
 

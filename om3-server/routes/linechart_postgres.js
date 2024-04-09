@@ -473,7 +473,7 @@ function init_multi_timeseries2(req, res) {
         }
     }).then(() => {
         const allPromises = new Array();
-        allMultiSeriesTables = [allMultiSeriesTables[0]];
+        // allMultiSeriesTables = [allMultiSeriesTables[0]];
         let amout = allMultiSeriesTables.length;
 
         console.log("allMultiSeriesTables:", allMultiSeriesTables);

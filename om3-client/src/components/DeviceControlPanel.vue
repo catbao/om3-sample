@@ -58,8 +58,8 @@ export default defineComponent({
       const maxLevel = store.state.controlParams.tableMaxLevel;
 
       if (
-        store.state.controlParams.currentLineType==='Single'&&
-        store.state.controlParams.currentSampleMethod === "ViewChangeQueryFinal"
+        store.state.controlParams.currentLineType==='Single'
+        // store.state.controlParams.currentSampleMethod === "ViewChangeQueryFinal"
       ) {
         const payload = {
           startTime: 0,
