@@ -7,7 +7,7 @@ import { canCut, checkSetType, computeLosedDataRange, computeLosedDataRangeV1, c
 import { NoUniformColObj } from "./non-uniform-col-obj";
 import { UniformGapObj } from "./uniform-gap-obj";
 // import { loadDataForRangeLevel, batchLoadDataForRangeLevelRawMinMax, batchLoadDataForRangeLevel, batchLoadDataForRangeLevel1, batchLoadDataForRangeLevel2MinMaxMiss, batchLoadDataForRangeLevel1MinMaxMiss, batchLoadDataForRangeLevel1WS, batchLoadDataForRangeLevelForMinMaxMiss } from "../api/build_tree"
-import { loadDataForRangeLevel, batchLoadDataForRangeLevelRawMinMax, batchLoadDataForRangeLevel, batchLoadDataForRangeLevel1, batchLoadDataForRangeLevel2MinMaxMiss, batchLoadDataForRangeLevel1MinMaxMiss, batchLoadDataForRangeLevel1WS, batchLoadDataForRangeLevelForMinMaxMiss } from "../api/build_tree"
+import { loadDataForRangeLevel, batchLoadDataForRangeLevelRawMinMax, batchLoadDataForRangeLevel, batchLoadDataForRangeLevel1, batchLoadDataForRangeLevel2MinMaxMiss, batchLoadDataForRangeLevel1MinMaxMiss, batchLoadDataForRangeLevel1MinMaxMiss2, batchLoadDataForRangeLevel1WS, batchLoadDataForRangeLevelForMinMaxMiss } from "../api/build_tree"
 import Cache from "lru-cache"
 import { getFlag } from "@/global_state/state";
 
@@ -1881,7 +1881,10 @@ export default class LevelDataManager {
         }
         let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
         // debugger
-        if (losedDataInfo.length > 0) {
+        if(losedDataInfo.length > 0 && store.state.controlParams.currentLineType==='Single'){
+            await batchLoadDataForRangeLevel1MinMaxMiss2(losedDataInfo, this);
+        }
+        else if (losedDataInfo.length > 0) {
             await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);
         }
 
@@ -2018,16 +2021,16 @@ export default class LevelDataManager {
             }
             let losedDataInfo2 = computeLosedDataRangeV1(needLoadDifNode);
             console.log("losedDataInfo2", losedDataInfo2);
+            if(losedDataInfo.length > 0 && store.state.controlParams.currentLineType==='Single'){
+                await batchLoadDataForRangeLevel1MinMaxMiss2(losedDataInfo, this);
+            }
             if (losedDataInfo2.length > 0) {
                 await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo2, this);
             }
-
         }
-
         for (let i = 0; i < nonUniformColObjs.length; i++) {
             nonUniformColObjs[i].checkIsMis();
         }
-
         return nonUniformColObjs;
     }
 

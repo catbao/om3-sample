@@ -512,7 +512,7 @@ export async function batchLoadDataForRangeLevel1MinMaxMiss(losedRange: Array<Ar
         const newTreeNode = [];
         for (let j = losedRange[i][1]; j <= losedRange[i][2];j++) {
             // if (p?.index === j && j === difVals[count].i && p.level === difVals[count].l) {
-                if (p?.index === j && p.level === difVals[count].l) {
+            if (p?.index === j && p.level === difVals[count].l) {
                 let dif = difVals[count].dif!;
                 let curNodeType: "O" | "NULL" | "LEFTNULL" | "RIGHTNULL" = 'O';
                 if (dif[1] === null && dif[2] === null) {
@@ -614,6 +614,135 @@ export async function batchLoadDataForRangeLevel1MinMaxMiss(losedRange: Array<Ar
         }
     }
 }
+export async function batchLoadDataForRangeLevel1MinMaxMiss2(losedRange: Array<Array<number>>, manager: any, tagName?: string){
+    // let difVals: Array<{ l: number, i: number, dif?: Array<number> }>
+    let difVals: Array<{ l: number, dif?: Array<number> }>
+    if(store.state.controlParams.currentLineType==='Single'){
+        difVals= await batchLoadMinMaxMissWithWs(losedRange, manager.dataName, "level_load_data_min_max_miss", manager.maxLevel, tagName) as Array<{ l: number, i: number }>;
+    }else{
+        // const inputString = manager.dataName;
+        // let dotIndex = inputString.indexOf('.');
+        // let beforeDot = inputString.substring(0, dotIndex);
+        // beforeDot = beforeDot.replace('stream', 'multi');
+        // let afterDot = inputString.substring(dotIndex + 1);
+        // afterDot = afterDot.replace('_stream', '');
+        // let result = beforeDot + '.' + afterDot;
+        // console.log(result);
+        // difVals = await batchLoadMinMaxMissWithPostForMultiLineType(losedRange, result, "level_load_data_min_max_miss", manager.maxLevel, tagName)
+        difVals= await batchLoadMinMaxMissWithWs(losedRange, manager.dataName, "level_load_data_min_max_miss", manager.maxLevel, tagName) as Array<{ l: number, i: number }>;
+    }
+
+    let count = 0;
+    for (let i = 0; i < losedRange.length; i++) {
+        const levelRange = losedRange[i];
+        const startNode = manager.levelIndexObjs[losedRange[i][0]].getTreeNodeStartIndex(losedRange[i][1]);
+        let p: TrendTree = startNode;
+        const newTreeNode = [];
+        for (let j = losedRange[i][1]; j <= losedRange[i][2];j++) {
+            // if (p?.index === j && j === difVals[count].i && p.level === difVals[count].l) {
+            if (p?.index === j && p.level === difVals[count].l) {
+                let dif = difVals[count].dif!;
+                let curNodeType: "O" | "NULL" | "LEFTNULL" | "RIGHTNULL" = 'O';
+                if (dif[1] === null && dif[2] === null) {
+                    curNodeType = "NULL";
+                } else if (dif[1] === null) {
+                    curNodeType = "LEFTNULL"
+                    p.gapFlag="L"
+                } else if (dif[2] === null) {
+                    curNodeType = "RIGHTNULL";
+                    p.gapFlag="R"
+                }
+                if(curNodeType!=="O"){
+                    p.nodeType = curNodeType
+                }
+                //@ts-ignore
+                p.difference = difVals[count].dif;
+                // const yArray1: [any, any, any, any] = [undefined, undefined, undefined, undefined]
+                // const yArray2: [any, any, any, any] = [undefined, undefined, undefined, undefined]
+                const yArray1: [any, any, any, any, any] = [undefined, undefined, undefined, undefined, undefined]
+                const yArray2: [any, any, any, any, any] = [undefined, undefined, undefined, undefined, undefined]
+                if (curNodeType === 'O') {
+                    if (p.difference![1] < 0) {
+                        yArray1[1] = p.yArray[1];
+                        yArray2[1] = p.yArray[1] - p.difference![1];
+                    } else {
+                        yArray1[1] = p.yArray[1] + p.difference![1];
+                        yArray2[1] = p.yArray[1]
+                    }
+                    if (p.difference![2] < 0) {
+                        yArray1[2] = p.yArray[2] + p.difference![2];
+                        yArray2[2] = p.yArray[2];
+                    } else {
+                        yArray1[2] = p.yArray[2];
+                        yArray2[2] = p.yArray[2] - p.difference![2];
+                    }
+                    if(p.difference![3] <= 0 || p.difference![3] >= 0){
+                        yArray1[3] = (p.yArray[3] * 2 + p.difference![3]) / 2; 
+                        yArray2[3] = (p.yArray[3] * 2 - p.difference![3]) / 2; 
+                    }
+                } else if (curNodeType == "LEFTNULL") {
+                   
+                    yArray2[1] = p.yArray[1];
+                    yArray2[2] = p.yArray[2];
+                    yArray2[3] = p.yArray[3] / 2;
+                  
+                } else if (curNodeType == "RIGHTNULL") {
+                 
+                    yArray1[1] = p.yArray[1];
+                    yArray1[2] = p.yArray[2];
+                    yArray1[3] = p.yArray[3] / 2;
+                  
+                } 
+
+                const firstNode = new TrendTree(p, true, p.index, yArray1, null);
+                if (p.nodeType === 'LEFTNULL' || p.nodeType === 'NULL') {
+                    firstNode.nodeType = 'NULL';
+                }
+                const secondNode = new TrendTree(p, false, p.index, yArray2, null);
+                if (p.nodeType === 'RIGHTNULL' || p.nodeType == 'NULL') {
+                    secondNode.nodeType = 'NULL';
+                }
+                // if(firstNode.nodeType==='NULL'){
+                //     secondNode.gapFlag='L'
+                // }
+                // if(secondNode.nodeType==='NULL'){
+                //     firstNode.gapFlag='R';
+                // }
+                newTreeNode.push(firstNode);
+                newTreeNode.push(secondNode);
+                manager.lruCache.set(firstNode.level+"_"+firstNode.index,firstNode);
+                manager.lruCache.set(secondNode.level+"_"+secondNode.index,secondNode);
+                p = p.nextSibling!;
+                count++;
+                if (p === null || count >= difVals.length) {
+                    break;
+                }
+
+            } else {
+                console.log(losedRange[i][0] - 1, Math.floor(losedRange[i][1] / 2))
+                console.log("lose range:", losedRange, p, p?.index, j);
+                console.log(manager.levelIndexObjs);
+                debugger
+                throw new Error("dif not match node");
+            }
+        }
+        for (let j = 0; j < newTreeNode.length - 1; j++) {
+            newTreeNode[j].nextSibling = newTreeNode[j + 1];
+            newTreeNode[j + 1].previousSibling = newTreeNode[j];
+            if (newTreeNode[j].index != newTreeNode[j + 1].index - 1) {
+                throw new Error("sibling index error");
+            }
+
+        }
+        if (manager.levelIndexObjs[losedRange[i][0] + 1]) {
+            manager.levelIndexObjs[losedRange[i][0] + 1].addLoadedDataRange(newTreeNode[0], [newTreeNode[0].index, newTreeNode[newTreeNode.length - 1].index]);
+        } else {
+            manager.levelIndexObjs[losedRange[i][0] + 1] = new LevelIndexObj(losedRange[i][0] + 1, false);
+            manager.levelIndexObjs[losedRange[i][0] + 1].addLoadedDataRange(newTreeNode[0], [newTreeNode[0].index, newTreeNode[newTreeNode.length - 1].index]);
+        }
+    }
+}
+
 export async function batchLoadDataForRangeLevel2MinMaxMiss(losedRange: Array<Array<number>>, manager: any, tagName?: string){
     // let difVals: Array<{ l: number, i: number, dif?: Array<number> }>
     let difVals: Array<{ l: number, dif?: Array<number> }>
