@@ -609,6 +609,8 @@ export async function batchLoadDataForRangeLevel1MinMaxMiss(losedRange: Array<Ar
             manager.levelIndexObjs[losedRange[i][0] + 1].addLoadedDataRange(newTreeNode[0], [newTreeNode[0].index, newTreeNode[newTreeNode.length - 1].index]);
         }
     }
+    console.log("  ");
+    console.log("manager:", manager);
 }
 export async function batchLoadDataForRangeLevel2MinMaxMiss(losedRange: Array<Array<number>>, manager: any, tagName?: string){
     let difVals: Array<{ l: number, i: number, dif?: Array<number> }>

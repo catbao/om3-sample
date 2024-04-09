@@ -1889,6 +1889,7 @@ export default class LevelDataManager {
             const tempQue: Array<TrendTree> = [];
 
             needLoadDifNode.forEach(v => {
+                console.log("v:", v);
                 if ((v._leftChild === null || v._rightChild === null) && v.nodeType === 'O') {
                     debugger
                     throw new Error("cannot find next level node");
@@ -2016,6 +2017,8 @@ export default class LevelDataManager {
                 break;
             }
             let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
+            console.log("needLoadDifNode:", needLoadDifNode);
+            console.log("  ");
             if (losedDataInfo.length > 0) {
                 await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);
             }
