@@ -151,33 +151,28 @@ async function loadMultiTimeSeriesInitData2(context: ActionContext<GlobalState, 
     const data = get(context.state, combinedUrl);
 
     data.then(async res => {
-        let dataManagers: Array<LevelDataManager> = [];
-        let globalMaxV = -Infinity;
-        let globalMinV = Infinity;
-        for (let i = 0; i < res.length; i++) {
-            const { dataManager } = constructMinMaxMissTrendTreeMulti(res[i].d, payload.width, res[i].tn);
-
-            dataManager.maxLevel = maxLevel;
-            dataManager.realDataRowNum = lineClassInfo['max_len'];
-
-            const { minv, maxv } = getGlobalMinMaxInfo(getLevelData(dataManager.levelIndexObjs[dataManager.levelIndexObjs.length - 1].firstNodes[0]));
-            globalMaxV = Math.max(maxv!, globalMaxV);
-            globalMinV = Math.min(minv!, globalMinV);
-            dataManager.md5Num = parseInt("0x" + md5(dataManager.dataName).slice(0, 8))
-            dataManagers.push(dataManager);
-        }
-
-        dataManagers = dataManagers.sort((a, b) => {
-            return parseInt("0x" + md5(a.dataName).slice(0, 8)) - parseInt("0x" + md5(b.dataName).slice(0, 8))
-        })
         // let tdataManagers = _.cloneDeep(dataManagers);
         for(let time=0; time<10; time++){
-            // let temp_dataManagers: Array<LevelDataManager> = [];
-            // for(let i=0; i<dataManagers.length; i++){
-            //     temp_dataManagers.push(dataManagers[i]);
-            // }
-            let temp_dataManagers = _.cloneDeep(dataManagers);
-            // let temp_dataManagers = dataManagers;
+            let dataManagers: Array<LevelDataManager> = [];
+            let globalMaxV = -Infinity;
+            let globalMinV = Infinity;
+            for (let i = 0; i < res.length; i++) {
+                const { dataManager } = constructMinMaxMissTrendTreeMulti(res[i].d, payload.width, res[i].tn);
+    
+                dataManager.maxLevel = maxLevel;
+                dataManager.realDataRowNum = lineClassInfo['max_len'];
+    
+                const { minv, maxv } = getGlobalMinMaxInfo(getLevelData(dataManager.levelIndexObjs[dataManager.levelIndexObjs.length - 1].firstNodes[0]));
+                globalMaxV = Math.max(maxv!, globalMaxV);
+                globalMinV = Math.min(minv!, globalMinV);
+                dataManager.md5Num = parseInt("0x" + md5(dataManager.dataName).slice(0, 8))
+                dataManagers.push(dataManager);
+            }
+            dataManagers = dataManagers.sort((a, b) => {
+                return parseInt("0x" + md5(a.dataName).slice(0, 8)) - parseInt("0x" + md5(b.dataName).slice(0, 8))
+            })
+            // let temp_dataManagers = _.cloneDeep(dataManagers);
+            let temp_dataManagers = dataManagers;
             // let temp_dataManagers = JSON.parse(JSON.stringify(dataManagers));
             // let temp_dataManagers = Object.assign({}, dataManagers);
             const allPromises = [];
@@ -413,40 +408,36 @@ async function computeLineTransform(context: ActionContext<GlobalState, GlobalSt
     const data2 = get(context.state, combinedUrl2);
 
     data2.then(async res => {
-        let dataManagers: Array<LevelDataManager> = [];
-        let globalMaxV = -Infinity;
-        let globalMinV = Infinity;
-        for (let i = 0; i < res.length; i++) {
-            const { dataManager } = constructMinMaxMissTrendTreeMulti(res[i].d, payload.width, res[i].tn);
-            dataManager2 = dataManager;
-            dataManager2.maxLevel = maxLevel;
-            dataManager2.realDataRowNum = lineClassInfo['max_len'];
-
-            const { minv, maxv } = getGlobalMinMaxInfo(getLevelData(dataManager2.levelIndexObjs[dataManager2.levelIndexObjs.length - 1].firstNodes[0]));
-            globalMaxV = Math.max(maxv!, globalMaxV);
-            globalMinV = Math.min(minv!, globalMinV);
-            dataManager2.md5Num = parseInt("0x" + md5(dataManager2.dataName).slice(0, 8))
-            dataManagers2.push(dataManager2);
-        }
-
-        dataManagers2 = dataManagers2.sort((a, b) => {
-            return parseInt("0x" + md5(a.dataName).slice(0, 8)) - parseInt("0x" + md5(b.dataName).slice(0, 8))
-        })
         // let tdataManagers = _.cloneDeep(dataManagers);
         for(let time=0; time<20; time++){
-
             console.log("temp_dataManager:", temp_dataManager);
             // const columnsInfoArray: Array<Array<NoUniformColObj>> = new Array(temp_dataManagers.length);
             const res2 = await temp_dataManager.viewTransformFinal(temp_dataManagers, currentLevel, payload.width, [time*2000, time*2000+15000], null, null, transform_symbol);
             // const res = await temp_dataManager.viewTransformFinal(temp_dataManagers, currentLevel, payload.width, [0, 65535], yScale, drawer, transform_symbol);
-            console.log("res2:", res2);
+            // console.log("res2:", res2);
             resultObject = res2 as { a: NoUniformColObj[]; b: number; };
             console.log("resultObject:", resultObject);
 
-            let temp_dataManagers2 = _.clone(dataManagers2);
-            // let temp_dataManagers2 = [];
-            // temp_dataManagers2.push(dataManagers2[0]);
-            // temp_dataManagers2.push(dataManagers2[1]);
+            let dataManagers2: Array<LevelDataManager> = [];
+            let globalMaxV = -Infinity;
+            let globalMinV = Infinity;
+            for (let i = 0; i < res.length; i++) {
+                const { dataManager } = constructMinMaxMissTrendTreeMulti(res[i].d, payload.width, res[i].tn);
+                dataManager2 = dataManager;
+                dataManager2.maxLevel = maxLevel;
+                dataManager2.realDataRowNum = lineClassInfo['max_len'];
+    
+                const { minv, maxv } = getGlobalMinMaxInfo(getLevelData(dataManager2.levelIndexObjs[dataManager2.levelIndexObjs.length - 1].firstNodes[0]));
+                globalMaxV = Math.max(maxv!, globalMaxV);
+                globalMinV = Math.min(minv!, globalMinV);
+                dataManager2.md5Num = parseInt("0x" + md5(dataManager2.dataName).slice(0, 8))
+                dataManagers2.push(dataManager2);
+            }
+    
+            dataManagers2 = dataManagers2.sort((a, b) => {
+                return parseInt("0x" + md5(a.dataName).slice(0, 8)) - parseInt("0x" + md5(b.dataName).slice(0, 8))
+            })
+            let temp_dataManagers2 = dataManagers2;
             const allPromises = [];
             const columnsInfoArray2: Array<Array<NoUniformColObj>> = new Array(temp_dataManagers2.length);
             for (let i = 0; i < temp_dataManagers2.length; i++) {
@@ -478,7 +469,7 @@ async function computeLineTransform(context: ActionContext<GlobalState, GlobalSt
                 finalValue: resultObject.b,
                 timeIntervalMs: timeInterval, dataManagers: temp_dataManagers2, columnInfos: columnsInfoArray2, startTime: 0, endTime: temp_dataManager.realDataRowNum - 1, algorithm: "multitimeseries", width: payload.width, height: payload.height, pow: false, minv: globalMinV, maxv: globalMaxV, maxLevel
             });
-            // await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise(resolve => setTimeout(resolve, 1000));
         }
     }).catch(error => {
         throw error
