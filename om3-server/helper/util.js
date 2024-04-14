@@ -96,7 +96,7 @@ function getPool() {
         const dbUser = process.env.POSTGRES_USER;
         const dbPassword = process.env.POSTGRES_PASSWORD;
         const dbName = process.env.POSTGRES_DB;
-        console.log(dbHost,dbUser,dbPassword,dbName);
+        // console.log(dbHost,dbUser,dbPassword,dbName);
         if (dbHost === undefined || dbUser === undefined || dbPassword === undefined || dbName === undefined) {
             throw new Error("cannot create db connection")
         }
@@ -108,8 +108,8 @@ function getPool() {
             port:5432,
         });
     } else {
-        const dbConfig = JSON.parse(fs.readFileSync("./initdb/dbconfig.json").toString());
-        console.log(dbConfig)
+        const dbConfig = JSON.parse(fs.readFileSync("/Users/bao/Downloads/om3-sample/om3-server/initdb/dbconfig.json").toString());
+        // console.log(dbConfig)
         if (!dbConfig['username'] || !dbConfig['hostname'] || !dbConfig['password'] || !dbConfig['db']) {
             throw new Error("db config error");
         }

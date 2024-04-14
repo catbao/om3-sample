@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const fs = require("fs")
+const fs = require("fs");
+const flatted = require('flatted');
 
 const { Pool } = require('pg');
 const { generateSingalLevelSQLWithSubQueryMinMaxMiss, generateSingalLevelSQLMinMaxMissQuery, generateSingalLevelSQLWithSubQuery } = require('../helper/generate_sql');
@@ -9,6 +10,9 @@ const { randomUUID } = require('crypto');
 const { nonuniformMinMaxEncode } = require('../compute/om_compute');
 const { resolve } = require('path');
 const { rejects } = require('assert');
+const { testCache } = require('../compute/cache');
+const { constructMinMaxMissTrendTree } = require('../compute/wavlet-decoder2');
+const { LevelDataManager } = require('../compute/level-data-manager');
 
 const stockTableMap = [];
 const mockTableMap = [];
@@ -217,6 +221,33 @@ function initWaveletBenchMinMaxMissHandler(req, res) {
                 finalRes.push({ l: -1, i: 0, minvd: result.rows[0]['minvd'], maxvd: result.rows[0]['maxvd'], avevd: result.rows[0]['avevd'] });
             }
             // printT(startT)
+
+            const {trendTree, dataManager} = constructMinMaxMissTrendTree(finalRes, 600);
+            // console.log("dataManager:", dataManager.levelIndexObjs[0]);
+            // console.log("testCache:", testCache);
+            // console.log(dataManager);
+            for(let i=0; i<dataManager.levelIndexObjs.length; i++){
+                // console.log("length1:", dataManager.levelIndexObjs.length);
+                for(let j=0; j<dataManager.levelIndexObjs[i].firstNodes.length; j++){
+                    // console.log("length2:", dataManager.levelIndexObjs[i].firstNodes.length);
+                    let currentNode = dataManager.levelIndexObjs[i].firstNodes[j];
+                    // console.log("currentNode:", i+'_'+currentNode.yArray[1]);
+                    // if(i === 1)
+                        // console.log("currentNode's nextSibing:", currentNode.nextSibling);
+                    while(currentNode.nextSibling !== null){
+                        // testCache.insert(i+'_'+currentNode.yArray[1]+'_'+currentNode.yArray[2], currentNode);
+                        testCache.insert(currentNode.level+'_'+currentNode.index, currentNode);
+                        currentNode = currentNode.nextSibling;
+                    }
+                    // testCache.insert(i+'_'+currentNode.yArray[1]+'_'+currentNode.yArray[2], currentNode);
+                    testCache.insert(currentNode.level+'_'+currentNode.index, currentNode);
+                }
+            }
+            console.log("testCache's indexPointsMap:", testCache.indexPointsMap.get(0))
+            // const mapJson = JSON.stringify([...testCache.indexPointsMap]);
+            // const serializedTree = flatted.stringify([...testCache.indexPointsMap]);
+            // fs.writeFileSync('indexPointsMap.json', serializedTree, 'utf8');
+            // console.log("testCache:", testCache.cacheMap.keys());
             console.log("w i t", new Date().getTime() - startT);
             res.send({ code: 200, msg: 'success', data: { result: finalRes } });
         });
