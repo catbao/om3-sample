@@ -583,6 +583,7 @@ export default class NoUniformColObj {
                     for(let i=0;i<p2.length;++i){
                         p2[i] = p2[i]._leftChild!;
                     }
+                    count.count++;
                 }
                 else if(temp_minL > temp_minR && p._rightChild){
                     let tempNode = [];
@@ -602,6 +603,7 @@ export default class NoUniformColObj {
                         p2[i] = p2[i]._rightChild!;
                     }
                     alternativeNodes.push(tempNode);
+                    count.count++;
                 }
             }
             // console.log("The bottom min(+):", minIndex);
@@ -684,6 +686,7 @@ export default class NoUniformColObj {
                     for(let i=0;i<p2.length;++i){
                         p2[i] = p2[i]._rightChild!;
                     }
+                    count.count++;
                 }
                 else if(temp_maxL > temp_maxR && p._leftChild){
                     let tempNode = [];
@@ -702,6 +705,7 @@ export default class NoUniformColObj {
                     for(let i=0;i<p2.length;++i){
                         p2[i] = p2[i]._leftChild!;
                     }
+                    count.count++;
                 }
             }
             // console.log("The bottom max(+):", maxIndex);

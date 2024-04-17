@@ -2449,7 +2449,8 @@ export default class LevelDataManager {
 
         // console.log("The time to get all coefficients:" + (new Date().getTime() - startT));
         console.log("The final count:", count_obj.count);
-        console.log("The time to get total coefficients:", total_time);
+        // console.log("The time to get total coefficients:", total_time);
+        console.log("The time to get total coefficients:", new Date().getTime() - startT);
 
         let maxValue = -Infinity, minValue = Infinity, finalValue = 0;
         for (let i = 0; i < nonUniformColObjs.length; i++) {
