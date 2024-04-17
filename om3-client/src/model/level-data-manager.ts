@@ -2147,14 +2147,14 @@ export default class LevelDataManager {
             needLoadDifNode2[i] = [...new Set(needLoadDifNode2[i])];
         }
         console.log("get data");
-        let start_databaseT = new Date().getTime();
-        let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
-        if (losedDataInfo.length > 0) {
-            await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);  //取得系数
-            for(let i=0; i<otherDataManager.length; i++)
-                await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, otherDataManager[i]);
-        }
-        databaseT += new Date().getTime() - start_databaseT;
+        // let start_databaseT = new Date().getTime();
+        // let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
+        // if (losedDataInfo.length > 0) {
+        //     await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);  //取得系数
+        //     for(let i=0; i<otherDataManager.length; i++)
+        //         await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, otherDataManager[i]);
+        // }
+        // databaseT += new Date().getTime() - start_databaseT;
         sumOfNeedLoadDifNodes += needLoadDifNode.length;
 
         let testT = 0;
@@ -2169,12 +2169,6 @@ export default class LevelDataManager {
             let tempQue2: Array<Array<TrendTree>> = new Array(otherDataManager.length).fill([]).map(() => new Array<TrendTree>());
 
             needLoadDifNode.forEach(v => {
-                // if (v._leftChild === null || v._rightChild === null) {
-                //     console.log(v)
-                //     console.log(this)
-                //     // debugger
-                //     // throw new Error("cannot find next level node");
-                // }
                 if(v._leftChild != null && v._rightChild != null){
                     this.lruCache.has(v._leftChild.level + "_" + v._leftChild.index);
                     this.lruCache.has(v._rightChild.level + "_" + v._rightChild.index);
@@ -2203,7 +2197,7 @@ export default class LevelDataManager {
             
             const preColIndex = [];
             let alterNodes = {value: 0};
-            console.log("level:", tempQue[0].level);
+            // console.log("level:", tempQue[0].level);
             for (let i = 0; i < tempQue.length; i++) {
                 if (colIndex >= nonUniformColObjs.length) {
                     break;
@@ -2241,22 +2235,7 @@ export default class LevelDataManager {
                     // throw new Error("node time is little than col");
                 }
             }
-            console.log("alterNodes:", alterNodes.value);
-            // if (preColIndex.length != tempNeedLoadDifNodes.length) {
-            //     throw new Error("cannot memory index");
-            // }
-
-            // for (let i = 0; i < tempNeedLoadDifNodes.length; i++) {
-            //     if (preColIndex[i] + 1 < nonUniformColObjs.length) {
-            //         //判断是否可以剪枝
-            //         const con1 = canCut(tempNeedLoadDifNodes[i], nonUniformColObjs[preColIndex[i]], nonUniformColObjs[preColIndex[i] + 1], yScale);
-            //         if (con1) {
-            //             tempNeedLoadDifNodes.splice(i, 1)
-            //             preColIndex.splice(i, 1);
-            //         }
-            //     }
-            // }
-            ////this.checkMonotonicity(nonUniformColObjs,preColIndex,tempNeedLoadDifNodes);
+            // console.log("alterNodes:", alterNodes.value);
             let testTime = new Date().getTime();
             tempNeedLoadDifNodes = [...new Set(tempNeedLoadDifNodes)];
             needLoadDifNode = tempNeedLoadDifNodes;
@@ -2266,7 +2245,7 @@ export default class LevelDataManager {
             let testTime2 = new Date().getTime() - testTime;
             testT += testTime2;
             needLoadDifNode2 = tempNeedLoadDifNodes2;
-            console.log("needLoadDifNode:", needLoadDifNode.length);
+            // console.log("needLoadDifNode:", needLoadDifNode.length);
 
             if (needLoadDifNode.length > 0 && needLoadDifNode[0].level === maxLevel - 1) {
                 if(transform_symbol === '+'){
@@ -2439,25 +2418,20 @@ export default class LevelDataManager {
             if (needLoadDifNode.length === 0) {
                 break;
             }
-            // if(needLoadDifNode.length === 0 || needLoadDifNode[0].level === this.maxLevel - 1){
-            //     break;
-            // }
-
-            let start_databaseT2 = new Date().getTime();
             sumOfNeedLoadDifNodes += needLoadDifNode.length;
-            let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
-            if (losedDataInfo.length > 0) {
-                await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this); //每一层都需要判断子节点是否需要获取，需要的话要从数据库获取系数
-                for(let i=0; i<otherDataManager.length; i++)
-                    await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, otherDataManager[i]); 
-            }
-            databaseT += new Date().getTime() - start_databaseT2;
+            // let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
+            // if (losedDataInfo.length > 0) {
+            //     await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this); //每一层都需要判断子节点是否需要获取，需要的话要从数据库获取系数
+            //     for(let i=0; i<otherDataManager.length; i++)
+            //         await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, otherDataManager[i]); 
+            // }
+            databaseT += new Date().getTime() - startT;
 
         }
        
         // console.log("The time to get all coefficients:" + (new Date().getTime() - startT - testT));
         // console.log("The final count:", count_obj.count);
-        console.log("The prune time to get coefficients:", databaseT);
+        console.log("The stop time to get coefficients:", databaseT);
 
         for(let i=0; i<alternativeNodes.length;i++){
             alternativeNodes[i] = [...new Set(alternativeNodes[i])];
@@ -2467,7 +2441,6 @@ export default class LevelDataManager {
                 alternativeNodes2[i][j] = [...new Set(alternativeNodes2[i][j])];
             }
         }
-
         // const itemsToRemove = 4;
         // if (this.levelIndexObjs.length >= itemsToRemove) {
         //     this.levelIndexObjs.splice(this.levelIndexObjs.length - itemsToRemove, itemsToRemove);
@@ -2538,18 +2511,28 @@ export default class LevelDataManager {
             }
         }
 
-        let start_noPruneTime = new Date().getTime();
+        let start_noStopTime = new Date().getTime();
         let tempArray: Array<TrendTree> = [];
         let tempArray2: Array<Array<TrendTree>> = new Array(otherDataManager.length).fill([]).map(() => new Array<TrendTree>());
         if(store.state.controlParams.stopEarly === false){
             for(let i=0;i<alternativeNodes.length;i++){
-                let tempLosedDataInfo = computeLosedDataRangeV1(alternativeNodes[i]);
-                // console.log("tempLosedDataInfo's length:", tempLosedDataInfo.length);
-                if (tempLosedDataInfo.length > 0) {
-                    await batchLoadDataForRangeLevel1MinMaxMiss(tempLosedDataInfo, this, tempArray); 
-                    // console.log("tempArray's length", tempArray.length);
-                    for(let j=0; j<otherDataManager.length; j++)
-                        await batchLoadDataForRangeLevel1MinMaxMiss(tempLosedDataInfo, otherDataManager[j], tempArray2[j]); 
+                // let tempLosedDataInfo = computeLosedDataRangeV1(alternativeNodes[i]);
+                // // console.log("tempLosedDataInfo's length:", tempLosedDataInfo.length);
+                // if (tempLosedDataInfo.length > 0) {
+                //     await batchLoadDataForRangeLevel1MinMaxMiss(tempLosedDataInfo, this, tempArray); 
+                //     // console.log("tempArray's length", tempArray.length);
+                //     for(let j=0; j<otherDataManager.length; j++)
+                //         await batchLoadDataForRangeLevel1MinMaxMiss(tempLosedDataInfo, otherDataManager[j], tempArray2[j]); 
+                // }
+                for(let m=0; m<alternativeNodes[i].length; m++){
+                    tempArray.push(alternativeNodes[i][m]._leftChild!);
+                    tempArray.push(alternativeNodes[i][m]._rightChild!);
+                }
+                for(let j=0; j<otherDataManager.length; j++){
+                    for(let n=0; n<alternativeNodes[i].length; n++){
+                        tempArray2[j].push(alternativeNodes2[j][i][n]._leftChild!);
+                        tempArray2[j].push(alternativeNodes2[j][i][n]._rightChild!);
+                    }
                 }
 
                 // compare with current pixel column, prune
@@ -2694,8 +2677,8 @@ export default class LevelDataManager {
                     tempArray2[l] = [];
             }
         }
-        databaseT += new Date().getTime() - start_noPruneTime;
-        console.log("No Prune Time:", databaseT);
+        databaseT += new Date().getTime() - start_noStopTime;
+        console.log("No Stop Time:", databaseT);
         console.log("The final load:", sumOfNeedLoadDifNodes);
         let maxValue = -Infinity, minValue = Infinity, finalValue = 0;
         for (let i = 0; i < nonUniformColObjs.length; i++) {
@@ -2709,8 +2692,6 @@ export default class LevelDataManager {
             else if(transform_symbol === '-'){
                 maxValue = Math.max(maxValue, nonUniformColObjs[i].subMax[1]);
                 minValue = Math.min(minValue, nonUniformColObjs[i].subMin[1]);
-                // maxValue = 1000;
-                // minValue = -2000;
             }
             else if(transform_symbol === '*'){
                 maxValue = Math.max(maxValue, nonUniformColObjs[i].multiMax[1]);
@@ -2805,14 +2786,14 @@ export default class LevelDataManager {
         sumOfNeedLoadDifNodes += needLoadDifNode.length;
 
         console.log("get data");
-        let start_databaseT = new Date().getTime();
-        let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
-        if (losedDataInfo.length > 0) {
-            await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);  //取得系数
-            for(let i=0; i<otherDataManager.length; i++)
-                await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, otherDataManager[i]);
-        }
-        databaseT += new Date().getTime() - start_databaseT;
+        // let start_databaseT = new Date().getTime();
+        // let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
+        // if (losedDataInfo.length > 0) {
+        //     await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);  //取得系数
+        //     for(let i=0; i<otherDataManager.length; i++)
+        //         await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, otherDataManager[i]);
+        // }
+        // databaseT += new Date().getTime() - start_databaseT;
 
         let testT = 0;
         let alternativeNodes:TrendTree[][] = Array.from({ length: 11 }, () => []);
@@ -3043,19 +3024,19 @@ export default class LevelDataManager {
 
             let start_databaseT2 = new Date().getTime();
             sumOfNeedLoadDifNodes += needLoadDifNode.length;
-            let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
-            if (losedDataInfo.length > 0) {
-                await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this); //每一层都需要判断子节点是否需要获取，需要的话要从数据库获取系数
-                for(let i=0; i<otherDataManager.length; i++)
-                    await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, otherDataManager[i]); 
-            }
-            databaseT += new Date().getTime() - start_databaseT2;
+            // let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
+            // if (losedDataInfo.length > 0) {
+            //     await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this); //每一层都需要判断子节点是否需要获取，需要的话要从数据库获取系数
+            //     for(let i=0; i<otherDataManager.length; i++)
+            //         await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, otherDataManager[i]); 
+            // }
+            // databaseT += new Date().getTime() - start_databaseT2;
 
         }
        
         // console.log("The time to get all coefficients:" + (new Date().getTime() - startT - testT));
         // console.log("The final count:", count_obj.count);
-        console.log("The time to get total coefficients:", databaseT);
+        console.log("The time to get total coefficients:", new Date().getTime() - startT);
         console.log("The final load:", sumOfNeedLoadDifNodes);
 
         let maxValue = -Infinity, minValue = Infinity, finalValue = 0;

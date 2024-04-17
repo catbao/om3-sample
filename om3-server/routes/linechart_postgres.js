@@ -483,7 +483,8 @@ function init_transform_timeseries(req, res){
             const sqlStr = `select i,minvd,maxvd,avevd from ${allMultiSeriesTables[i]} where i<$1 order by i asc`;
             // const sqlStr = `select i,minvd,maxvd,avevd from ${allMultiSeriesTables[i]} order by i asc`;
             const params = [];
-            params.push(2 ** Math.ceil(Math.log2(query.width)));
+            params.push(65536);
+            // params.push(2 ** Math.ceil(Math.log2(query.width)));
             const sqlQuery = {
                 text: sqlStr,
                 values: params
