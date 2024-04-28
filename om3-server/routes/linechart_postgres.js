@@ -168,7 +168,7 @@ async function batchLoadMinMaxMissWithWs(req,res){  //替代了websocket
     }
     
     // const tName="om3.mock_guassian_sin_om3_8m";
-    const tName="om3.mock_guassian_sin_om3_16";
+    const tName="om3.mock_guassian_sin_16_om3_6ht";
     const condition = generateSingalLevelSQLMinMaxMissQuery(needRangeArray, maxLevel, tName);
     if (condition === null) {
         console.log("condition is null");
@@ -188,7 +188,7 @@ async function batchLoadMinMaxMissWithWs(req,res){  //替代了websocket
             throw err;
         }
         console.log("The time of getting cof:", new Date().getTime() - startT);
-        console.log(result.rows);
+        // console.log(result.rows);
         const minV = [];
         const maxV = [];
         const aveV = [];
