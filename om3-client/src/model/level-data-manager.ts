@@ -2603,5 +2603,182 @@ export default class LevelDataManager {
         return myDict;
     }
 
+    async viewChangeInteractionFinal_rs(currentLevel: number, width: number, timeRange: Array<number>, yScale: any, maxLevel: any, columns?:Array<NoUniformColObj>) {
+        console.log(currentLevel, width, timeRange)
+        const dataName = this.dataName.includes(".") ? this.dataName.split(".")[1] : this.dataName;
+        const currentFlagInfo = store.state.allFlags[this.dataName];
+        // if (currentFlagInfo === undefined) {
+        //     throw new Error(this.dataName + " get flag faild")
+        // } else {
+        //     console.log("flag length:", currentFlagInfo.length)
+        // }
+    
+        allTimes = []
+        maxLevel = 16;
+        // console.time("v_c")
+        const nonUniformColObjs = computeTimeSE(currentLevel, width, timeRange, this.realDataRowNum, this.maxLevel);
+        let needLoadDifNode: Array<TrendTree> = [];
+        let colIndex = 0;
+    
+        let dif = 4000;
+        let total = 20000;
+        let widthOfScreen = 1000;
+        let numInOnePixel = total / widthOfScreen;
+        let wentPixel = Math.floor(dif / numInOnePixel);
+        let comePixel = wentPixel; 
+    
+        // if(columns !== undefined){
+        //     colIndex = widthOfScreen - comePixel;
+        //     for(let i=comePixel; i<columns!.length; i++){  //重用原来的像素列
+        //         nonUniformColObjs[i-comePixel] = columns![i];
+        //     }
+        // }
+    
+        for (let i = 0; i < this.levelIndexObjs[currentLevel].firstNodes.length; i++) {
+            const firtIndexTimeRange = this.getIndexTime(currentLevel, this.levelIndexObjs[currentLevel].loadedDataRange[i][0], maxLevel);
+            const lastIndexTimeRange = this.getIndexTime(currentLevel, this.levelIndexObjs[currentLevel].loadedDataRange[i][1], maxLevel);
+            let p = this.levelIndexObjs[currentLevel].firstNodes[i];
+    
+            if (firtIndexTimeRange.startT <= timeRange[0] && lastIndexTimeRange.endT >= timeRange[1]) {
+                while (p != null) {
+                    if (colIndex >= nonUniformColObjs.length) {
+                        break;
+                        //throw new Error("col index out range");
+                    }
+                    const type = nonUniformColObjs[colIndex].isMissContain(p);
+                    nonUniformColObjs[colIndex].containColumnRange(p, type);
+                    if (type === 1) {
+                        p = p.nextSibling!;
+                    } else if (type === 2) {
+                        needLoadDifNode.push(p);
+                        p = p.nextSibling!;
+                    } else if (type === 3) {
+                        colIndex++;
+                    } else if (type === 5) {
+                        p = p.nextSibling!
+                    } else if (type === 6) {
+                        throw new Error("error in viewchange")
+                        break;
+                    } else {
+                        p = p.nextSibling!;
+                        //throw new Error("node time is little than col");
+                    }
+                }
+            }
+    
+        }
+    
+        if (needLoadDifNode.length === 0) {
+            return nonUniformColObjs;
+        }
+    
+        // let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
+        // if (losedDataInfo.length > 0) {
+        //     await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);
+        // }
+    
+    
+        while (needLoadDifNode.length > 0) {
+            colIndex = 0;
+            const tempNeedLoadDifNodes = [];
+            const tempQue: Array<TrendTree> = [];
+    
+            needLoadDifNode.forEach(v => {
+                if(v._leftChild != null && v._rightChild != null){
+                    this.lruCache.has(v._leftChild.level + "_" + v._leftChild.index);
+                    this.lruCache.has(v._rightChild.level + "_" + v._rightChild.index);
+                    if (v._leftChild.nodeType !== 'NULL') {
+                        tempQue.push(v._leftChild!);
+                    }
+                    if (v._rightChild.nodeType !== 'NULL') {
+                        tempQue.push(v._rightChild!);
+                    }
+                }
+            });
+    
+            const preColIndex = [];
+            for (let i = 0; i < tempQue.length; i++) {
+                if (colIndex >= nonUniformColObjs.length) {
+                    break;
+                    //throw new Error("col index out range");
+                }
+                const type = nonUniformColObjs[colIndex].isMissContain(tempQue[i]);
+                nonUniformColObjs[colIndex].containColumnRange(tempQue[i], type);
+                if (type === 1) {
+                    continue;
+                } else if (type === 2) {
+                    tempNeedLoadDifNodes.push(tempQue[i]);
+                    preColIndex.push(colIndex);
+                } else if (type === 3) {
+                    colIndex++;
+                    i--;
+                } else if (type === 6) {
+                    break;
+                } else {
+                    continue;
+                    // throw new Error("node time is little than col");
+                }
+            }
+            if (preColIndex.length != tempNeedLoadDifNodes.length) {
+                throw new Error("cannot memory index");
+            }
+    
+            for (let i = 0; i < tempNeedLoadDifNodes.length; i++) {
+                if (preColIndex[i] + 1 < nonUniformColObjs.length) {
+                    const con1 = canCut(tempNeedLoadDifNodes[i], nonUniformColObjs[preColIndex[i]], nonUniformColObjs[preColIndex[i] + 1], yScale);
+                    if (con1) {
+                        tempNeedLoadDifNodes.splice(i, 1)
+                        preColIndex.splice(i, 1);
+                    }
+                }
+    
+            }
+            //this.checkMonotonicity(nonUniformColObjs,preColIndex,tempNeedLoadDifNodes);
+            needLoadDifNode = tempNeedLoadDifNodes;
+    
+            // if (needLoadDifNode.length > 0 && needLoadDifNode[0].level === this.maxLevel - 1) {
+    
+            //     console.log("last level:", needLoadDifNode.length);
+    
+            //     for (let i = 0; i < needLoadDifNode.length; i++) {
+            //         const nodeFlag1 = currentFlagInfo[2 * needLoadDifNode[i].index];
+            //         if (nodeFlag1 === 1) {
+            //             throw new Error("flag error")
+            //         }
+            //         const nodeFlag2 = currentFlagInfo[2 * needLoadDifNode[i].index + 1]
+            //         if (nodeFlag2 === 0) {
+            //             nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[1]);
+            //             nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[1]);
+            //             if (preColIndex[i] + 1 < nonUniformColObjs.length) {
+            //                 nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[2]);
+            //                 nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[2]);
+            //             }
+            //         } else {
+            //             nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[2]);
+            //             nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[2]);
+            //             if (preColIndex[i] + 1 < nonUniformColObjs.length) {
+            //                 nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[1]);
+            //                 nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[1]);
+            //             }
+            //         }
+    
+            //     }
+            //     break;
+            // }
+            if (needLoadDifNode.length === 0 || needLoadDifNode[0].level === this.maxLevel - 1) {
+                break;
+            }
+            // let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
+            // if (losedDataInfo.length > 0) {
+            //     await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);
+            // }
+    
+        }
+        for (let i = 0; i < nonUniformColObjs.length; i++) {
+            nonUniformColObjs[i].checkIsMis();
+        }
+        return nonUniformColObjs;
+    }
 }
+
 
