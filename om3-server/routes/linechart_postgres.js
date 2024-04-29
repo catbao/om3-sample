@@ -187,7 +187,7 @@ async function batchLoadMinMaxMissWithWs(req,res){  //替代了websocket
             pool.end();
             throw err;
         }
-        console.log("The time of getting cof:", new Date().getTime() - startT);
+        // console.log("The time of getting cof:", new Date().getTime() - startT);
         // console.log(result.rows);
         const minV = [];
         const maxV = [];
@@ -306,19 +306,19 @@ function initWaveletBenchMinMaxMissHandler(req, res) {
     // let maxLevel = levelMap[splitArray[splitArray.length - 1]];
     // console.log(maxLevel)
     let sqlStr = '';
-    let table_name = 'mock50ht_mock_guassian_sin1_50ht_om3_50ht';
-    sqlStr = `select i,minvd,maxvd,avevd from om3.${table_name} order by i asc`;
+    let table_name = 'mock_guassian_sin_16_om3_6ht';
+    sqlStr = `select i,minvd,maxvd,avevd from om3.${table_name} where i<$1 order by i asc`;
     const params = [];
     console.log(query.width);
-    params.push(65536);
-    // params.push(2 ** Math.ceil(Math.log2(query.width)));
-    // const sqlQuery = {
-    //     text: sqlStr,
-    //     values: params
-    // }
+    // params.push(65536);
+    params.push(2 ** Math.ceil(Math.log2(query.width)));
+    const sqlQuery = {
+        text: sqlStr,
+        values: params
+    }
     const startT = new Date().getTime();
     try {
-        currentPool.query(sqlStr, function (err, result) {
+        currentPool.query(sqlQuery, function (err, result) {
             if (err) {
                 //currentPool.end();
                 console.log(sqlStr)

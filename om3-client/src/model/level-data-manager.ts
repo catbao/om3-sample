@@ -1645,15 +1645,15 @@ export default class LevelDataManager {
         // }
         let needLoadCount = 0;
         allTimes = []
-        let maxLevel = 19;
+        let maxLevel = 16;
         // console.time("v_c")
         const nonUniformColObjs = computeTimeSE(currentLevel, width, timeRange, this.realDataRowNum, this.maxLevel);
         let needLoadDifNode: Array<TrendTree> = [];
         let colIndex = 0;
         let startT = new Date().getTime();
 
-        let dif = 10000;
-        let total = 20000;
+        let dif = 2000;
+        let total = 10000;
         let widthOfScreen = 600;
         let numInOnePixel = total / widthOfScreen;
         let wentPixel = Math.floor(dif / numInOnePixel);
@@ -1705,10 +1705,10 @@ export default class LevelDataManager {
         }else{
             needLoadCount += needLoadDifNode.length;
         }
-        // let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
-        // if (losedDataInfo.length > 0) {
-        //     await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);
-        // }
+        let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
+        if (losedDataInfo.length > 0) {
+            await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);
+        }
 
         while (needLoadDifNode.length > 0) {
             colIndex = 0;
@@ -1768,46 +1768,20 @@ export default class LevelDataManager {
             //this.checkMonotonicity(nonUniformColObjs,preColIndex,tempNeedLoadDifNodes);
             needLoadDifNode = tempNeedLoadDifNodes;
             needLoadCount += needLoadDifNode.length;
-            // if (needLoadDifNode.length > 0 && needLoadDifNode[0].level === this.maxLevel - 1) {
-            //     console.log("last level:", needLoadDifNode.length);
-            //     for (let i = 0; i < needLoadDifNode.length; i++) {
-            //         const nodeFlag1 = currentFlagInfo[2 * needLoadDifNode[i].index];
-            //         if (nodeFlag1 === 1) {
-            //             throw new Error("flag error")
-            //         }
-            //         const nodeFlag2 = currentFlagInfo[2 * needLoadDifNode[i].index + 1]
-            //         if (nodeFlag2 === 0) {
-            //             nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[1]);
-            //             nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[1]);
-            //             if (preColIndex[i] + 1 < nonUniformColObjs.length) {
-            //                 nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[2]);
-            //                 nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[2]);
-            //             }
-            //         } else {
-            //             nonUniformColObjs[preColIndex[i]].addLastVal(needLoadDifNode[i].yArray[2]);
-            //             nonUniformColObjs[preColIndex[i]].forceMerge(needLoadDifNode[i].yArray[2]);
-            //             if (preColIndex[i] + 1 < nonUniformColObjs.length) {
-            //                 nonUniformColObjs[preColIndex[i] + 1].addFirstVal(needLoadDifNode[i].yArray[1]);
-            //                 nonUniformColObjs[preColIndex[i] + 1].forceMerge(needLoadDifNode[i].yArray[1]);
-            //             }
-            //         }
-
-            //     }
-            //     break;
-            // }
             if (needLoadDifNode.length === 0 || needLoadDifNode[0].level === this.maxLevel - 1) {
                 break;
             }
-            // let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
-            // if (losedDataInfo.length > 0) {
-            //     await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);
-            // }
+            let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
+            if (losedDataInfo.length > 0) {
+                await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);
+            }
         }
+        console.log("Time:", new Date().getTime() - startT);
         for (let i = 0; i < nonUniformColObjs.length; i++) {
             nonUniformColObjs[i].checkIsMis();
         }
+        
         console.log("needLoadCount:", needLoadCount);
-        console.log("Time:", new Date().getTime() - startT);
         return nonUniformColObjs;
     }
 

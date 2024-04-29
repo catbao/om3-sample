@@ -510,7 +510,7 @@ export async function batchLoadDataForRangeLevel1MinMaxMiss(losedRange: Array<Ar
         const getBatchLoadMinMaxMissWithWsUrl = `/line_chart/batchLoadMinMaxMissWithWs?losedRange=${losedRange}`
         const data = get(getBatchLoadMinMaxMissWithWsUrl);
         difVals = await data;
-        console.log("The time of getting cof:", new Date().getTime() - startT);
+        // console.log("The time of getting cof:", new Date().getTime() - startT);
     }else{
         difVals= await batchLoadMinMaxMissWithPostForMultiLineType(losedRange, manager.dataName, "level_load_data_min_max_miss", manager.maxLevel, tagName)
     }
