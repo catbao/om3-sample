@@ -1634,8 +1634,8 @@ export default class LevelDataManager {
         }
     }
 
-    async viewChangeInteractionFinal(currentLevel: number, width: number, timeRange: Array<number>, yScale: any, maxLevel: any, columns?:Array<NoUniformColObj>) {
-        console.log(currentLevel, width, timeRange)
+    async viewChangeInteractionFinal(currentLevel: number, width: number, timeRange: Array<number>, yScale: any, columns?:Array<NoUniformColObj>) {
+        // console.log(currentLevel, width, timeRange)
         const dataName = this.dataName.includes(".") ? this.dataName.split(".")[1] : this.dataName;
         const currentFlagInfo = store.state.allFlags[this.dataName];
         // if (currentFlagInfo === undefined) {
@@ -1643,27 +1643,28 @@ export default class LevelDataManager {
         // } else {
         //     console.log("flag length:", currentFlagInfo.length)
         // }
-
+        let needLoadCount = 0;
         allTimes = []
-        maxLevel = 16;
+        let maxLevel = 19;
         // console.time("v_c")
         const nonUniformColObjs = computeTimeSE(currentLevel, width, timeRange, this.realDataRowNum, this.maxLevel);
         let needLoadDifNode: Array<TrendTree> = [];
         let colIndex = 0;
+        let startT = new Date().getTime();
 
-        let dif = 4000;
+        let dif = 10000;
         let total = 20000;
-        let widthOfScreen = 1000;
+        let widthOfScreen = 600;
         let numInOnePixel = total / widthOfScreen;
         let wentPixel = Math.floor(dif / numInOnePixel);
         let comePixel = wentPixel; 
 
-        // if(columns !== undefined){
-        //     colIndex = widthOfScreen - comePixel;
-        //     for(let i=comePixel; i<columns!.length; i++){  //重用原来的像素列
-        //         nonUniformColObjs[i-comePixel] = columns![i];
-        //     }
-        // }
+        if(columns !== undefined){
+            colIndex = widthOfScreen - comePixel;
+            for(let i=comePixel; i<columns!.length; i++){  //重用原来的像素列
+                nonUniformColObjs[i-comePixel] = columns![i];
+            }
+        }
 
         for (let i = 0; i < this.levelIndexObjs[currentLevel].firstNodes.length; i++) {
             const firtIndexTimeRange = this.getIndexTime(currentLevel, this.levelIndexObjs[currentLevel].loadedDataRange[i][0], maxLevel);
@@ -1701,13 +1702,13 @@ export default class LevelDataManager {
 
         if (needLoadDifNode.length === 0) {
             return nonUniformColObjs;
+        }else{
+            needLoadCount += needLoadDifNode.length;
         }
-
-        let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
-        if (losedDataInfo.length > 0) {
-            await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);
-        }
-
+        // let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
+        // if (losedDataInfo.length > 0) {
+        //     await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);
+        // }
 
         while (needLoadDifNode.length > 0) {
             colIndex = 0;
@@ -1715,20 +1716,6 @@ export default class LevelDataManager {
             const tempQue: Array<TrendTree> = [];
 
             needLoadDifNode.forEach(v => {
-                // if (v._leftChild === null || v._rightChild === null) {
-                //     console.log(v)
-                //     console.log(this)
-                //     debugger
-                //     throw new Error("cannot find next level node");
-                // }
-                // this.lruCache.has(v._leftChild.level + "_" + v._leftChild.index);
-                // this.lruCache.has(v._rightChild.level + "_" + v._rightChild.index);
-                // if (v._leftChild.nodeType !== 'NULL') {
-                //     tempQue.push(v._leftChild!);
-                // }
-                // if (v._rightChild.nodeType !== 'NULL') {
-                //     tempQue.push(v._rightChild!);
-                // }
                 if(v._leftChild != null && v._rightChild != null){
                     this.lruCache.has(v._leftChild.level + "_" + v._leftChild.index);
                     this.lruCache.has(v._rightChild.level + "_" + v._rightChild.index);
@@ -1780,11 +1767,9 @@ export default class LevelDataManager {
             }
             //this.checkMonotonicity(nonUniformColObjs,preColIndex,tempNeedLoadDifNodes);
             needLoadDifNode = tempNeedLoadDifNodes;
-
+            needLoadCount += needLoadDifNode.length;
             // if (needLoadDifNode.length > 0 && needLoadDifNode[0].level === this.maxLevel - 1) {
-
             //     console.log("last level:", needLoadDifNode.length);
-
             //     for (let i = 0; i < needLoadDifNode.length; i++) {
             //         const nodeFlag1 = currentFlagInfo[2 * needLoadDifNode[i].index];
             //         if (nodeFlag1 === 1) {
@@ -1813,15 +1798,16 @@ export default class LevelDataManager {
             if (needLoadDifNode.length === 0 || needLoadDifNode[0].level === this.maxLevel - 1) {
                 break;
             }
-            let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
-            if (losedDataInfo.length > 0) {
-                await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);
-            }
-
+            // let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
+            // if (losedDataInfo.length > 0) {
+            //     await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);
+            // }
         }
         for (let i = 0; i < nonUniformColObjs.length; i++) {
             nonUniformColObjs[i].checkIsMis();
         }
+        console.log("needLoadCount:", needLoadCount);
+        console.log("Time:", new Date().getTime() - startT);
         return nonUniformColObjs;
     }
 

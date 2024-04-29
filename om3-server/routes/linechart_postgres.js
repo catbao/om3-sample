@@ -302,21 +302,23 @@ function initWaveletBenchMinMaxMissHandler(req, res) {
         }
         currentPool = customDBPoolMap().get(userCookie);
     }
-    const splitArray = query.table_name.split("_");
-    let maxLevel = levelMap[splitArray[splitArray.length - 1]];
-    console.log(maxLevel)
+    // const splitArray = query.table_name.split("_");
+    // let maxLevel = levelMap[splitArray[splitArray.length - 1]];
+    // console.log(maxLevel)
     let sqlStr = '';
-    sqlStr = `select i,minvd,maxvd,avevd from om3.${query.table_name} where i<$1 order by i asc`;
+    let table_name = 'mock50ht_mock_guassian_sin1_50ht_om3_50ht';
+    sqlStr = `select i,minvd,maxvd,avevd from om3.${table_name} order by i asc`;
     const params = [];
-    console.log(query.width)
-    params.push(2 ** Math.ceil(Math.log2(query.width)));
-    const sqlQuery = {
-        text: sqlStr,
-        values: params
-    }
+    console.log(query.width);
+    params.push(65536);
+    // params.push(2 ** Math.ceil(Math.log2(query.width)));
+    // const sqlQuery = {
+    //     text: sqlStr,
+    //     values: params
+    // }
     const startT = new Date().getTime();
     try {
-        currentPool.query(sqlQuery, function (err, result) {
+        currentPool.query(sqlStr, function (err, result) {
             if (err) {
                 //currentPool.end();
                 console.log(sqlStr)

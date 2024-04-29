@@ -139,31 +139,32 @@ async function getBuffer(state: GlobalState, url: string) {
 // }
 
 async function loadViewChangeQueryWSMinMaxMissDataInitData(context: ActionContext<GlobalState, GlobalState>, payload: { startTime: number, endTime: number, width: number, height: number }){
-    const getDataUrl = `/line_chart/getEqualData?width=${2 ** (Math.ceil(Math.log2(payload.width)))}` 
+    const getDataUrl = `/line_chart/init_wavelet_bench_min_max_miss?width=${2 ** (Math.ceil(Math.log2(payload.width)))}` 
     const data2 = get(context.state,getDataUrl);
-    console.log(data2);
-    const res = await data2;
+    // console.log(data2);
+    let res = await data2;
+    res = res.data['result'];
     const currentLevel = Math.ceil(Math.log2(payload.width));
-    const current_maxLevel = 11;
+    // const current_maxLevel = 11;
     let res2;
-    for(let j=0; j<10; ++j){
+    for(let j=0; j<2; ++j){
         if (Math.log2(payload.width) !== Math.ceil(Math.log2(payload.width))) {
-            const { trendTree, dataManager } = constructMinMaxMissTrendTree(res);
-            console.log(dataManager); 
+            const { trendTree, dataManager } = constructMinMaxMissTrendTree(res, payload.width);
+            // console.log(dataManager); 
             //dataManager.realDataRowNum=2**dataManager.maxLevel;
             await dataManager.getDataMinMaxMiss(currentLevel, 0, 2 ** (currentLevel) - 1);
             const minV = dataManager.levelIndexObjs[0].firstNodes[0].yArray[1];
             const maxV = dataManager.levelIndexObjs[0].firstNodes[0].yArray[2];
-            console.log(minV, maxV);
+            // console.log(minV, maxV);
             const yScale = d3.scaleLinear().domain([minV, maxV]).range([payload.height, 0]);
             
             if(j === 0)
                 // res2 = await dataManager.viewChangeInteractionFinal(Math.ceil(Math.log2(payload.width)), payload.width, [4000*j, 4000*j+20000], yScale,current_maxLevel+2);
-                res2 = await dataManager.viewChangeInteractionFinal(Math.ceil(Math.log2(payload.width)), payload.width, [4000*j, 4000*j+20000], yScale, current_maxLevel+2);
+                res2 = await dataManager.viewChangeInteractionFinal(Math.ceil(Math.log2(payload.width)), payload.width, [100000*j, 100000*j+200000], yScale);
             else
                 // res2 = await dataManager.viewChangeInteractionFinal(Math.ceil(Math.log2(payload.width)), payload.width, [4000*j, 4000*j+20000], yScale,current_maxLevel+2,res2);
-                res2 = await dataManager.viewChangeInteractionFinal(Math.ceil(Math.log2(payload.width)), payload.width, [4000*j, 4000*j+20000], yScale, current_maxLevel+2,res2);
-            console.log(res2);
+                res2 = await dataManager.viewChangeInteractionFinal(Math.ceil(Math.log2(payload.width)), payload.width, [100000*j, 100000*j+200000], yScale,res2);
+            // console.log(res2);
             context.commit("addViewChangeQueryNoPowLineChartObj", { trendTree, dataManager, data: res2, startTime: payload.startTime, endTime: payload.endTime, algorithm: "trendtree", width: payload.width, height: payload.height });
             await new Promise(resolve => setTimeout(resolve, 1000));
         }

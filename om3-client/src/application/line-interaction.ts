@@ -84,7 +84,7 @@ export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
 
     timeBrushObj.on("end", brushed);
     timeBrushObj.on("start", () => {
-        console.log("start")
+        // console.log("start")
     })
     const timeBoxG = svg.append("g").attr("transform", `translate(${pading.left},${pading.top + 50 + lineChartObj.height - 20})`).call(timeBrushObj).call(timeBrushObj.move, [0, lineChartObj.width]);
     let zoomAxisG = svg.append("g").attr('style', 'user-select:none').attr("transform", `translate(${pading.left},${lineChartObj.height + pading.top + 50})`).attr("class", 'x axis').call(zoomAxis)
