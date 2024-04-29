@@ -290,7 +290,7 @@ const computeLineTransform: ActionHandler<GlobalState, GlobalState> = (context: 
                 // const yScale = d3.scaleLinear().domain([minV, maxV]).range([payload.height, 0]);
                 const yScale = d3.scaleLinear().domain([-1000, 1000]).range([600, 0]);
 
-                dataManager.viewTransformFinal_testNoPrune2(dataManagers, currentLevel, 600, [0, dataManager.realDataRowNum], yScale, drawer, transform_symbol).then(res => {
+                dataManager.viewTransformFinal(dataManagers, currentLevel, 600, [0, dataManager.realDataRowNum], yScale, drawer, transform_symbol).then(res => {
                     console.log(res);
                     // console.log(res['a']);
                     const resultObject = res as { a: NoUniformColObj[]; b: number; };

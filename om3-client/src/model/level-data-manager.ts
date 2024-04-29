@@ -3532,13 +3532,16 @@ export default class LevelDataManager {
                     }
                     break;
                 }
+                let copyT = new Date().getTime();
                 //update to next layer
+                console.log("copy time:")
                 alternativeNodes[i+1] = [...alternativeNodes[i+1], ...tempArray];
                 // alternativeNodes[i+1] = [...new Set(alternativeNodes[i+1])];
                 for(let l=0; l<tempArray2.length; l++){
                     alternativeNodes2[l][i+1] = [...alternativeNodes2[l][i+1], ...tempArray2[l]];
                     // alternativeNodes2[l][i+1] = [...new Set(alternativeNodes2[l][i+1])];
                 }
+                console.log("copy time:", new Date().getTime() - copyT);
                 tempArray= [];
                 for(let l=0; l<tempArray2.length; l++)
                     tempArray2[l] = [];
