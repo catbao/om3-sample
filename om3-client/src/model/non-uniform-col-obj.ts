@@ -445,7 +445,7 @@ export default class NoUniformColObj {
         // const pTimeE = pTRange + pTimeS - 1;
         // console.log("transform_symbol:",transform_symbol);
         let symbol = transform_symbol;
-        if((type === 1 || type === 7 || type ===8 || type === 9) && (symbol == '+' || symbol == 'avg')){
+        if((type === 1 || type === 7 || type ===8 || type === 9) && (symbol === '+' || symbol === 'avg')){
             // let p = pp, p2 = pp2;
             let min1 = p.yArray[1];
             let min2 = 0;
@@ -470,7 +470,7 @@ export default class NoUniformColObj {
             let alternativeNodes = [];
             let alternativeNodes2 = [];
             // let p = pp, p2 = pp2;
-            while(max > -10000){
+            while(max > -Infinity){
                 let temp_minL = 0, temp_minR = 0;
                 // const combinedUrl = `/line_chart/onlyChild?&p=${p}&p2=${p2}&dataName=${dataName}&dataNames=${dataNames}`;
                 // const data = get(combinedUrl);
@@ -608,7 +608,7 @@ export default class NoUniformColObj {
             }
             // console.log("The bottom min(+):", minIndex);
             p = pp, p2 = pp2;
-            while(max > -10000){
+            while(max > -Infinity){
                 let temp_maxL = 0, temp_maxR = 0;
                 // let needLoadChildNode: Array<TrendTree> = [];
                 // needLoadChildNode.push(p);
@@ -664,7 +664,7 @@ export default class NoUniformColObj {
                 if(p._rightChild){
                     temp_maxR = p._rightChild.yArray[2];
                     for(let i=0;i<p2.length;++i){
-                        if(p2[i]._leftChild !== null){
+                        if(p2[i]._rightChild !== null){
                             temp_maxR += p2[i]._rightChild!.yArray[2];
                         }
                     }
@@ -721,7 +721,7 @@ export default class NoUniformColObj {
                 let pop:any = alternativeNodes.pop();
                 // if(pop === undefined ) continue;
                 // console.log("pop:", pop);
-                if(Number(pop[pop.length-1]) > this.addMin[1]) continue;
+                // if(Number(pop[pop.length-1]) > this.addMin[1]) continue;
                 // min = this.updateMinValue(p![0], min, alternativeNodes);
                 let len = pop.length;
                 let temp_minL = 0, temp_minR = 0;
@@ -803,7 +803,7 @@ export default class NoUniformColObj {
             while(alternativeNodes2.length > 0){
                 let pop:any = alternativeNodes2.pop();
                 // if(pop === undefined) continue;
-                if(Number(pop[pop.length-1]) < this.addMax[1]) continue;
+                // if(Number(pop[pop.length-1]) < this.addMax[1]) continue;
                 let len = pop.length;
                 let temp_maxL = 0, temp_maxR = 0;
                 if(!pop[Math.floor(len/2)]._leftChild && !pop[Math.floor(len/2)]._rightChild){
@@ -929,7 +929,7 @@ export default class NoUniformColObj {
                 this.addMax = maxIndex;
             }
         }
-        else if((type === 1 || type === 7 || type ===8 || type === 9) && symbol == '-'){
+        else if((type === 1 || type === 7 || type ===8 || type === 9) && symbol === '-'){
             // let p = pp, p2 = pp2;
             let min1 = p.yArray[1];
             let min2 = 0;
@@ -953,7 +953,7 @@ export default class NoUniformColObj {
 
             let alternativeNodes = [];
             let alternativeNodes2 = [];
-            while(max > -100000){
+            while(max > -Infinity){
                 let temp_minL = 0, temp_minR = 0;
                 if(!p._leftChild && !p._rightChild){
                     let minL = 0, minR = 0;
@@ -1039,6 +1039,7 @@ export default class NoUniformColObj {
                     for(let i=0;i<p2.length;++i){
                         p2[i] = p2[i]._leftChild!;
                     }
+                    count.count++;
                 }
                 else if(temp_minL > temp_minR && p._rightChild){
                     // tempMin = temp_minR;
@@ -1062,11 +1063,13 @@ export default class NoUniformColObj {
                         p2[i] = p2[i]._rightChild!;
                     }
                     alternativeNodes.push(tempNode);
+                    count.count++;
                 }
+                
             }
             // console.log("The bottom min(-):", minIndex);
             p = pp, p2 = pp2;
-            while(max > -100000){
+            while(max > -Infinity){
                 let temp_maxL = 0, temp_maxR = 0;
                 if(!p._leftChild && !p._rightChild){
                     let maxL = 0, maxR = 0;
@@ -1126,7 +1129,7 @@ export default class NoUniformColObj {
                     // temp_maxR = (p._rightChild.yArray[2] - p2._rightChild.yArray[1]);
                     temp_maxR = p._rightChild.yArray[2];
                     for(let i=0;i<p2.length;++i){
-                        if(p2[i]._leftChild !== null){
+                        if(p2[i]._rightChild !== null){
                             temp_maxR -= p2[i]._rightChild!.yArray[1];
                         }
                     }
@@ -1151,6 +1154,7 @@ export default class NoUniformColObj {
                     for(let i=0;i<p2.length;++i){
                         p2[i] = p2[i]._rightChild!;
                     }
+                    count.count++;
                 }
                 else if(temp_maxL > temp_maxR && p._leftChild){
                     // alternativeNodes.push([p, p2, p._leftChild, p2._leftChild, temp_maxR]);
@@ -1172,6 +1176,7 @@ export default class NoUniformColObj {
                     for(let i=0;i<p2.length;++i){
                         p2[i] = p2[i]._leftChild!;
                     }
+                    count.count++;
                 }
             }
             // console.log("The bottom max(-):", maxIndex);
@@ -1184,6 +1189,7 @@ export default class NoUniformColObj {
                 // console.log("alternativeNodes:", alternativeNodes);
                 let pop:any = alternativeNodes.pop();
                 if(pop === undefined ) continue;
+                // if(Number(pop[pop.length-1]) > this.subMin[1]) continue;
                 // let p:[TrendTree, number] = alternativeNodes.pop();
                 // console.log("pop:", pop);
                 // if(Number(pop[pop.length-1]) > min) continue;
@@ -1289,6 +1295,7 @@ export default class NoUniformColObj {
                 // console.log("alternativeNodes2:", alternativeNodes2);
                 let pop:any = alternativeNodes2.pop();
                 if(pop === undefined ) continue;
+                // if(Number(pop[pop.length-1]) < this.subMax[1]) continue;
                 // console.log("pop:", pop);
                 // if(Number(pop[pop.length-1]) < max) continue;
                 let len = pop.length;
@@ -1502,6 +1509,7 @@ export default class NoUniformColObj {
                     for(let i=0;i<p2.length;++i){
                         p2[i] = p2[i]._leftChild!;
                     }
+                    count.count++;
                 }
                 else if(temp_minL > temp_minR && p._rightChild){
                     let tempNode = [];
@@ -1520,6 +1528,7 @@ export default class NoUniformColObj {
                         p2[i] = p2[i]._rightChild!;
                     }
                     alternativeNodes.push(tempNode);
+                    count.count++;
                 }
             }
             // console.log("The bottom min(*):", minIndex);
@@ -1612,6 +1621,7 @@ export default class NoUniformColObj {
                     for(let i=0;i<p2.length;++i){
                         p2[i] = p2[i]._rightChild!;
                     }
+                    count.count++;
                 }
                 else if(temp_maxL > temp_maxR && p._leftChild){
                     let tempNode = [];
@@ -1630,6 +1640,7 @@ export default class NoUniformColObj {
                     for(let i=0;i<p2.length;++i){
                         p2[i] = p2[i]._leftChild!;
                     }
+                    count.count++;
                 }
             }
             // console.log("The bottom max(*):", maxIndex);
@@ -1641,6 +1652,7 @@ export default class NoUniformColObj {
             while(alternativeNodes.length > 0){
                 let pop:any = alternativeNodes.pop();
                 if(pop === undefined ) continue;
+                // if(Number(pop[pop.length-1]) > this.multiMin[1]) continue;
                 // if(Number(pop[pop.length-1]) > min) continue;
                 let len = pop.length;
                 let temp_minL = 0, temp_minR = 0;
@@ -1745,6 +1757,7 @@ export default class NoUniformColObj {
                 // console.log("alternativeNodes2:", alternativeNodes2);
                 let pop:any = alternativeNodes2.pop();
                 if(pop === undefined ) continue;
+                // if(Number(pop[pop.length-1]) < this.multiMax[1]) continue;
                 // console.log("pop:", pop);
                 // if(Number(pop[pop.length-1]) < max) continue;
                 let len = pop.length;
@@ -2065,6 +2078,7 @@ export default class NoUniformColObj {
             while(alternativeNodes.length > 0){
                 let pop:any = alternativeNodes.pop();
                 if(pop === undefined ) continue;
+                // if(Number(pop[pop.length-1]) > this.divMin[1]) continue;
                 // if(Number(pop[pop.length-1]) > min) continue;
                 let len = pop.length;
                 let temp_minL = 0, temp_minR = 0;
@@ -2148,6 +2162,7 @@ export default class NoUniformColObj {
                 // console.log("alternativeNodes2:", alternativeNodes2);
                 let pop:any = alternativeNodes2.pop();
                 if(pop === undefined ) continue;
+                // if(Number(pop[pop.length-1]) < this.divMax[1]) continue;
                 // console.log("pop:", pop);
                 // if(Number(pop[pop.length-1]) < max) continue;
                 let len = pop.length;

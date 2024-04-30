@@ -2042,8 +2042,8 @@ export default class LevelDataManager {
         if (currentFlagInfo === undefined) {
             throw new Error(this.dataName + " get flag faild")
         } else {
-            console.log("flag info:", currentFlagInfo);
-            console.log("flag length:", currentFlagInfo.length)
+            // console.log("flag info:", currentFlagInfo);
+            // console.log("flag length:", currentFlagInfo.length)
         }
         const currentFlagInfo2 = [];
         const dataNames = [];
@@ -2054,8 +2054,8 @@ export default class LevelDataManager {
             if (currentFlagInfo2[i] === undefined) {
                 throw new Error(otherDataManager[i].dataName + " get flag faild")
             } else {
-                console.log("flag2 info:", currentFlagInfo2[i]);
-                console.log("flag2 length:", currentFlagInfo2[i].length)
+                // console.log("flag2 info:", currentFlagInfo2[i]);
+                // console.log("flag2 length:", currentFlagInfo2[i].length)
             }
         }
         // const currentFlagInfo = [0,1,1,0,1,0,0,1];
@@ -2091,28 +2091,6 @@ export default class LevelDataManager {
                     let p2_temp = p2.slice();
                     nonUniformColObjs[colIndex].containColumnRange2(p, p2_temp, type, transform_symbol);
                     
-                    // if(type === 1 || type === 7 || type === 8 || type === 9){
-                    //     let combinedUrl = `/line_chart/getChildTree?level=${p.level}&index=${p.index}&dataset1=${this.dataName}&dataset2=${dataNames}`;
-                    //     try {
-                    //         resChild = await get(combinedUrl);
-                    //     } catch (error) {
-                    //         console.error("异步操作失败：", error);
-                    //     }
-                    //     resChild = await get(combinedUrl);
-                    //     resChild[0].d.push({l:-1, i:0, minvd:p.yArray[1], maxvd:p.yArray[2], avevd:p.yArray[3]});
-                    //     for(let j=0; j<dataNames.length; j++){
-                    //         resChild[j+1].d.push({l:-1, i:0, minvd:p2[j].yArray[1], maxvd:p2[j].yArray[2], avevd:p2[j].yArray[3]});
-                    //     }
-                    //     let p3: any;
-                    //     let p4 = [];
-                    //     let trendTree = [];
-                    //     for(let j=0; j<resChild.length; j++){
-                    //         trendTree.push(constructMinMaxMissTrendTreeForGetChildTree(resChild[j].d, 600, resChild[j].tn));
-                    //         if(j===0) p3 = trendTree[j].trendTree;
-                    //         else p4.push(trendTree[j].trendTree);
-                    //     }
-                    //     nonUniformColObjs[colIndex].computeTransform(p, p2, type, currentFlagInfo, currentFlagInfo2, transform_symbol);
-                    // }
                     let start_t = new Date().getTime();
                     nonUniformColObjs[colIndex].computeTransform(p, p2_temp, type, currentFlagInfo, currentFlagInfo2, transform_symbol, count_obj);
                     let end_t = new Date().getTime();
@@ -2154,7 +2132,7 @@ export default class LevelDataManager {
                     }
                 }
             }
-            console.log("count:", count_obj.count);
+            // console.log("count:", count_obj.count);
         }
         
         if(needLoadDifNode.length === 0){
