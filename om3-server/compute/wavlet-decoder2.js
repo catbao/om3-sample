@@ -67,7 +67,6 @@ function constructMinMaxMissTrendTree(data, width, tableName="aTable") {
                 curNodeType = "LEFTNULL"
                 lastNode.gapFlag='L'
             } else if (dif[1] === null) {
-                
                 curNodeType = "RIGHTNULL";
                 lastNode.gapFlag='R'
             }
@@ -113,21 +112,21 @@ function constructMinMaxMissTrendTree(data, width, tableName="aTable") {
             }
 
             //@ts-ignore
-            const firstNode = new TrendTree(lastNode, true, lastNode.index, yArray1, null, "O");
+            const firstNode = new TrendTree(lastNode, true, lastNode.index, yArray1, [minvd[(difIndex-1)*2], maxvd[(difIndex-1)*2], avevd[(difIndex-1)*2]], "O");
+            // const firstNode = new TrendTree(lastNode, true, lastNode.index, yArray1, null, "O");
             if (curNodeType === "LEFTNULL") {
                 firstNode.nodeType = 'NULL';
             }
 
             //@ts-ignore
-            const secondNode = new TrendTree(lastNode, false, lastNode.index, yArray2, null,"O");
+            const secondNode = new TrendTree(lastNode, false, lastNode.index, yArray2, [minvd[(difIndex-1)*2+1], maxvd[(difIndex-1)*2+1], avevd[(difIndex-1)*2+1]],"O");
+            // const secondNode = new TrendTree(lastNode, false, lastNode.index, yArray2, null,"O");
             if (curNodeType === "RIGHTNULL") {
                 secondNode.nodeType = 'NULL';
             }
             currentLevelNodes.push(firstNode);
             currentLevelNodes.push(secondNode);
             nodeNum += 2
-
-
         }
         levelIndex[i] = new LevelIndexObj(currentLevelNodes[0].level, true);
         levelIndex[i].addLoadedDataRange(currentLevelNodes[0], [currentLevelNodes[0].index, currentLevelNodes[currentLevelNodes.length-1].index]);
@@ -145,10 +144,11 @@ function constructMinMaxMissTrendTree(data, width, tableName="aTable") {
     }
 
     const levelDataManager = new LevelDataManager(levelIndex, tableName ? tableName : "test");
-    return {
-        dataManager: levelDataManager,
-        trendTree: root
-    }
+    // return {
+    //     dataManager: levelDataManager,
+    //     // trendTree: root
+    // }
+    return levelDataManager;
 }
 
 module.exports = { constructMinMaxMissTrendTree}

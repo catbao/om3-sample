@@ -1,6 +1,7 @@
 import axios from "axios";
 import store, { ws } from "../store"
 import { getUserCookie } from "@/helper/util";
+import LevelDataManager from "@/model/level-data-manager";
 export async function batchLoadDif(losedDataInfo: Array<Array<number>>,manager:any) {
     if (losedDataInfo.length === 0) {
         return [];
@@ -198,15 +199,34 @@ export function batchLoadWithWsForRawMinMax(losedDataInfo:Array<Array<number>>, 
         }
     })
 }
-export function batchLoadMinMaxMissWithWs(losedDataInfo:Array<Array<number>>, dataName: string, url: string, maxLevel: number,tagName?:string){
+export async function batchLoadMinMaxMissWithWs(losedDataInfo:Array<Array<number>>, dataName: string, url: string, maxLevel: number, manager?: LevelDataManager, tagName?:string){
     if (losedDataInfo.length === 0) {
         return [];
     }
+    const { data } = await axios.post(`postgres/line_chart/level_load_data_min_max_miss`, {
+        table_name: dataName.includes(".") ? dataName.split(".")[1] : dataName,
+        losedDataInfo:  {data:losedDataInfo} ,
+        // manager: manager,
+        tagName:tagName,
+        line_type:store.state.controlParams.currentLineType,
+        mode:store.state.controlParams.currentMode
+    });
+    const result = data.data;
+    // console.log("load_data_result:", result);
+    const resultArray = [];
+    if (result && result[0] && result[0].length > 0) {
+        for (let i = 0; i < result[0].length; i++) {
+            // resultArray.push({ l:  result[0][i], i: result[1][i], dif: [0, result[2][i], result[3][i], result[4][i], 0] });
+            resultArray.push({ l:  result[0][i], i: result[1][i], dif: [0, result[2][i], result[3][i], result[4][i], 0] });
+        }
+    }
+    return resultArray;
     const sendData = {
         url: url,
         tn: dataName.includes(".") ? dataName.split(".")[1] : dataName,//store.state.controlParams.currentTable,
         data: JSON.stringify({ data: losedDataInfo }),
         tagName:tagName,
+        // manager: manager,
         line_type:store.state.controlParams.currentLineType,
         mode:store.state.controlParams.currentMode,
         user_cookie:getUserCookie()

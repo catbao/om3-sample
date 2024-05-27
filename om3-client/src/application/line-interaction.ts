@@ -177,21 +177,21 @@ export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
             for (let i = 0; i < nonUniformColObjs.length - 1; i++) {
                 if (!nonUniformColObjs[i].isMis && nonUniformColObjs[i + 1].isMis) {
                     stack.push(nonUniformColObjs[i]);
-                    for (let j = i + 1; j < nonUniformColObjs.length; j++) {
-                        if (nonUniformColObjs[j - 1].isMis && !nonUniformColObjs[j].isMis) {
-                            const co = stack.pop()
-                            if (nonUniformColObjs[j].startV === undefined || co?.endV === undefined) {
-                                console.error("error nonUniform");
-                            }
-                            ctx.moveTo(co!.positionInfo.endX, yScale(co!.endV));
-                            if (nonUniformColObjs[j].startV !== undefined) {
-                                ctx.lineTo(nonUniformColObjs[j].positionInfo.startX, yScale(nonUniformColObjs[j].startV!))
-                            } else {
-                                ctx.lineTo(nonUniformColObjs[j].positionInfo.minX, yScale((nonUniformColObjs[j].vRange[0] + nonUniformColObjs[j].vRange[1]) / 2))
-                            }
+                    // for (let j = i + 1; j < nonUniformColObjs.length; j++) {
+                    //     if (nonUniformColObjs[j - 1].isMis && !nonUniformColObjs[j].isMis) {
+                    //         const co = stack.pop()
+                    //         if (nonUniformColObjs[j].startV === undefined || co?.endV === undefined) {
+                    //             console.error("error nonUniform");
+                    //         }
+                    //         ctx.moveTo(co!.positionInfo.endX, yScale(co!.endV));
+                    //         if (nonUniformColObjs[j].startV !== undefined) {
+                    //             ctx.lineTo(nonUniformColObjs[j].positionInfo.startX, yScale(nonUniformColObjs[j].startV!))
+                    //         } else {
+                    //             ctx.lineTo(nonUniformColObjs[j].positionInfo.minX, yScale((nonUniformColObjs[j].vRange[0] + nonUniformColObjs[j].vRange[1]) / 2))
+                    //         }
 
-                        }
-                    }
+                    //     }
+                    // }
                 }
             }
             ctx.stroke();

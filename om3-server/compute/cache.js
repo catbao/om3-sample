@@ -20,19 +20,19 @@ class CustomCache {
       if(!this.indexPointsMap.has(value.level)){
         this.indexPointsMap.set(value.level, value);
       }
-      // if (this.cacheMap.has(key)) {
-      //   // 如果缓存中已存在该键，更新值并调整顺序
-      //   const node = this.cacheMap.get(key);
-      //   node.freq += 1;
-      //   // this.updateNodeOrder(node);
-      // } else {
+      if (this.cacheMap.has(key)) {
+        // 如果缓存中已存在该键，更新值并调整顺序
+        const node = this.cacheMap.get(key);
+        node.freq += 1;
+        return;
+        // this.updateNodeOrder(node);
+      } 
       this.cacheMap.set(key, value);
       this.addToSortedPosition(value);
       // 如果缓存满了，先移出最不符合条件的数据
       if (this.cacheMap.size >= this.capacity) {
         this.evict();
       }
-      // }
     }
   
     getMaxKey() {
@@ -193,7 +193,7 @@ class CustomCache {
     }
 }
 
-const testCache = new CustomCache(100000);
+const testCache = new CustomCache(10000);
 // testCache.insert("key1", "value1");
 
 module.exports = { testCache }

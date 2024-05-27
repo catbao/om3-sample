@@ -4,7 +4,7 @@ const fs = require("fs");
 const flatted = require('flatted');
 
 const { Pool } = require('pg');
-const { generateSingalLevelSQLWithSubQueryMinMaxMiss, generateSingalLevelSQLMinMaxMissQuery, generateSingalLevelSQLWithSubQuery } = require('../helper/generate_sql');
+const { generateSingalLevelSQLWithSubQueryMinMaxMiss, generateSingalLevelSQLMinMaxMissQuery, generateSingalLevelSQLWithSubQuery, generateSingalLevelSQLMinMaxMissQuery2, generateSingalLevelSQLMinMaxMissQuery3 } = require('../helper/generate_sql');
 const { getTableLevel, generateOM3TableName, customDBPoolMap, computeLevelFromT, getPool } = require('../helper/util');
 const { randomUUID } = require('crypto');
 const { nonuniformMinMaxEncode } = require('../compute/om_compute');
@@ -13,6 +13,8 @@ const { rejects } = require('assert');
 const { testCache } = require('../compute/cache');
 const { constructMinMaxMissTrendTree } = require('../compute/wavlet-decoder2');
 const { LevelDataManager } = require('../compute/level-data-manager');
+const {LevelIndexObj} = require('../compute/level-index-obj');
+const {TrendTree} = require('../compute/tend-query-tree');
 
 const stockTableMap = [];
 const mockTableMap = [];
@@ -37,7 +39,7 @@ function init() {
 }
 
 
-
+let dataManager = null;
 const pool = getPool()
 const levelMap = {
     "1t": 10,
@@ -69,6 +71,7 @@ const levelMap = {
 
 let allTimes = [];
 
+router.post('/level_load_data_min_max_miss', queryMinMaxMissDataSingle);
 router.get('/m4_bench', m4BenchmarkHandler);
 //
 router.get('/init_wavelet_bench_min_max_miss', initWaveletBenchMinMaxMissHandler)
@@ -189,9 +192,20 @@ function initWaveletBenchMinMaxMissHandler(req, res) {
     }
     const splitArray = query.table_name.split("_");
     let maxLevel = levelMap[splitArray[splitArray.length - 1]];
-    console.log(maxLevel)
+    // console.log(maxLevel)
+    const startt = new Date().getTime();
     let sqlStr = '';
+    
     sqlStr = `select i,minvd,maxvd,avevd from om3.${query.table_name} where i<$1 order by i asc`;
+    for(let i=0; i<2 ** Math.ceil(Math.log2(query.width)); i++){
+        let l = Math.floor(Math.log2(i+1));
+        let l_i = i - (2 ** l) + 1;
+        let key = l + '_' + l_i;
+        if(testCache.cacheMap.has(key)){
+            continue;
+        }
+    }
+    console.log("testNoDatabaseTime:", new Date().getTime() - startt);
     const params = [];
     console.log(query.width)
     params.push(2 ** Math.ceil(Math.log2(query.width)));
@@ -214,7 +228,7 @@ function initWaveletBenchMinMaxMissHandler(req, res) {
                 const tempVal = result.rows[i];
                 const tempL = Math.floor(Math.log2(tempVal['i']));
                 const tempI = tempVal['i'] - 2 ** tempL;
-                finalRes.push({ l: maxLevel - tempL, i: tempI, minvd: tempVal['minvd'], maxvd: tempVal['maxvd'], avevd: tempVal['avevd'] });
+                finalRes.push({ l: tempL, i: tempI, minvd: tempVal['minvd'], maxvd: tempVal['maxvd'], avevd: tempVal['avevd'] });
             }
             console.log(finalRes.length)
             if (result.rows.length > 0) {
@@ -222,7 +236,7 @@ function initWaveletBenchMinMaxMissHandler(req, res) {
             }
             // printT(startT)
 
-            const {trendTree, dataManager} = constructMinMaxMissTrendTree(finalRes, 600);
+            dataManager = constructMinMaxMissTrendTree(finalRes, 600);
             // console.log("dataManager:", dataManager.levelIndexObjs[0]);
             // console.log("testCache:", testCache);
             // console.log(dataManager);
@@ -243,7 +257,7 @@ function initWaveletBenchMinMaxMissHandler(req, res) {
                     testCache.insert(currentNode.level+'_'+currentNode.index, currentNode);
                 }
             }
-            console.log("testCache's indexPointsMap:", testCache.indexPointsMap.get(0))
+            console.log("testCache's indexPointsMap:", testCache.cacheMap.size)
             // const mapJson = JSON.stringify([...testCache.indexPointsMap]);
             // const serializedTree = flatted.stringify([...testCache.indexPointsMap]);
             // fs.writeFileSync('indexPointsMap.json', serializedTree, 'utf8');
@@ -258,6 +272,209 @@ function initWaveletBenchMinMaxMissHandler(req, res) {
 
 }
 
+function queryMinMaxMissDataSingle(req, res) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+    res.setHeader('Access-Control-Allow-Credentials', true);
+    const query = { table_name: req.body.table_name, line_type: req.body.line_type, mode: req.body.mode};
+    const userCookie = req.headers['authorization'];
+    let currentPool = pool
+    if (query.mode === 'Custom') {
+        if (userCookie === '' || userCookie === null || userCookie === undefined) {
+            res.send({ code: 400, msg: "cookie not found", data: { result: "fail" } })
+            return
+        }
+        if (!customDBPoolMap().has(userCookie)) {
+            res.send({ code: 400, msg: "custom db not create connection", data: { result: "fail" } })
+            return
+        }
+        currentPool = customDBPoolMap().get(userCookie);
+    }
+    // console.log(query.table_name);
+    // console.log(dataManager.levelIndexObjs.length);
+    const splitArray = query.table_name.split("_");
+    let maxLevel = levelMap[splitArray[splitArray.length - 1]];
+    const strObj = req.body.losedDataInfo;
+    let manager = dataManager;
+
+    const needRangeArray = strObj["data"];
+    // console.log(needRangeArray);
+    // console.log(manager);
+
+    const curLevel=needRangeArray[0][0];
+    if(curLevel===undefined){
+        console.log(needRangeArray);
+        ws.send({ code: 400, msg: "level error" })
+        return
+    }
+    let schema="";
+    if(query.line_type==='Single'){
+        schema="om3";
+    }else{
+        schema="om3_multi";
+    }
+    const tName=`${schema}.${query.table_name}`;
+    console.log(needRangeArray);
+    const condition = generateSingalLevelSQLMinMaxMissQuery2(needRangeArray, maxLevel, tName);
+    // if(curLevel != 10){
+    //     let dataa = generateSingalLevelSQLMinMaxMissQuery3(needRangeArray, maxLevel, tName);
+    //     console.log("dataa:", dataa);
+    // }
+    if (condition === null) {
+        console.log(needRangeArray);
+        ws.send({ code: 400, msg: "level error" })
+        return
+    }
+    else if(condition.includes("()")){
+        res.send({ code: 200, msg: "success", data: [] });
+        return;
+    }
+    let sqlStr = condition + " order by i asc";
+    // console.log("condition:", condition);
+    currentPool.query(sqlStr, function (err, result) {
+        if (err) {
+            console.log(sqlStr);
+            currentPool.end();
+            throw err;
+        }
+        const minV = [];
+        const maxV = [];
+        const aveV = [];
+        const l = [];
+        const idx = [];
+        // console.log("result.rows:", result.rows);
+        result.rows.forEach((v) => {
+            const curI=v['i'];
+            l.push(curLevel);
+            idx.push(curI-2**curLevel);
+            minV.push(v['minvd']);
+            maxV.push(v['maxvd']);
+            aveV.push(v['avevd']);
+        });
+        res.send({ code: 200, msg: "success", data: [l, idx, minV, maxV, aveV] });
+
+        const resultArray = [];
+        if (l && l[0] && l.length > 0) {
+            for (let i = 0; i < l.length; i++) {
+                resultArray.push({ l: l[i], i: idx[i], dif: [0, minV[i], maxV[i], aveV[i], 0] });
+            }
+        }
+        // console.log(resultArray);
+        let count = 0;
+        losedRange = needRangeArray;
+        difVals = resultArray;
+        for (let i = 0; i < losedRange.length; i++) {
+            const levelRange = losedRange[i];
+            const startNode = manager.levelIndexObjs[losedRange[i][0]].getTreeNodeStartIndex(losedRange[i][1]);
+            // console.log(startNode);
+            let p = startNode;
+            const newTreeNode = [];
+            for (let j = losedRange[i][1]; j <= losedRange[i][2];j++) {
+                // if (p?.index === j && j === difVals[count].i && p.level === difVals[count].l) {
+                if (p?.index === j && p.level === difVals[count].l) {
+                    let dif = difVals[count].dif;
+                    let curNodeType = 'O';
+                    if (dif[1] === null && dif[2] === null) {
+                        curNodeType = "NULL";
+                    } else if (dif[1] === null) {
+                        curNodeType = "LEFTNULL"
+                        p.gapFlag="L"
+                    } else if (dif[2] === null) {
+                        curNodeType = "RIGHTNULL";
+                        p.gapFlag="R"
+                    }
+                    if(curNodeType!=="O"){
+                        p.nodeType = curNodeType
+                    }
+                    //@ts-ignore
+                    p.difference = difVals[count].dif;
+                    // const yArray1: [any, any, any, any] = [undefined, undefined, undefined, undefined]
+                    // const yArray2: [any, any, any, any] = [undefined, undefined, undefined, undefined]
+                    const yArray1 = [undefined, undefined, undefined, undefined, undefined]
+                    const yArray2 = [undefined, undefined, undefined, undefined, undefined]
+                    if (curNodeType === 'O') {
+                        if (p.difference[1] < 0) {
+                            yArray1[1] = p.yArray[1];
+                            yArray2[1] = p.yArray[1] - p.difference[1];
+                        } else {
+                            yArray1[1] = p.yArray[1] + p.difference[1];
+                            yArray2[1] = p.yArray[1]
+                        }
+                        if (p.difference[2] < 0) {
+                            yArray1[2] = p.yArray[2] + p.difference[2];
+                            yArray2[2] = p.yArray[2];
+                        } else {
+                            yArray1[2] = p.yArray[2];
+                            yArray2[2] = p.yArray[2] - p.difference[2];
+                        }
+                        if(p.difference[3] <= 0 || p.difference[3] >= 0){
+                            yArray1[3] = (p.yArray[3] * 2 + p.difference[3]) / 2; 
+                            yArray2[3] = (p.yArray[3] * 2 - p.difference[3]) / 2; 
+                        }
+                    } else if (curNodeType == "LEFTNULL") {
+                    
+                        yArray2[1] = p.yArray[1];
+                        yArray2[2] = p.yArray[2];
+                        yArray2[3] = p.yArray[3] / 2;
+                    
+                    } else if (curNodeType == "RIGHTNULL") {
+                    
+                        yArray1[1] = p.yArray[1];
+                        yArray1[2] = p.yArray[2];
+                        yArray1[3] = p.yArray[3] / 2;
+                    
+                    } 
+
+                    const firstNode = new TrendTree(p, true, p.index, yArray1, null);
+                    if (p.nodeType === 'LEFTNULL' || p.nodeType === 'NULL') {
+                        firstNode.nodeType = 'NULL';
+                    }
+                    const secondNode = new TrendTree(p, false, p.index, yArray2, null);
+                    if (p.nodeType === 'RIGHTNULL' || p.nodeType == 'NULL') {
+                        secondNode.nodeType = 'NULL';
+                    }
+
+                    newTreeNode.push(firstNode);
+                    newTreeNode.push(secondNode);
+                    // manager.lruCache.set(firstNode.level+"_"+firstNode.index,firstNode);
+                    // manager.lruCache.set(secondNode.level+"_"+secondNode.index,secondNode);
+                    testCache.insert(firstNode.level+'_'+firstNode.index, firstNode);
+                    testCache.insert(secondNode.level+'_'+secondNode.index, secondNode);
+                    p = p.nextSibling;
+                    count++;
+                    if (p === null || count >= difVals.length) {
+                        break;
+                    }
+                } else {
+                    console.log(losedRange[i][0] - 1, Math.floor(losedRange[i][1] / 2))
+                    console.log("lose range:", losedRange, p, p?.index, j);
+                    console.log(manager.levelIndexObjs);
+                    debugger
+                    throw new Error("dif not match node");
+                }
+            }
+            for (let j = 0; j < newTreeNode.length - 1; j++) {
+                newTreeNode[j].nextSibling = newTreeNode[j + 1];
+                newTreeNode[j + 1].previousSibling = newTreeNode[j];
+                if (newTreeNode[j].index != newTreeNode[j + 1].index - 1) {
+                    throw new Error("sibling index error");
+                }
+            }
+            if (manager.levelIndexObjs[losedRange[i][0] + 1]) {
+                manager.levelIndexObjs[losedRange[i][0] + 1].addLoadedDataRange(newTreeNode[0], [newTreeNode[0].index, newTreeNode[newTreeNode.length - 1].index]);
+            } else {
+                manager.levelIndexObjs[losedRange[i][0] + 1] = new LevelIndexObj(losedRange[i][0] + 1, false);
+                manager.levelIndexObjs[losedRange[i][0] + 1].addLoadedDataRange(newTreeNode[0], [newTreeNode[0].index, newTreeNode[newTreeNode.length - 1].index]);
+            }
+        }
+        // console.log(dataManager.levelIndexObjs.length);
+        console.log(testCache.indexPointsMap.size);
+        console.log(testCache.cacheMap.size);
+
+    });
+    
+}
 
 function batchLevelDataProgressiveWaveletMinMaxMissPostHandler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -344,8 +561,6 @@ function batchLevelDataProgressiveWaveletMinMaxMissPostHandler(req, res) {
 let allWaveletTables = []
 function getAllTables(req, res) {
     res.setHeader("Access-Control-Allow-Origin", "*");
-
-
     const sqlStr = `select table_schema||'.'||table_name as table_fullname from information_schema."tables" where table_type = 'BASE TABLE' and table_schema not in ('pg_catalog', 'information_schema');`
     pool.query(sqlStr, (err, result) => {
         if (err) {
@@ -1496,4 +1711,4 @@ async function getAllDefaultTableAndInfo(req, res) {
 
 
 
-module.exports = router;
+module.exports = router, dataManager;

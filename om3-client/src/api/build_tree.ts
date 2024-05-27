@@ -491,7 +491,8 @@ export async function batchLoadDataForRangeLevel1MinMaxMiss(losedRange: Array<Ar
     // let difVals: Array<{ l: number, i: number, dif?: Array<number> }>
     let difVals: Array<{ l: number, dif?: Array<number> }>
     if(store.state.controlParams.currentLineType==='Single'){
-        difVals= await batchLoadMinMaxMissWithWs(losedRange, manager.dataName, "level_load_data_min_max_miss", manager.maxLevel, tagName) as Array<{ l: number, i: number }>;
+        difVals= await batchLoadMinMaxMissWithWs(losedRange, manager.dataName, "level_load_data_min_max_miss", manager.maxLevel, manager, tagName) as Array<{ l: number, i: number }>;
+        if(difVals.length == 0) return;
     }else{
         const inputString = manager.dataName;
         let dotIndex = inputString.indexOf('.');
@@ -617,8 +618,8 @@ export async function batchLoadDataForRangeLevel1MinMaxMiss(losedRange: Array<Ar
 export async function batchLoadDataForRangeLevel1MinMaxMiss2(losedRange: Array<Array<number>>, manager: any, tagName?: string){
     let difVals: Array<{ l: number, i: number, dif?: Array<number> }>
     // let difVals: Array<{ l: number, dif?: Array<number> }>
-    difVals= await batchLoadMinMaxMissWithWs(losedRange, manager.dataName, "level_load_data_min_max_miss", manager.maxLevel, tagName) as Array<{ l: number, i: number }>;
-
+    difVals= await batchLoadMinMaxMissWithWs(losedRange, manager.dataName, "level_load_data_min_max_miss", manager.maxLevel, manager, tagName) as Array<{ l: number, i: number }>;
+    if(difVals.length == 0) return;
     let count = 0;
     for (let i = 0; i < losedRange.length; i++) {
         const levelRange = losedRange[i];
@@ -728,7 +729,8 @@ export async function batchLoadDataForRangeLevel2MinMaxMiss(losedRange: Array<Ar
     // let difVals: Array<{ l: number, i: number, dif?: Array<number> }>
     let difVals: Array<{ l: number, dif?: Array<number> }>
     if(store.state.controlParams.currentLineType==='Single'){
-        difVals= await batchLoadMinMaxMissWithWs(losedRange, manager.dataName, "level_load_data_min_max_miss", manager.maxLevel, tagName) as Array<{ l: number, i: number }>;
+        difVals= await batchLoadMinMaxMissWithWs(losedRange, manager.dataName, "level_load_data_min_max_miss", manager.maxLevel, manager, tagName) as Array<{ l: number, i: number }>;
+        if (difVals.length == 0) return;
     }else{
         difVals= await batchLoadMinMaxMissWithPostForMultiLineType(losedRange, manager.dataName, "level_load_data_min_max_miss", manager.maxLevel, tagName)
     }

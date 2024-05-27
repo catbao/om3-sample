@@ -2102,13 +2102,13 @@ export default class LevelDataManager {
         if (needLoadDifNode.length === 0) {
             return nonUniformColObjs;
         }
-        // let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
-        // if(losedDataInfo.length > 0 && store.state.controlParams.currentLineType==='Single'){
-        //     await batchLoadDataForRangeLevel1MinMaxMiss2(losedDataInfo, this);
-        // }
-        // else if (losedDataInfo.length > 0) {
-        //     await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);
-        // }
+        let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
+        if(losedDataInfo.length > 0 && store.state.controlParams.currentLineType==='Single'){
+            await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);
+        }
+        else if (losedDataInfo.length > 0) {
+            await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);
+        }
 
         while (needLoadDifNode.length > 0) {
             colIndex = 0;
@@ -2211,7 +2211,7 @@ export default class LevelDataManager {
             let losedDataInfo2 = computeLosedDataRangeV1(needLoadDifNode);
             console.log("losedDataInfo2", losedDataInfo2);
             if(losedDataInfo2.length > 0 && store.state.controlParams.currentLineType==='Single'){
-                await batchLoadDataForRangeLevel1MinMaxMiss2(losedDataInfo2, this);
+                await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo2, this);
             }
             else if (losedDataInfo2.length > 0) {
                 await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo2, this);
