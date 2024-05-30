@@ -390,11 +390,11 @@ function generateSingalLevelSQLMinMaxMissQuery2(losedDataInfo, maxLevel, tableNa
         const second = losedDataInfo[i][2];
         let key = "";
         if (first === second) {
-            if(!testCache.cacheMap.has(curL+'_'+first) )
+            // if(!testCache.cacheMap.has(curL+'_'+first) )
                 sqlStr += `${2**(curL-1)+first},`
         } else {
             for (let j = first; j <= second; j++) {
-                if(!testCache.cacheMap.has(curL+'_'+j) )
+                // if(!testCache.cacheMap.has(curL+'_'+j) )
                     sqlStr += `${2**(curL-1)+j},`
             }
         }
@@ -410,7 +410,8 @@ function generateSingalLevelSQLMinMaxMissQuery2(losedDataInfo, maxLevel, tableNa
 }
 
 function generateSingalLevelSQLMinMaxMissQuery3(losedDataInfo, maxLevel, tableName){
-    const curL = losedDataInfo[0][0]+1;
+    // let set1 = new Set(losedDataInfo);
+    const curL = losedDataInfo[0][0];
     let flag = 0;
     for (let i = 0; i < losedDataInfo.length - 1; i++) {
         if (losedDataInfo[i][2] === losedDataInfo[i + 1][1] || (losedDataInfo[i][2] + 1) === losedDataInfo[i + 1][1]) {
@@ -425,22 +426,29 @@ function generateSingalLevelSQLMinMaxMissQuery3(losedDataInfo, maxLevel, tableNa
     const aveV = [];
     const l = [];
     const idx = [];
+    const cached = [];
+    const nocached = [];
     // let temp = testCache.cacheMap.get(1+'_'+1);
     // console.log("temp:", temp.level, temp.index, temp.difference);
     for (let i = 0; i < losedDataInfo.length; i++) {
         const first = losedDataInfo[i][1];
         const second = losedDataInfo[i][2];
         let key = "";
-        if (first === second) {
+        if (first === second) { 
             if(testCache.cacheMap.has(curL+'_'+first)){
                 let temp = testCache.cacheMap.get(curL+'_'+first);
-                console.log(temp.level, temp.index, temp.difference);
+                if(temp.difference === null) continue;
+                // console.log(temp.level, temp.index, temp.difference);
                 l.push(temp.level);
                 idx.push(temp.index);
                 minV.push(temp.difference[0]);
                 maxV.push(temp.difference[1]);
                 aveV.push(temp.difference[2]);
+                cached.push([temp.level, temp.index, temp.index]);
+                // continue;
             }
+            else
+                nocached.push([curL, first, second]);
             // sqlStr += `${2**(curL-1)+first},`
         } else {
             for (let j = first; j <= second; j++) {
@@ -451,12 +459,16 @@ function generateSingalLevelSQLMinMaxMissQuery3(losedDataInfo, maxLevel, tableNa
                     minV.push(temp.difference[0]);
                     maxV.push(temp.difference[1]);
                     aveV.push(temp.difference[2]);
+                    cached.push([temp.level, temp.index, temp.index]);
+                    // continue;
                 }
+                else
+                    nocached.push([curL, j, j]);
             }
         }
     }
     let data = [l, idx, minV, maxV, aveV];
-    return data;
+    return [data, cached, nocached];
 }
 
 function generateSingalLevelSQLWithSubQueryMinMax(losedDataInfo, maxLevel, tableName) {

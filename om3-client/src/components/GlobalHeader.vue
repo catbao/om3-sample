@@ -3,10 +3,10 @@
     <div class="container-fluid">
       <a class="navbar-brand" href="#">
        
-       OM<sup>3</sup>
+       OM<sup>3</sup>-extending
       </a>
 
-      <a href="https://docs.google.com/document/d/1OFRmg6ShyKj1i4w2zbHGIOyjUxGR7tcvreKuWCIerHk/edit?usp=sharing">user guide</a>
+      <!-- <a href="https://docs.google.com/document/d/1OFRmg6ShyKj1i4w2zbHGIOyjUxGR7tcvreKuWCIerHk/edit?usp=sharing">user guide</a> -->
     
       <!-- <button type="button" class="btn btn-secondary" @click.prevent="openImportPanel">ImportData</button> -->
     </div>

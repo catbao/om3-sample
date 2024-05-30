@@ -7,7 +7,7 @@ class CustomCache {
       this.indexPointsMap = new Map();  
     }
   
-    get(key) {
+    gett(key) {
       if (this.cacheMap.has(key)) {
         const node = this.cacheMap.get(key);
         node.freq++;
@@ -193,7 +193,8 @@ class CustomCache {
     }
 }
 
-const testCache = new CustomCache(10000);
+const testCache = new CustomCache(50000);
+const streamCache = new CustomCache(200000);
 // testCache.insert("key1", "value1");
 
-module.exports = { testCache }
+module.exports = { testCache, streamCache }

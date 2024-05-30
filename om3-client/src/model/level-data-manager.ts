@@ -2110,6 +2110,7 @@ export default class LevelDataManager {
             await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);
         }
 
+        const time1 = new Date().getTime();
         while (needLoadDifNode.length > 0) {
             colIndex = 0;
             const tempNeedLoadDifNodes = [];
@@ -2218,6 +2219,7 @@ export default class LevelDataManager {
             }
 
         }
+        console.log("now-time1:", new Date().getTime()-time1);
         for (let i = 0; i < nonUniformColObjs.length; i++) {
             nonUniformColObjs[i].checkIsMis();
         }

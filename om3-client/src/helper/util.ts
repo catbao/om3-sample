@@ -196,14 +196,14 @@ export function computeLosedDataRangeV1(parents: Array<TrendTree>) {
     const losedDataRange: Array<Array<number>> = [];
 
     parents.forEach(v => {
-        if (v.nodeType !== 'O') {
-            console.log("compute losed node cut");
-            console.log(v)
-        }
+        // if (v.nodeType !== 'O') {
+        //     console.log("compute losed node cut");
+        //     console.log(v)
+        // }
         // if (v._leftChild === null && v._rightChild === null && v.nodeType === 'O') {
         //     losedDataRange.push([v.level, v.index, v.index]);
         // }
-        if (v.level >= 10 && v.nodeType === 'O') {
+        if (v.level >= 11 && v.nodeType === 'O') {
             losedDataRange.push([v.level, v.index, v.index]);
         }
     });

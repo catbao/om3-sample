@@ -6,6 +6,7 @@ const {LevelDataManager} = require('./level-data-manager');
 const {LevelIndexObj} = require('./level-index-obj');
 // const {store} = require('../../om3-client/src/store');
 const {TrendTree} = require('./tend-query-tree');
+const {BackNode} = require('./backNode');
 
 
 function constructMinMaxMissTrendTree(data, width, tableName="aTable") {
@@ -150,5 +151,14 @@ function constructMinMaxMissTrendTree(data, width, tableName="aTable") {
     // }
     return levelDataManager;
 }
-
-module.exports = { constructMinMaxMissTrendTree}
+function constructBackNode(data){
+    let len = data.length;
+    const nodes = [];
+    for(let i=0; i<len; i++){
+        let dif = [data[i].minvd, data[i].maxvd, data[i].avevd];
+        const node = new BackNode(data[i].l, data[i].i, dif);
+        nodes.push(node);
+    }
+    return nodes;
+}
+module.exports = { constructMinMaxMissTrendTree, constructBackNode}

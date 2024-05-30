@@ -23,10 +23,10 @@ class TrendTree {
     // gapFlag
     //fetcher: TreeNodeFetchers
     constructor(parent, leftChild = true, index = 0, yArray, dif, nodeType) {
-        this.nodeType='O'
-        if(nodeType){
-            this.nodeType=nodeType
-        }
+        // this.nodeType='O'
+        // if(nodeType){
+        //     this.nodeType=nodeType
+        // }
         this.parent = parent;
         
         this._leftChild = null;
@@ -38,11 +38,11 @@ class TrendTree {
         this.freq = 0;
         this.previousSibling = null;
         this.nextSibling = null;
-        this.linkedListPrev = null;
-        this.linkedListnext = null;
+        // this.linkedListPrev = null;
+        // this.linkedListnext = null;
         this.nextP = null;
         this.preP = null
-        this.trendRange = [0, 0];
+        // this.trendRange = [0, 0];
         if (yArray) {
             this.yArray = yArray;
         }
@@ -68,7 +68,7 @@ class TrendTree {
         if (this.level > TOTAL_LEVELS) {
             throw new Error("This level is protected")
         }
-        this.timeRange = [];
+        // this.timeRange = [];
         if(parent===null){
             this.gapFlag='NO';
         }else{
