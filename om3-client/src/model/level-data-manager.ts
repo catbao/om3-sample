@@ -2135,7 +2135,6 @@ export default class LevelDataManager {
                     }
                 }
             }
-            // console.log("count:", count_obj.count);
         }
         
         if(needLoadDifNode.length === 0){
@@ -2234,7 +2233,6 @@ export default class LevelDataManager {
                     // throw new Error("node time is little than col");
                 }
             }
-            // console.log("alterNodes:", alterNodes.value);
             tempNeedLoadDifNodes = [...new Set(tempNeedLoadDifNodes)];
             needLoadDifNode = tempNeedLoadDifNodes;
             for(let i=0;i<tempNeedLoadDifNodes2.length;i++){
@@ -2426,9 +2424,6 @@ export default class LevelDataManager {
        
         databaseT = new Date().getTime() - startT;
         console.log("The time to get all coefficients:" + databaseT);
-        // console.log("The final count:", count_obj.count);
-        // console.log("The stop time to get coefficients:", total_time);
-        // databaseT = total_time;
 
         for(let i=0; i<alternativeNodes.length;i++){
             alternativeNodes[i] = [...new Set(alternativeNodes[i])];
@@ -2438,10 +2433,6 @@ export default class LevelDataManager {
                 alternativeNodes2[i][j] = [...new Set(alternativeNodes2[i][j])];
             }
         }
-        // const itemsToRemove = 4;
-        // if (this.levelIndexObjs.length >= itemsToRemove) {
-        //     this.levelIndexObjs.splice(this.levelIndexObjs.length - itemsToRemove, itemsToRemove);
-        // }
 
         //first prune
         for(let i=0; i<alternativeNodes.length;i++){
@@ -2676,7 +2667,6 @@ export default class LevelDataManager {
         }
         databaseT += new Date().getTime() - start_noStopTime;
         console.log("No Stop Time:", databaseT);
-        console.log("The final load:", sumOfNeedLoadDifNodes);
         let maxValue = -Infinity, minValue = Infinity, finalValue = 0;
         for (let i = 0; i < nonUniformColObjs.length; i++) {
             nonUniformColObjs[i].checkIsMis();
