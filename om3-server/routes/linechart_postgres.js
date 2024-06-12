@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const fs = require("fs");
 const flatted = require('flatted');
+const bodyParser = require('body-parser')
 
 const { Pool } = require('pg');
 const { generateSingalLevelSQLWithSubQueryMinMaxMiss, generateSingalLevelSQLMinMaxMissQuery, generateSingalLevelSQLWithSubQuery, generateSingalLevelSQLMinMaxMissQuery2, generateSingalLevelSQLMinMaxMissQuery3 } = require('../helper/generate_sql');
@@ -10,7 +11,8 @@ const { randomUUID } = require('crypto');
 const { nonuniformMinMaxEncode } = require('../compute/om_compute');
 const { resolve } = require('path');
 const { rejects } = require('assert');
-const { testCache } = require('../compute/cache');
+const { testCache} = require('../compute/cache');
+const { streamCache} = require('../compute/cache2');
 const { constructMinMaxMissTrendTree, constructBackNode } = require('../compute/wavlet-decoder2');
 const { LevelDataManager } = require('../compute/level-data-manager');
 const {LevelIndexObj} = require('../compute/level-index-obj');
@@ -70,7 +72,7 @@ const levelMap = {
 
 
 let allTimes = [];
-
+router.post('/sensor_data', sensor);
 router.post('/level_load_data_min_max_miss', queryMinMaxMissDataSingle);
 router.get('/m4_bench', m4BenchmarkHandler);
 //
@@ -102,7 +104,57 @@ router.get('/performTransformForMultiLine', performTransformForMultiLine);
 router.get("/getAllMultiLineClassAndLinesInfo", getAllMultiLineClassAndLinesInfo);
 //router.options('/batchLevelDataProgressiveWavelet',batchLevelDataProgressiveWaveletPostHandler)
 
+function zigzagDecode(n) {
+    return (n >>> 1) ^ -(n & 1);
+}
+function varintDecode(bytes) {
+    let value = 0;
+    let shift = 0;
+    for (let i = 0; i < bytes.length; i++) {
+        const byte = bytes[i];
+        value |= (byte & 0x7F) << shift;
+        if ((byte & 0x80) === 0) {
+            break;
+        }
+        shift += 7;
+    }
+    return value;
+}
+function decompressArray(arr) {
+    const result = [];
+    let bytes = [];
+    for (let byte of arr) {
+        bytes.push(byte);
+        if ((byte & 0x80) === 0) {
+            result.push(zigzagDecode(varintDecode(bytes)));
+            bytes = [];
+        }
+    }
+    return result;
+}
 
+function sensor(req, res){
+    // const data = req.body;
+    // console.log('Received data:', data);
+    // res.status(200).json({ status: 'success', data: data });
+    let data = [];
+    req.on('data', (chunk) => {
+        data.push(chunk);
+    }).on('end', () => {
+        const bufferData = Buffer.concat(data);
+        res.status(200).json({ status: 'success', dataLength: bufferData.length });
+        console.log('Received binary data:', bufferData.length, 'bytes');
+        let uint8Array = new Uint8Array(bufferData);
+        const start = new Date().getTime();
+        const originalData = decompressArray(uint8Array);
+        console.log("decode_time:", new Date().getTime() - start);
+        // console.log(originalData);
+    }).on('error', (err) => {
+        console.error('Error in request:', err);
+        res.status(400).send('Error processing request');
+    });
+    // res.status(200).json({ status: 'success'});
+}
 
 let queryTime = [];
 function m4BenchmarkHandler(req, res) {
@@ -171,7 +223,6 @@ function m4BenchmarkHandler(req, res) {
         res.send(result.rows);
     });
 }
-
 
 function initWaveletBenchMinMaxMissHandler(req, res) {
     res.setHeader("Access-Control-Allow-Origin", "*");
@@ -813,7 +864,9 @@ function init_multi_timeseries2(req, res) {
                         // const tempI = tempVal['i'] - 2 ** tempL;
                         // finalRes.push({ l: curTableLevel - tempL, i: tempI, minvd: tempVal['minvd'], maxvd: tempVal['maxvd'], avevd: tempVal['avevd'] });
                         finalRes.push({minvd:tempVal['minvd'],maxvd:tempVal['maxvd'],avevd:tempVal['avevd']});
+                        // streamCache.insert(tempVal['i'], [tempVal['minvd'],tempVal['maxvd'],tempVal['avevd']])
                     }
+                    // console.log(streamCache.cacheMap.size);
                     // if (result.rows.length > 0) {
                     //     finalRes.push({ l: -1, i: 0, minvd: result.rows[0]['minvd'], maxvd: result.rows[0]['maxvd'], avevd:result.rows[0]['avevd'] });
                     // }
@@ -985,9 +1038,9 @@ function init_transform_timeseries(req, res){
                 const finalRes = [];
                 for(let i=1; i<result.rows.length; ++i){
                     const tempVal = result.rows[i];
-                        const tempL = Math.floor(Math.log2(tempVal['i']));
-                        const tempI = tempVal['i'] - 2 ** tempL;
-                        finalRes.push({ l: curTableLevel - tempL, i: tempI, minvd: tempVal['minvd'], maxvd: tempVal['maxvd'], avevd: tempVal['avevd'] });
+                    const tempL = Math.floor(Math.log2(tempVal['i']));
+                    const tempI = tempVal['i'] - 2 ** tempL;
+                    finalRes.push({ l: curTableLevel - tempL, i: tempI, minvd: tempVal['minvd'], maxvd: tempVal['maxvd'], avevd: tempVal['avevd'] });
                 }
                 if (result.rows.length > 0) {
                     finalRes.push({ l: -1, i: 0, minvd: result.rows[0]['minvd'], maxvd: result.rows[0]['maxvd'], avevd: result.rows[0]['avevd'] });

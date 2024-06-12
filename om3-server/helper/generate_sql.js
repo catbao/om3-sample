@@ -363,7 +363,7 @@ function generateSingalLevelSQLMinMaxMissQuery(losedDataInfo, maxLevel, tableNam
         }
     }
     let subStr = sqlStr.substring(0, sqlStr.length - 1) + ")";
-    console.log("subStr:", subStr);
+    // console.log("subStr:", subStr);
 
     // if (subStr.includes("()")) {
     //     return "abc";

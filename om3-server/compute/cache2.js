@@ -1,10 +1,7 @@
-class CustomCache {
+class StreamCache {
     constructor(capacity) {
       this.capacity = capacity;
-      this.cacheMap = new Map();
-      this.head = null;
-      this.tail = null;
-      this.indexPointsMap = new Map();  
+      this.cacheMap = new Map(); 
     }
   
     gett(key) {
@@ -17,18 +14,14 @@ class CustomCache {
     }
   
     insert(key, value) {
-      if(!this.indexPointsMap.has(value.level)){
-        this.indexPointsMap.set(value.level, value);
-      }
       if (this.cacheMap.has(key)) {
         // 如果缓存中已存在该键，更新值并调整顺序
-        const node = this.cacheMap.get(key);
-        node.freq += 1;
+        // const node = this.cacheMap.get(key);
         return;
         // this.updateNodeOrder(node);
       } 
       this.cacheMap.set(key, value);
-      this.addToSortedPosition(value);
+    //   this.addToSortedPosition(value);
       // 如果缓存满了，先移出最不符合条件的数据
       if (this.cacheMap.size >= this.capacity) {
         this.evict();
@@ -46,29 +39,7 @@ class CustomCache {
     }
 
     evict() {
-      let maxKey = this.getMaxKey();
-      while(this.cacheMap.size >= this.capacity)
-      {
-        for(let i = maxKey; i >= 0; i--){
-          let currentHead = this.indexPointsMap.get(i);
-          if (currentHead) {
-            // 移除第一个节点
-            // this.cacheMap.delete(this.head.level+'_'+this.head.yArray[1]+'_'+this.head.yArray[2]);
-            this.cacheMap.delete(currentHead.level+'_'+currentHead.index);
-            if (currentHead.next) {
-                // 如果有后一个节点，将头部指向后一个节点
-                // this.head.next.prev = null;
-                this.indexPointsMap.set(i, currentHead.next);
-            } else {
-                // 如果只有一个节点，则头尾都为null
-                // this.head = null;
-                // this.tail = null;
-                this.indexPointsMap.delete(i);
-            }
-          }
-          break;
-        }
-      }
+      
     }
   
     changeFreq(node){
@@ -193,8 +164,7 @@ class CustomCache {
     }
 }
 
-const testCache = new CustomCache(50000);
-// const streamCache = new CustomCache(200000);
+const streamCache = new StreamCache(200000);
 // testCache.insert("key1", "value1");
 
-module.exports = { testCache}
+module.exports = {streamCache }

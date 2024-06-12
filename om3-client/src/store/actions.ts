@@ -14,6 +14,7 @@ import { ElButtonGroup, ElLoading } from 'element-plus'
 import { drawViewChangeLineChart } from "@/application/line-interaction";
 import { indexGetData, indexPutData, initIndexDB } from "@/indexdb";
 import * as _ from 'lodash';
+import Papa from 'papaparse';
 
 async function get(state: GlobalState, url: string) {
 
@@ -26,8 +27,8 @@ async function get(state: GlobalState, url: string) {
 }
 
 async function getBuffer(state: GlobalState, url: string) {
-
     url = 'postgres' + url;
+    // console.log("1245");
     // localStorage.removeItem(url)
     try {
         const timeGetCache = new Date().getTime()
@@ -44,7 +45,6 @@ async function getBuffer(state: GlobalState, url: string) {
         console.error(err)
     }
 
-
     //const loading = openLoading();
     const { data } = await axios.get(url, { responseType: 'arraybuffer' });
     if (data) {
@@ -54,7 +54,6 @@ async function getBuffer(state: GlobalState, url: string) {
     // loading.close();
     return data;
 }
-
 
 
 const loadViewChangeQueryWSMinMaxMissDataInitData: ActionHandler<GlobalState, GlobalState> = (context: ActionContext<GlobalState, GlobalState>, payload: { startTime: number, endTime: number, width: number, height: number }) => {
@@ -225,27 +224,28 @@ async function loadMultiTimeSeriesInitData(context: ActionContext<GlobalState, G
     const data = get(context.state, combinedUrl);
 
     data.then(async res => {
-        let dataManagers: Array<LevelDataManager> = [];
-        let globalMaxV = -Infinity;
-        let globalMinV = Infinity;
-        for (let i = 0; i < res.length; i++) {
-            const { dataManager } = constructMinMaxMissTrendTreeMulti(res[i].d, payload.width, res[i].tn);
+        for(let time=0; time<5; time++){
+            let dataManagers: Array<LevelDataManager> = [];
+            let globalMaxV = -Infinity;
+            let globalMinV = Infinity;
+            for (let i = 0; i < res.length; i++) {
+                const { dataManager } = constructMinMaxMissTrendTreeMulti(res[i].d, payload.width, res[i].tn);
 
-            dataManager.maxLevel = maxLevel;
-            dataManager.realDataRowNum = lineClassInfo['max_len'];
+                dataManager.maxLevel = maxLevel;
+                dataManager.realDataRowNum = lineClassInfo['max_len'];
 
-            const { minv, maxv } = getGlobalMinMaxInfo(getLevelData(dataManager.levelIndexObjs[dataManager.levelIndexObjs.length - 1].firstNodes[0]));
-            globalMaxV = Math.max(maxv!, globalMaxV);
-            globalMinV = Math.min(minv!, globalMinV);
-            dataManager.md5Num = parseInt("0x" + md5(dataManager.dataName).slice(0, 8))
-            dataManagers.push(dataManager);
-        }
+                const { minv, maxv } = getGlobalMinMaxInfo(getLevelData(dataManager.levelIndexObjs[dataManager.levelIndexObjs.length - 1].firstNodes[0]));
+                globalMaxV = Math.max(maxv!, globalMaxV);
+                globalMinV = Math.min(minv!, globalMinV);
+                dataManager.md5Num = parseInt("0x" + md5(dataManager.dataName).slice(0, 8))
+                dataManagers.push(dataManager);
+            }
 
-        dataManagers = dataManagers.sort((a, b) => {
-            return parseInt("0x" + md5(a.dataName).slice(0, 8)) - parseInt("0x" + md5(b.dataName).slice(0, 8))
-        })
-        // let tdataManagers = _.cloneDeep(dataManagers);
-        for(let time=0; time<1; time++){
+            dataManagers = dataManagers.sort((a, b) => {
+                return parseInt("0x" + md5(a.dataName).slice(0, 8)) - parseInt("0x" + md5(b.dataName).slice(0, 8))
+            })
+            // let tdataManagers = _.cloneDeep(dataManagers);
+        
             // let temp_dataManagers: Array<LevelDataManager> = [];
             // for(let i=0; i<dataManagers.length; i++){
             //     temp_dataManagers.push(dataManagers[i]);
@@ -257,7 +257,7 @@ async function loadMultiTimeSeriesInitData(context: ActionContext<GlobalState, G
             const allPromises = [];
             const columnsInfoArray: Array<Array<NoUniformColObj>> = new Array(temp_dataManagers.length);
             for (let i = 0; i < temp_dataManagers.length; i++) {
-                const noUniformColObjs = await temp_dataManagers[i].viewChangeInteractionFinal1(currentLevel, payload.width, [0, 65535], null, null);
+                const noUniformColObjs = await temp_dataManagers[i].viewChangeInteractionFinal1(currentLevel, payload.width, [time*2000, time*2000+10000], null, null);
                 columnsInfoArray[i] = noUniformColObjs;
                 temp_dataManagers[i].columnInfos = noUniformColObjs;
             }
@@ -279,7 +279,7 @@ async function loadMultiTimeSeriesInitData(context: ActionContext<GlobalState, G
                 endTimeStamp: endTimeStamp,
                 timeIntervalMs: timeInterval, dataManagers: temp_dataManagers, columnInfos: columnsInfoArray, startTime: 0, endTime: dataManagers[0].realDataRowNum - 1, algorithm: "multitimeseries", width: payload.width, height: payload.height, pow: false, minv: globalMinV, maxv: globalMaxV, maxLevel
             });
-            // await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise(resolve => setTimeout(resolve, 1000));
         }
     }).catch(error => {
         throw error
@@ -643,7 +643,148 @@ const getAllMultiLineClassAndLinesInfo: ActionHandler<GlobalState, GlobalState> 
     });
 }
 
+// Zigzag 编码与解码函数
+function zigzagEncode(n:any) {
+    return (n << 1) ^ (n >> 31);
+}
+
+function zigzagDecode(n:any) {
+    return (n >>> 1) ^ -(n & 1);
+}
+
+// Varint 编码与解码函数
+function varintEncode(value:any) {
+    const bytes = [];
+    while (value > 0x7F) {
+        bytes.push((value & 0x7F) | 0x80);
+        value >>>= 7;
+    }
+    bytes.push(value);
+    return bytes;
+}
+
+function varintDecode(bytes:any) {
+    let value = 0;
+    let shift = 0;
+    for (let i = 0; i < bytes.length; i++) {
+        const byte = bytes[i];
+        value |= (byte & 0x7F) << shift;
+        if ((byte & 0x80) === 0) {
+            break;
+        }
+        shift += 7;
+    }
+    return value;
+}
+
+function compressArray(arr:number[]) {
+    return arr.flatMap(x => varintEncode(zigzagEncode(x)));
+}
+function decompressArray(arr:number[]) {
+    const result = [];
+    let bytes = [];
+    for (let byte of arr) {
+        bytes.push(byte);
+        if ((byte & 0x80) === 0) {
+            result.push(zigzagDecode(varintDecode(bytes)));
+            bytes = [];
+        }
+    }
+    return result;
+}
+
+function postDataWithDelay(data:any, callback:any) {
+    let startTime = performance.now();
+    const blob = new Blob([data], { type: 'application/octet-stream' });
+    const start = new Date().getTime();
+    axios.post('postgres/line_chart/sensor_data', blob, {
+        headers: {
+            'Content-Type': 'application/octet-stream'
+        },
+    })
+    .then(response => {
+        // console.log('Success:', response.data.data);
+        console.log("post_time:", new Date().getTime() - start - 550);
+        let endTime = performance.now(); 
+        // let elapsedTime = endTime - startTime; 
+        // console.log(response.data);
+        // console.log(`Total time taken for sending data: ${elapsedTime.toFixed(2)} milliseconds`);
+        // setTimeout(callback, 10);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        // If there's an error, also wait for 10 seconds before processing next batch
+        setTimeout(callback, 1000);
+    });
+    
+}
+
 const testCustomDBConn: ActionHandler<GlobalState, GlobalState> = (context: ActionContext<GlobalState, GlobalState>, payload: { hostName: string, possword: string, dbName: string, userName: string }) => {
+    console.log(234);
+    const data:any = [];
+    const csvUrl = 'https://raw.githubusercontent.com/catbao/data_set/main/sensor/mock_guassian_sin_16_om3_6ht_int.csv';
+    // const csvUrl = 'https://raw.githubusercontent.com/catbao/data_set/main/sensor_origin/mock_guassian_sin_16.csv';
+    // const csvUrl = 'https://raw.githubusercontent.com/catbao/data_set/main/sensor/mock50ht_mock_guassian_sin1_50ht_om3_50ht.csv';
+    fetch(csvUrl)
+        .then(response => response.text())
+        .then(csvText => {
+            const batchSize = 3800;
+            let rows:any = [];
+            let processedCount = 0;
+            let processing = false;  
+
+            function processBatch() {
+                if (rows.length > 0 && !processing) {
+                    processing = true;
+                    const batch = rows.splice(0, batchSize);
+                    // console.log(batch);
+
+                    const notCompressedBatch = new Uint32Array(batch); 
+                    // console.log("uint32Array:", Uint32Array);
+                    const batchBuffer = notCompressedBatch.buffer;
+                    // console.log("batchBuffer byte length:", batchBuffer.byteLength);
+
+                    const compressedArray = compressArray(batch);
+                    const uint8Array = new Uint8Array(compressedArray);
+                    // console.log("uint8Array:", uint8Array);
+                    const arrayBuffer = uint8Array.buffer;
+                    // console.log("ArrayBuffer byte length:", arrayBuffer.byteLength);
+
+                    // console.log(batch.length);
+                    postDataWithDelay(arrayBuffer, () => {
+                        processing = false;
+                        processBatch();  
+                    });
+                }
+            }
+            Papa.parse(csvText, {
+                header: false,
+                step: function(row:any) {
+                    rows.push(Math.round(Number(row.data[1])*100));
+                    // rows.push(row.data[0]);
+                    processedCount++;
+                    if (rows.length === batchSize) {
+                        // console.log("rows:", rows);
+                        processBatch();
+                        // rows = [];  
+                    }
+                },
+                complete: function(results) {
+                    // if (rows.length > 0) {
+                    //     postData(rows);
+                    // }
+                    // console.log(results.data);
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching the CSV file:', error);
+        });
+
+    // axios.post("postgres/line_chart/sensor_data", {
+    //     data: JSON.stringify(data)
+    // })
+    
     return axios.post("postgres/line_chart/testDBConnection", {
         host_name: payload.hostName,
         user_name: payload.userName,

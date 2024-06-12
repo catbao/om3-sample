@@ -52,4 +52,10 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
+// app.post('/sensor_data',(req,res)=>{
+//   const data = req.body;
+//   console.log(`Received data: ${JSON.stringify(data)}`);
+//   res.status(200).json({ status: 'success', data: data });
+// })
+
 module.exports = app;

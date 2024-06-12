@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sensor Data Simulation</title>
+    <script>
+        function sendSensorData() {
+            const data = {
+                temperature: (Math.random() * 10 + 20).toFixed(2),
+                humidity: (Math.random() * 20 + 30).toFixed(2),
+                timestamp: Date.now()
+            };
+
+            fetch('http://localhost:8082/postgres/line_chart/sensor_data', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Data sent successfully:', data);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+
+        setInterval(sendSensorData, 5000); // 每5秒发送一次数据
+    </script>
+</head>
+<body>
+    <h1>Sensor Data Simulation</h1>
+    <p>Sensor data is being sent to the server every 5 seconds.</p>
+</body>
+</html>
