@@ -409,11 +409,11 @@ async function computeLineTransform(context: ActionContext<GlobalState, GlobalSt
 
     data2.then(async res => {
         // let tdataManagers = _.cloneDeep(dataManagers);
-        for(let time=0; time<20; time++){
+        for(let time=0; time<1; time++){
             console.log("temp_dataManager:", temp_dataManager);
             // const columnsInfoArray: Array<Array<NoUniformColObj>> = new Array(temp_dataManagers.length);
-            const res2 = await temp_dataManager.viewTransformFinal(temp_dataManagers, currentLevel, payload.width, [time*2000, time*2000+15000], null, null, transform_symbol);
-            // const res = await temp_dataManager.viewTransformFinal(temp_dataManagers, currentLevel, payload.width, [0, 65535], yScale, drawer, transform_symbol);
+            // const res2 = await temp_dataManager.viewTransformFinal(temp_dataManagers, currentLevel, payload.width, [time*2000, time*2000+15000], null, null, transform_symbol);
+            const res2 = await temp_dataManager.viewTransformFinal(temp_dataManagers, currentLevel, payload.width, [0, 65535], null, null, transform_symbol);
             // console.log("res2:", res2);
             resultObject = res2 as { a: NoUniformColObj[]; b: number; };
             console.log("resultObject:", resultObject);
@@ -441,7 +441,8 @@ async function computeLineTransform(context: ActionContext<GlobalState, GlobalSt
             const allPromises = [];
             const columnsInfoArray2: Array<Array<NoUniformColObj>> = new Array(temp_dataManagers2.length);
             for (let i = 0; i < temp_dataManagers2.length; i++) {
-                const noUniformColObjs = await temp_dataManagers2[i].viewChangeInteractionFinal1(currentLevel, payload.width, [time*2000, time*2000+15000], null, null);
+                // const noUniformColObjs = await temp_dataManagers2[i].viewChangeInteractionFinal1(currentLevel, payload.width, [time*2000, time*2000+15000], null, null);
+                const noUniformColObjs = await temp_dataManagers2[i].viewChangeInteractionFinal1(currentLevel, payload.width, [0, 65535], null, null);
                 columnsInfoArray2[i] = noUniformColObjs;
                 temp_dataManagers2[i].columnInfos = noUniformColObjs;
             }
