@@ -466,7 +466,6 @@ export default class NoUniformColObj {
             minIndex = [-1, Infinity, -1, []];
             let maxIndex: [number, number, number, Array<TrendTree>];
             maxIndex = [-1, -Infinity, -1, []];
-            // console.log("count:", count);
             // let alternativeNodes = [];
             // let alternativeNodes2 = [];
             // this.addMin = [-1, min, -1]; //add level info
