@@ -433,7 +433,7 @@ export default class NoUniformColObj {
     }
     
 
-    computeTransform2(p: TrendTree, p2:Array <TrendTree>, type: number, currentFlagInfo: any, currentFlagInfo2: any, transform_symbol: any, count?: any, needLoadDifNode?: any, needLoadDifNode2?: any, alternativeNodes?: any, alternativeNodes2?: any, maxLevel?: number, alterNodes?: any){
+    computeTransform2(p: TrendTree, p2:Array <TrendTree>, type: number, currentFlagInfo: any, currentFlagInfo2: any, transform_symbol: any, count?: any, needLoadDifNode?: any, needLoadDifNode2?: any, alternativeNodes?: any, alternativeNodes2?: any, maxLevel?: number, minNode?: any, maxNode?: any){
         const pp = p, pp2 = p2.slice();
         if (p.nodeType === "NULL") {
             return
@@ -445,8 +445,8 @@ export default class NoUniformColObj {
         let symbol = transform_symbol;
         if((type === 1 || type === 7 || type ===8 || type === 9) && (symbol == '+' || symbol == 'avg')){
             // let p = pp, p2 = pp2;
-            if(alterNodes)
-                alterNodes.value = alterNodes.value+1;
+            // if(alterNodes)
+            //     alterNodes.value = alterNodes.value+1;
             let min1 = p.yArray[1];
             let min2 = 0;
             for(let i=0;i<p2.length;i++){
@@ -466,10 +466,6 @@ export default class NoUniformColObj {
             minIndex = [-1, Infinity, -1, []];
             let maxIndex: [number, number, number, Array<TrendTree>];
             maxIndex = [-1, -Infinity, -1, []];
-            // let alternativeNodes = [];
-            // let alternativeNodes2 = [];
-            // this.addMin = [-1, min, -1]; //add level info
-            // this.addMax = [-1, max, -1];
 
             if(p.level === maxLevel!-1){
                 let minL = 0, minR = 0;
@@ -523,20 +519,20 @@ export default class NoUniformColObj {
                 this.addMin = [-1, min, p.level, [p, ...p2]];
                 this.addMax = [-1, max, p.level, [p, ...p2]];
                 needLoadDifNode.push(p);
-                needLoadDifNode.push(p);
+                // needLoadDifNode.push(p);
                 for(let i=0; i<needLoadDifNode2.length; i++){
-                    needLoadDifNode2[i].push(p2[i]);
+                    // needLoadDifNode2[i].push(p2[i]);
                     needLoadDifNode2[i].push(p2[i]);
                 }
             }
             else if(p.level > this.addMin[2]){
                 this.addMin = [-1, min, p.level, [p, ...p2]];
                 this.addMax = [-1, max, p.level, [p, ...p2]];
-                needLoadDifNode.push(p);
-                needLoadDifNode.push(p);
+                minNode[0] = p;
+                // needLoadDifNode.push(p);
                 for(let i=0; i<needLoadDifNode2.length; i++){
-                    needLoadDifNode2[i].push(p2[i]);
-                    needLoadDifNode2[i].push(p2[i]);
+                    minNode[i+1] = p2[i];
+                    // needLoadDifNode2[i].push(p2[i]);
                 }
                 // alternativeNodes[p.level-10].push(p);
                 // for(let i=0; i<needLoadDifNode2.length; i++){
@@ -544,58 +540,77 @@ export default class NoUniformColObj {
                 // }
             }
             else if(p.level === this.addMin[2]){
-                alternativeNodes[p.level-10].push(p);
-                for(let i=0; i<needLoadDifNode2.length; i++){
-                    alternativeNodes2[i][p.level-10].push(p2[i]);
-                }
+                // alternativeNodes[p.level-10].push(p);
+                // for(let i=0; i<needLoadDifNode2.length; i++){
+                //     alternativeNodes2[i][p.level-10].push(p2[i]);
+                // }
                 if(min < this.addMin[1]){
-                    for(let i=needLoadDifNode.length-1;i>=0;i--){
-                        if(needLoadDifNode[i] == this.addMin[3][0]){
-                            // alternativeNodes[p.level-10].push(needLoadDifNode[i]);
-                            needLoadDifNode.splice(i,1);
-                            break;
+                    minNode[0] = p;
+                    for(let i=0;i<needLoadDifNode2.length;i++){
+                        minNode[i+1] = p2[i];
+                    }
+                    if(!(min > this.addMin[1] && max < this.addMax[1])){
+                        alternativeNodes[p.level-10].push(this.addMin[3][0]);
+                        for(let i=0; i<needLoadDifNode2.length; i++){
+                            alternativeNodes2[i][p.level-10].push(this.addMin[3][i+1]);
                         }
                     }
-                    needLoadDifNode.push(p);
-                    for(let i=0; i<needLoadDifNode2.length; i++){
-                        for(let j=needLoadDifNode.length-1;j>=0;j--){
-                            if(needLoadDifNode2[i][j] == this.addMin[3][i+1]){
-                                // alternativeNodes2[i][p.level-10].push(needLoadDifNode2[i][j]);
-                                needLoadDifNode2[i].splice(j,1);
-                                break;
-                            }
-                        }
-                        needLoadDifNode2[i].push(p2[i]);
-                    }
+                    // for(let i=needLoadDifNode.length-1;i>=0;i--){
+                    //     if(needLoadDifNode[i] == this.addMin[3][0]){
+                    //         needLoadDifNode.splice(i,1);
+                    //         break;
+                    //     }
+                    // }
+                    // needLoadDifNode.push(p);
+                    // for(let i=0; i<needLoadDifNode2.length; i++){
+                    //     for(let j=needLoadDifNode.length-1;j>=0;j--){
+                    //         if(needLoadDifNode2[i][j] == this.addMin[3][i+1]){
+                    //             needLoadDifNode2[i].splice(j,1);
+                    //             break;
+                    //         }
+                    //     }
+                    //     needLoadDifNode2[i].push(p2[i]);
+                    // }
                     this.addMin = [-1, min, p.level,[p, ...p2]];
                 }
                 if(max > this.addMax[1]){
-                    for(let i=needLoadDifNode.length-1;i>=0;i--){
-                        if(needLoadDifNode[i] == this.addMax[3][0]){
-                            // alternativeNodes[p.level-10].push(needLoadDifNode[i]);
-                            needLoadDifNode.splice(i,1);
-                            break;
+                    maxNode[0] = p;
+                    for(let i=0;i<needLoadDifNode2.length;i++){
+                        maxNode[i+1] = p2[i];
+                    }
+                    if(!(min > this.addMin[1] && max < this.addMax[1])){
+                        alternativeNodes[p.level-10].push(this.addMax[3][0]);
+                        for(let i=0; i<needLoadDifNode2.length; i++){
+                            alternativeNodes2[i][p.level-10].push(this.addMax[3][i+1]);
                         }
                     }
-                    needLoadDifNode.push(p);
-                    for(let i=0; i<needLoadDifNode2.length; i++){
-                        for(let j=needLoadDifNode.length-1;j>=0;j--){
-                            if(needLoadDifNode2[i][j] == this.addMax[3][i+1]){
-                                // alternativeNodes2[i][p.level-10].push(needLoadDifNode2[i][j]);
-                                needLoadDifNode2[i].splice(j,1);
-                                break;
-                            }
-                        }
-                        needLoadDifNode2[i].push(p2[i]);
-                    }
+                    // for(let i=needLoadDifNode.length-1;i>=0;i--){
+                    //     if(needLoadDifNode[i] == this.addMax[3][0]){
+                    //         // alternativeNodes[p.level-10].push(needLoadDifNode[i]);
+                    //         needLoadDifNode.splice(i,1);
+                    //         break;
+                    //     }
+                    // }
+                    // needLoadDifNode.push(p);
+                    // for(let i=0; i<needLoadDifNode2.length; i++){
+                    //     for(let j=needLoadDifNode.length-1;j>=0;j--){
+                    //         if(needLoadDifNode2[i][j] == this.addMax[3][i+1]){
+                    //             // alternativeNodes2[i][p.level-10].push(needLoadDifNode2[i][j]);
+                    //             needLoadDifNode2[i].splice(j,1);
+                    //             break;
+                    //         }
+                    //     }
+                    //     needLoadDifNode2[i].push(p2[i]);
+                    // }
                     this.addMax = [-1, max, p.level,[p, ...p2]];
                 }
-                if(min > this.addMin[1] && max < this.addMax[1]){
-                    alternativeNodes[p.level-10].push(p);
-                    for(let i=0; i<needLoadDifNode2.length; i++){
-                        alternativeNodes2[i][p.level-10].push(p2[i]);
-                    }
-                }
+                // if(min > this.addMin[1] && max < this.addMax[1]){
+                    // alternativeNodes[p.level-10].push(p);
+                    // for(let i=0; i<needLoadDifNode2.length; i++){
+                    //     alternativeNodes2[i][p.level-10].push(p2[i]);
+                    // }
+                    // return;
+                // }
             }
         }
         else if((type === 1 || type === 7 || type ===8 || type === 9) && (symbol == '-')){
