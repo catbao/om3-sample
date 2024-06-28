@@ -207,6 +207,21 @@ export function computeLosedDataRangeV1(parents: Array<TrendTree>) {
     return losedDataRange;
 }
 
+export function computeLosedDataRangeV1Avg(parents: Array<TrendTree>) {
+    const losedDataRange: Array<Array<number>> = [];
+
+    parents.forEach(v => {
+        if (v.nodeType !== 'O') {
+            console.log("compute losed node cut");
+            console.log(v)
+        }
+        // if (v._leftChild === null && v._rightChild === null && v.nodeType === 'O') {
+        losedDataRange.push([v.level, v.index, v.index]);
+        // }
+    });
+    return losedDataRange;
+}
+
 export function computeLosedDataRangeV1ForRawMinMax(parents: Array<TrendTree>) {
     const losedDataRange: Array<Array<number>> = [];
 

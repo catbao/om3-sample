@@ -3,7 +3,7 @@ import axios from "axios";
 import TrendTree from "@/helper/tend-query-tree";
 import store, { pushTimeArray } from "@/store";
 import * as d3 from 'd3';
-import { canCut, checkSetType, computeLosedDataRange, computeLosedDataRangeV1, computeTimeSE, deleteSavedNodeIndex, computeSemanticColumn, convertWaveletToRawTableName, computeLosedDataRangeV1ForRawMinMax, computeTimeSE1 } from "@/helper/util";
+import { canCut, checkSetType, computeLosedDataRange, computeLosedDataRangeV1, computeLosedDataRangeV1Avg, computeTimeSE, deleteSavedNodeIndex, computeSemanticColumn, convertWaveletToRawTableName, computeLosedDataRangeV1ForRawMinMax, computeTimeSE1 } from "@/helper/util";
 import { NoUniformColObj } from "./non-uniform-col-obj";
 import { UniformGapObj } from "./uniform-gap-obj";
 // import { loadDataForRangeLevel, batchLoadDataForRangeLevelRawMinMax, batchLoadDataForRangeLevel, batchLoadDataForRangeLevel1, batchLoadDataForRangeLevel2MinMaxMiss, batchLoadDataForRangeLevel1MinMaxMiss, batchLoadDataForRangeLevel1WS, batchLoadDataForRangeLevelForMinMaxMiss } from "../api/build_tree"
@@ -576,8 +576,8 @@ export default class LevelDataManager {
     async viewChangeInteraction(currentLevel: number, width: number, timeRange: Array<number>, yScale: any) {
         // console.time("v_c")
         const nonUniformColObjs = computeTimeSE(currentLevel, width, timeRange, this.realDataRowNum, this.maxLevel, this.dataName);
-        //drawViewChangeLineChart({ dataManager:this,data: {maxv:0,minv:0,powRenderData:[],noPowRenderData:[]}, startTime: 0, endTime: timeRange[1], algorithm: "trendtree", width:width, height: 600 })
-        //context!.commit("addViewChangeQueryNoPowLineChartObj", { dataManager:this,data: nonUniformColObjs, startTime: 0, endTime: timeRange[1], algorithm: "trendtree", width:width, height: 600 });
+        //drawViewChangeLineChart({ dataManager:this,data: {maxv:0,minv:0,powRenderData:[],noPowRenderData:[]}, startTime: 0, endTime: timeRange[1], algorithm: "trendtree", width:width, height: kuandu })
+        //context!.commit("addViewChangeQueryNoPowLineChartObj", { dataManager:this,data: nonUniformColObjs, startTime: 0, endTime: timeRange[1], algorithm: "trendtree", width:width, height: kuandu });
 
         let needLoadDifNode: Array<TrendTree> = [];
         let colIndex = 0;
@@ -1805,7 +1805,6 @@ export default class LevelDataManager {
 
 
     async viewChangeInteractionFinal1(currentLevel: number, width: number, timeRange: Array<number>, yScale: any, drawer: any) {
-        
         const currentFlagInfo = getFlag(this.dataName);
         // const currentFlagInfo = getFlag("mock_guassian_sin_8m_om3_8m");
         if (currentFlagInfo === undefined) {
@@ -1813,11 +1812,21 @@ export default class LevelDataManager {
         } else {
             //console.log("flag length:", currentFlagInfo.length)
         }
-
+        let totalNum = 65536;
+        let kuandu = 600;
         allTimes = []
         // console.time("v_c")
         const nonUniformColObjs = computeTimeSE(currentLevel, width, timeRange, this.realDataRowNum, this.maxLevel);
         let needLoadDifNode: Array<TrendTree> = [];
+        // let alterNodes: Array<Array<TrendTree>> = Array.from({length: kuandu}, () => []);
+        let alterNodes: Array<Array<TrendTree>> = Array.from({length: kuandu}, () => new Array<TrendTree>());
+        let groundNodes: Array<Array<TrendTree>> = Array.from({length: kuandu}, () => new Array<TrendTree>());
+        let sum = new Array(kuandu).fill(0);
+        let error_bound = new Array(kuandu).fill(0); //误差值
+        let total = new Array(kuandu).fill(0);  //估计的总和
+        let estimate = new Array(kuandu).fill(0); //估计的平均值
+        let error = new Array(kuandu).fill(0); //误差归一化
+
         let colIndex = 0;
         for (let i = 0; i < this.levelIndexObjs[currentLevel].firstNodes.length; i++) {
             const firtIndexTimeRange = this.getIndexTime(currentLevel, this.levelIndexObjs[currentLevel].loadedDataRange[i][0], this.maxLevel);
@@ -1831,36 +1840,31 @@ export default class LevelDataManager {
                         //throw new Error("col index out range");
                     }
                     const type = nonUniformColObjs[colIndex].isMissContain(p);
-                    nonUniformColObjs[colIndex].containColumnRange(p, type);
+                    nonUniformColObjs[colIndex].containColumnRange2(p, type, colIndex, alterNodes, groundNodes, sum);
                     if (type === 1) {
                         p = p.nextSibling!;
                     } else if (type === 2 || type === 7 || type === 8 || type === 9 || type === 10) {
                         if (type === 2) {
                             needLoadDifNode.push(p);
                         }
-                        // if (type === 7) {
-                        //     needLoadDifNode.push(p);
-                        //     colIndex++;
-                        // }
-                        // if (type === 8) {
-                        //     if (colIndex != 0) {
-                        //         needLoadDifNode.push(p);
-                        //     }
-                        // }
-                        // if (type === 9) {
-                        //     colIndex++;
-                        //     if (colIndex !== nonUniformColObjs.length - 1) {
-                        //         needLoadDifNode.push(p);
-                        //     }
-                        // }
-                        // if (type === 10) {
-                        //     needLoadDifNode.push(p);
-                        //     //preColIndex.push(colIndex);
+                        // else{
+                        //     if(p.timeRange[1] - p.timeRange[0] == 1) groundNodes[colIndex].add(p);
+                        //     else if(p.timeRange[0] >= nonUniformColObjs[colIndex].tStart && p.timeRange[1] <= nonUniformColObjs[colIndex].tEnd)
+                        //         alterNodes[colIndex].add(p);
                         // }
                         p = p.nextSibling!;
                     } else if (type === 3) {
                         colIndex++;
-                    } else if (type === 5) {
+                        // if(p.timeRange[1] - p.timeRange[0] == 1) groundNodes[colIndex].add(p);
+                        // else if(p.timeRange[0] >= nonUniformColObjs[colIndex].tStart && p.timeRange[1] <= nonUniformColObjs[colIndex].tEnd) 
+                        //     alterNodes[colIndex].add(p);
+                    } 
+                    // else if(type == 4){
+                    //     if(p.timeRange[1] - p.timeRange[0] == 1) groundNodes[colIndex].add(p);
+                    //     else if(p.timeRange[0] >= nonUniformColObjs[colIndex].tStart && p.timeRange[1] <= nonUniformColObjs[colIndex].tEnd) 
+                    //         alterNodes[colIndex].add(p);
+                    // }
+                    else if (type === 5) {
                         p = p.nextSibling!
                     } else if (type === 6) {
                         break;
@@ -1889,7 +1893,7 @@ export default class LevelDataManager {
             const tempQue: Array<TrendTree> = [];
 
             needLoadDifNode.forEach(v => {
-                console.log("v:", v);
+                // console.log("v:", v);
                 if ((v._leftChild === null || v._rightChild === null) && v.nodeType === 'O') {
                     debugger
                     throw new Error("cannot find next level node");
@@ -1916,7 +1920,7 @@ export default class LevelDataManager {
                     //throw new Error("col index out range");
                 }
                 const type = nonUniformColObjs[colIndex].isMissContain(tempQue[i]);
-                nonUniformColObjs[colIndex].containColumnRange(tempQue[i], type);
+                nonUniformColObjs[colIndex].containColumnRange2(tempQue[i], type, colIndex, alterNodes, groundNodes, sum);
                 if (type === 1) {
                     continue;
                 } else if (type === 2 || type === 7 || type === 8 || type === 9 || type === 10) {
@@ -1924,31 +1928,26 @@ export default class LevelDataManager {
                         tempNeedLoadDifNodes.push(tempQue[i]);
                         preColIndex.push(colIndex);
                     }
-                    // if (type === 7) {
-                    //     tempNeedLoadDifNodes.push(tempQue[i]);
-                    //     preColIndex.push(colIndex)
+                    // else{
+                    //     if(tempQue[i].timeRange[1] - tempQue[i].timeRange[0] == 1) groundNodes[colIndex].add(tempQue[i]);
+                    //     else if(tempQue[i].timeRange[0] >= nonUniformColObjs[colIndex].tStart && tempQue[i].timeRange[1] <= nonUniformColObjs[colIndex].tEnd)
+                    //         alterNodes[colIndex].add(tempQue[i]);
                     // }
-                    // if (type === 8) {
-                    //     if (colIndex != 0) {
-                    //         tempNeedLoadDifNodes.push(tempQue[i]);
-                    //         preColIndex.push(colIndex - 1)
-                    //     }
-                    // }
-                    // if (type === 9) {
-                    //     if (colIndex !== nonUniformColObjs.length - 1) {
-                    //         tempNeedLoadDifNodes.push(tempQue[i]);
-                    //         preColIndex.push(colIndex)
-                    //     }
-                    // }
-                    // if (type === 10) {
-                    //     tempNeedLoadDifNodes.push(tempQue[i]);
-                    //     preColIndex.push(colIndex);
-                    // }
-
                 } else if (type === 3) {
                     colIndex++;
+                    // if(tempQue[i].timeRange[1] - tempQue[i].timeRange[0] == 1) groundNodes[colIndex].add(tempQue[i]);
+                    // else if(tempQue[i].timeRange[0] >= nonUniformColObjs[colIndex].tStart && tempQue[i].timeRange[1] <= nonUniformColObjs[colIndex].tEnd)
+                    //     alterNodes[colIndex].add(tempQue[i]);
                     i--;
-                } else if (type === 6) {
+                }
+                // else if (type === 4) {
+                //     colIndex++;
+                //     if(tempQue[i].timeRange[1] - tempQue[i].timeRange[0] == 1) groundNodes[colIndex].add(tempQue[i]);
+                //     else if(tempQue[i].timeRange[0] >= nonUniformColObjs[colIndex].tStart && tempQue[i].timeRange[1] <= nonUniformColObjs[colIndex].tEnd)
+                //         alterNodes[colIndex].add(tempQue[i]);
+                //     i--;
+                // } 
+                else if (type === 6) {
                     break;
                 } else {
                     continue;
@@ -1958,18 +1957,7 @@ export default class LevelDataManager {
             if (preColIndex.length != tempNeedLoadDifNodes.length) {
                 throw new Error("cannot memory index");
             }
-            // for (let i = 0; i < tempNeedLoadDifNodes.length; i++) {
-            //     if (tempNeedLoadDifNodes[i].gapFlag !== 'NO') {
-            //         continue;
-            //     }
-            //     if (preColIndex[i] + 1 < nonUniformColObjs.length) {
-            //         const con1 = canCut(tempNeedLoadDifNodes[i], nonUniformColObjs[preColIndex[i]], nonUniformColObjs[preColIndex[i] + 1], yScale);
-            //         if (con1) {
-            //             tempNeedLoadDifNodes.splice(i, 1)
-            //             preColIndex.splice(i, 1);
-            //         }
-            //     }
-            // }
+
             needLoadDifNode = tempNeedLoadDifNodes;
             if (needLoadDifNode.length > 0 && needLoadDifNode[0].level === this.maxLevel - 1) {
                 for (let i = 0; i < needLoadDifNode.length; i++) {
@@ -2017,21 +2005,93 @@ export default class LevelDataManager {
                 break;
             }
             let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
-            console.log("needLoadDifNode:", needLoadDifNode);
-            console.log("  ");
+            // console.log("needLoadDifNode:", needLoadDifNode);
             if (losedDataInfo.length > 0) {
                 await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);
             }
 
         }
 
+        for(let i=0;i<kuandu;i++){
+            for(const element of alterNodes[i]){
+                if(element.level == 10){
+                    alterNodes[i].shift();
+                    alterNodes[i].unshift(element._rightChild!);
+                    alterNodes[i].unshift(element._leftChild!);
+                }
+            }
+        }
+        // for(let i=0;i<kuandu;i++){
+        //     alterNodesArray[i].sort((a, b) => computeError(b,sum) - computeError(a,sum)); 
+        // }
+
+        //计算error-bound
+        for(let i=0;i<kuandu;i++){
+            for (const element of alterNodes[i]){
+                error_bound[i] += this.computeError(element,sum,i);
+                total[i] += (element.yArray[2] + element.yArray[1]) / 2 * (element.timeRange[1] - element.timeRange[0]+1);
+            }
+            for (const element of groundNodes[i]){
+                total[i] += (element.yArray[2] + element.yArray[1]) / 2 * (element.timeRange[1] - element.timeRange[0]+1);
+            }
+        }
+        //计算估计的平均值和误差率
+        for(let i=0;i<kuandu;i++){
+            estimate[i] = total[i] / (nonUniformColObjs[i].tEnd - nonUniformColObjs[i].tStart + 1);
+            error[i] = error_bound[i] / (nonUniformColObjs[i].vRange[1] - nonUniformColObjs[i].vRange[0]);
+        }
+
+        
+        for(let l = 11; l<15; l++){
+            let layerNodes: Array<TrendTree> = []; 
+            for(let i=0;i<kuandu;i++){
+                for (let i = 0; i < alterNodes.length; i++) {   
+                    alterNodes[i] = alterNodes[i].filter(node => {  
+                        if (node.level === l) {   
+                            layerNodes.push(node);  
+                            return false;  
+                        }   
+                        return true;  
+                    });  
+                }  
+            }
+            console.log("layerNodes:", layerNodes);
+            let losedDataInfoAvg = computeLosedDataRangeV1Avg(layerNodes);
+            for(let i=0;i<losedDataInfoAvg.length;i++){
+                losedDataInfoAvg.sort((a, b) => a[1] - b[1]); 
+            }
+            if (losedDataInfoAvg.length > 0) {
+                await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfoAvg, this);
+            }
+            //计算error-bound
+            for(let j=0;j<layerNodes.length;j++){
+                let index = Math.floor(layerNodes[j].timeRange[0] / (totalNum / kuandu));
+                total[index] -= (layerNodes[j].yArray[2] + layerNodes[j].yArray[1]) / 2 * (layerNodes[j].timeRange[1] - layerNodes[j].timeRange[0] + 1);
+                total[index] += (layerNodes[j]._leftChild!.yArray[2] + layerNodes[j]._leftChild!.yArray[1]) / 2 * (layerNodes[j]._leftChild!.timeRange[1] - layerNodes[j]._leftChild!.timeRange[0] + 1);
+                total[index] += (layerNodes[j]._rightChild!.yArray[2] + layerNodes[j]._rightChild!.yArray[1]) / 2 * (layerNodes[j]._rightChild!.timeRange[1] - layerNodes[j]._rightChild!.timeRange[0] + 1);
+                estimate[index] = total[index] / (nonUniformColObjs[index].tEnd - nonUniformColObjs[index].tStart + 1);
+                let count = layerNodes[j].timeRange[1] - layerNodes[j].timeRange[0] + 1;
+                error_bound[index] -= (count - 2)*(layerNodes[j].yArray[2] - layerNodes[j].yArray[1])/(sum[index]*2);
+                let count2 = count / 2;
+                error_bound[index] += (count2 - 2)*(layerNodes[j]._leftChild!.yArray[2] - layerNodes[j]._leftChild!.yArray[1])/(sum[index]*2);
+                error_bound[index] += (count2 - 2)*(layerNodes[j]._rightChild!.yArray[2] - layerNodes[j]._rightChild!.yArray[1])/(sum[index]*2);
+                alterNodes[index].unshift(layerNodes[j]._rightChild!);
+                alterNodes[index].unshift(layerNodes[j]._leftChild!);
+                error[index] = error_bound[index] / (nonUniformColObjs[index].vRange[1] - nonUniformColObjs[index].vRange[0]);
+            }
+            // layerNodes.length = 0;
+        }
+
         for (let i = 0; i < nonUniformColObjs.length; i++) {
             nonUniformColObjs[i].checkIsMis();
         }
-
         return nonUniformColObjs;
     }
 
+    computeError(t:any, sum:any, i:number){
+        let count = t.timeRange[1] - t.timeRange[0] + 1;
+        return (count - 2)*(t.yArray[2] - t.yArray[1])/(sum[i]*2);
+    }
 }
 
 

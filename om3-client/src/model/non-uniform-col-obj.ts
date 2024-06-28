@@ -235,6 +235,87 @@ export class NoUniformColObj {
             throw new Error("time out of range")
         }
     }
+
+    containColumnRange2(p: TrendTree, type: number, colIndex: number, alterNodes:any, groundNodes:any, sum:any) {
+        if (p.nodeType === "NULL") {
+            return
+        }
+        if ( p.yArray[1] === undefined || p.yArray[2] === undefined) {
+            debugger
+            throw new Error("error val")
+        }
+        const pL = p.level;
+        const pTRange = (2 ** this.maxLevel) / (2 ** pL);
+        const pTimeS = p.index * pTRange;
+        const pTimeE = pTRange + pTimeS - 1;
+        if (this.tStart === pTimeS) {
+            // throw new Error("cannot use this val")
+            // this.startV = p.yArray[0];
+        }
+        if (this.tEnd === pTimeE) {
+            // throw new Error("cannot use this val")
+            // this.endV = 0;//p.yArray[3];
+        }
+        if (type === 6) {
+            // console.log(pTimeE)
+            // console.log(this.globalDataLen)
+            // console.error("type 6");
+            //throw new Error("type 8")
+        }
+        if (type === 1||type===7||type===8||type===9) {
+            if (p.yArray[1] < this.vRange[0]) {
+                this.vRange[0] = p.yArray[1];
+                const tRange = getIndexTime(p.level, p.index, this.maxLevel);
+                this.minVTimeRange = [tRange.startT, tRange.endT];
+            }
+            if (p.yArray[2] > this.vRange[1]) {
+                this.vRange[1] = p.yArray[2];
+                const tRange = getIndexTime(p.level, p.index, this.maxLevel);
+                this.maxVTimeRange = [tRange.startT, tRange.endT];
+            }
+            if(this.ordinalLevelCount === 0){
+                this.average = p.yArray[3];
+                this.currentSum += p.yArray[3] * pTRange;
+                this.currentPointNum += pTRange;
+                this.currentRange.push([pTimeS, pTimeE]);
+                if(p.timeRange[1] - p.timeRange[0] != 1){
+                    alterNodes[colIndex].push(p);
+                    sum[colIndex] += p.timeRange[1] - p.timeRange[0] + 1;
+                }
+                else groundNodes[colIndex].push(p);
+                this.ordinalLevelCount++;
+            }
+            else{
+                // let levelDif = 2 ** this.ordinalLevelCount;
+                // // let newAverage = (this.average + (1 / levelDif) * p.yArray[3]) / (1 + (1 / levelDif));
+                // let newAverage = (this.average * (levelDif - 1) * 2 + p.yArray[3]) / (levelDif * 2 - 1);
+                // this.average = newAverage;
+                this.currentSum += p.yArray[3] * pTRange;
+                this.currentPointNum += pTRange;
+                this.average = this.currentSum / this.currentPointNum;
+                this.currentRange.push([pTimeS, pTimeE]);
+                if(p.timeRange[1] - p.timeRange[0] != 1){
+                    alterNodes[colIndex].push(p);
+                    sum[colIndex] += p.timeRange[1] - p.timeRange[0] + 1;
+                }
+                else groundNodes[colIndex].push(p);
+                
+                this.ordinalLevelCount++;
+            }
+            // if (p.parent && p.parent.nodeType === 'LEFTNULL') {
+            //     this.startV = p.yArray[0];
+            // }
+            // if (p.parent && p.parent.nodeType === 'RIGHTNULL') {
+            //     if (this.endV! > p.yArray[3]) {
+            //         throw new Error("dddddddddddd")
+            //     }
+            //     this.endV = p.yArray[3];
+            // }
+        }
+        return;
+    }
+
+
     containColumnRange(p: TrendTree, type: number) {
         if (p.nodeType === "NULL") {
             return
@@ -302,7 +383,6 @@ export class NoUniformColObj {
         }
         return;
     }
-
 
     addLastVal(v: number, p?: any) {
         if (v === undefined) {
