@@ -500,9 +500,9 @@ export async function batchLoadDataForRangeLevel1MinMaxMiss(losedRange: Array<Ar
         return a[1] - b[1];
     });
     for(let i=0;i<losedRange.length-1;i++){
-        if(losedRange[i][1]>losedRange[i+1][1]){
-            console.log("losedRange[i][1],losedRange[i+1][1]:", losedRange[i][1],losedRange[i+1][1])
-        }
+        // if(losedRange[i][1]>losedRange[i+1][1]){
+        //     console.log("losedRange[i][1],losedRange[i+1][1]:", losedRange[i][1],losedRange[i+1][1])
+        // }
         if(losedRange[i][1] === losedRange[i+1][1] && losedRange[i][2] === losedRange[i+1][2]){
             losedRange.splice(i, 1);
         }
