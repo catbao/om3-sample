@@ -230,6 +230,27 @@ export function batchLoadMinMaxMissWithWs(losedDataInfo:Array<Array<number>>, da
     })
 }
 
+export async function batchLoadMinMaxMissWithWs123(losedDataInfo:Array<Array<number>>, dataName: string, maxLevel: number,tagName?:string){
+    if (losedDataInfo.length === 0) {
+        return [];
+    }
+    const { data } = await axios.post(`postgres/line_chart/batchLoadMinMaxMissWithPostForMultiLineType`, {
+        table_name: dataName.includes(".") ? dataName.split(".")[1] : dataName,
+        losedDataInfo:  {data:losedDataInfo} ,
+        tagName:tagName,
+        line_type:store.state.controlParams.currentLineType,
+        mode:store.state.controlParams.currentMode
+    });
+    const result = data.data;
+    const resultArray = [];
+    if (result && result[0] && result[0].length > 0) {
+        for (let i = 0; i < result[0].length; i++) {
+            resultArray.push({ l:  result[0][i], i: result[1][i], dif: [0,result[2][i], result[3][i], result[4][i], 0] });
+        }
+    }
+    return resultArray;
+}
+
 export async function batchLoadMinMaxMissWithPostForMultiLineType(losedDataInfo:Array<Array<number>>, dataName: string, url: string, maxLevel: number,tagName?:string) {
     if (losedDataInfo.length === 0) {
         return [];

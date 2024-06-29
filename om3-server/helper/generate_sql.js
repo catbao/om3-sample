@@ -360,11 +360,41 @@ function generateSingalLevelSQLMinMaxMissQuery(losedDataInfo, maxLevel, tableNam
     return sqlStr.substring(0, sqlStr.length - 1) + ")"
 }
 
-function generateSingalLevelSQLWithSubQueryMinMax(losedDataInfo, maxLevel, tableName) {
-    const curL = maxLevel - losedDataInfo[0][0];
-    if (curL < 1) {
-        return null;
+function generateSingalLevelSQLMinMaxMissQuery123(losedDataInfo, maxLevel, tableName){
+    // const curL = losedDataInfo[0][0];
+    // const curL = losedDataInfo[0][0];
+    // if (curL < 1) {
+    //     return null;
+    // }
+    let sqlStr = `select i,minvd,maxvd,avevd from ${tableName} where i in (`;
+    // for (let i = 0; i < losedDataInfo.length - 1; i++) {
+    //     if (losedDataInfo[i][2] === losedDataInfo[i + 1][1] || (losedDataInfo[i][2] + 1) === losedDataInfo[i + 1][1]) {
+    //         losedDataInfo[i][2] = losedDataInfo[i + 1][2];
+    //         losedDataInfo.splice(i + 1, 1)
+    //         i--;
+    //     }
+    // }
+    for (let i = 0; i < losedDataInfo.length; i++) {
+        const curL = losedDataInfo[i][0];
+        // console.log(curL);
+        const first = losedDataInfo[i][1];
+        const second = losedDataInfo[i][2];
+        if (first === second) {
+            sqlStr += `${2**curL+first},`
+        } else {
+            for (let j = first; j <= second; j++) {
+                sqlStr += `${2**curL+j},`
+            }
+        }
     }
+    return sqlStr.substring(0, sqlStr.length - 1) + ")"
+}
+
+function generateSingalLevelSQLWithSubQueryMinMax(losedDataInfo, maxLevel, tableName) {
+    // const curL = maxLevel - losedDataInfo[0][0];
+    // if (curL < 1) {
+    //     return null;
+    // }
     let sqlStr = `select l,i,minvd,maxvd from ${tableName} where l=${curL} and i in (`;
     for (let i = 0; i < losedDataInfo.length - 1; i++) {
         if (losedDataInfo[i][2] === losedDataInfo[i + 1][1] || (losedDataInfo[i][2] + 1) === losedDataInfo[i + 1][1]) {
@@ -374,13 +404,14 @@ function generateSingalLevelSQLWithSubQueryMinMax(losedDataInfo, maxLevel, table
         }
     }
     for (let i = 0; i < losedDataInfo.length; i++) {
+        const curL = losedDataInfo[i][0];
         const first = losedDataInfo[i][1];
         const second = losedDataInfo[i][2];
         if (first === second) {
-            sqlStr += `${first},`
+            sqlStr += `${2**curL+first},`
         } else {
             for (let j = first; j <= second; j++) {
-                sqlStr += `${j},`
+                sqlStr += `${2**curL+j},`
             }
         }
     }
@@ -467,4 +498,4 @@ function generateSingalLevelSQLWithSubQuery11(losedDataInfo, maxLevel, tableName
 
 
 
-module.exports = {generateSingalLevelSQLWithSubQueryMinMaxMiss,generateSingalLevelSQLWithSubQuery21RawMinMax,generateSingalLevelSQLWithSubQueryRawMinMax,generateSingalLevelSQLMinMaxMissQuery, generateAllLevelSQLQuery, generateSingalLevelSQLWithSubQuery1, generateSingalLevelSQLWithSubQuery11, generateMultiLevelSQL, generateSingalLevelSQL, generateSingalLevelSQLWithSubQuery, generateSingalLevelSQLWithSubQuery21, generateAllLevelParallelSQLQuery, generateSingalLevelSQLWithSubQueryMinMax ,generateSingalLevelSQLWithSubQuery21test}
+module.exports = {generateSingalLevelSQLWithSubQueryMinMaxMiss,generateSingalLevelSQLMinMaxMissQuery123,generateSingalLevelSQLWithSubQuery21RawMinMax,generateSingalLevelSQLWithSubQueryRawMinMax,generateSingalLevelSQLMinMaxMissQuery, generateAllLevelSQLQuery, generateSingalLevelSQLWithSubQuery1, generateSingalLevelSQLWithSubQuery11, generateMultiLevelSQL, generateSingalLevelSQL, generateSingalLevelSQLWithSubQuery, generateSingalLevelSQLWithSubQuery21, generateAllLevelParallelSQLQuery, generateSingalLevelSQLWithSubQueryMinMax ,generateSingalLevelSQLWithSubQuery21test}

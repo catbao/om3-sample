@@ -81,9 +81,10 @@ function queryMinMaxMissData(req, ws){
         const idx = [];
         result.rows.forEach((v) => {
             const curI=v['i'];
-            
             l.push(curLevel);
+            // l.push(0);
             idx.push(curI-2**curLevel);
+            // idx.push(curI - 2**(Math.floor(Math.log2(curI))));
             minV.push(v['minvd']);
             maxV.push(v['maxvd']);
             aveV.push(v['avevd']);

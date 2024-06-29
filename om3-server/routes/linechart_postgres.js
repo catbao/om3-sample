@@ -3,7 +3,7 @@ const router = express.Router();
 const fs = require("fs")
 
 const { Pool } = require('pg');
-const { generateSingalLevelSQLWithSubQueryMinMaxMiss, generateSingalLevelSQLMinMaxMissQuery, generateSingalLevelSQLWithSubQuery } = require('../helper/generate_sql');
+const { generateSingalLevelSQLWithSubQueryMinMaxMiss, generateSingalLevelSQLMinMaxMissQuery, generateSingalLevelSQLMinMaxMissQuery123, generateSingalLevelSQLWithSubQuery } = require('../helper/generate_sql');
 const { getTableLevel, generateOM3TableName, customDBPoolMap, computeLevelFromT, getPool } = require('../helper/util');
 const { randomUUID } = require('crypto');
 const { nonuniformMinMaxEncode } = require('../compute/om_compute');
@@ -157,7 +157,6 @@ function m4BenchmarkHandler(req, res) {
     });
 }
 
-
 function initWaveletBenchMinMaxMissHandler(req, res) {
     res.setHeader("Access-Control-Allow-Origin", "*");
 
@@ -218,8 +217,6 @@ function initWaveletBenchMinMaxMissHandler(req, res) {
     }
 
 }
-
-
 
 function batchLevelDataProgressiveWaveletMinMaxMissPostHandler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -302,15 +299,9 @@ function batchLevelDataProgressiveWaveletMinMaxMissPostHandler(req, res) {
     });
 }
 
-
-
-
-
 let allWaveletTables = []
 function getAllTables(req, res) {
     res.setHeader("Access-Control-Allow-Origin", "*");
-
-
     const sqlStr = `select table_schema||'.'||table_name as table_fullname from information_schema."tables" where table_type = 'BASE TABLE' and table_schema not in ('pg_catalog', 'information_schema');`
     pool.query(sqlStr, (err, result) => {
         if (err) {
@@ -332,7 +323,6 @@ function getAllTables(req, res) {
 let allTables = [];
 let lineType = ''
 let maxLevel = 20;
-
 
 let allMultiSeriesTables = [];
 let multiSeriesClass = 'stock'
@@ -470,15 +460,16 @@ function queryMinMaxMissData(req, res) {
         schema = "om3_multi";
     }
     const tName = `${schema}.${query.table_name}`;
-    console.log(tName)
-    const condition = generateSingalLevelSQLMinMaxMissQuery(needRangeArray, maxLevel, tName);
+    // console.log(tName)
+    // console.log(needRangeArray);
+    const condition = generateSingalLevelSQLMinMaxMissQuery123(needRangeArray, maxLevel, tName);
     if (condition === null) {
         console.log(needRangeArray);
         ws.send({ code: 400, msg: "level error" })
         return
     }
     let sqlStr = condition + " order by i asc";
-
+    // let sqlStr = condition;
 
     currentPool.query(sqlStr, function (err, result) {
         if (err) {
@@ -486,23 +477,27 @@ function queryMinMaxMissData(req, res) {
             currentPool.end();
             throw err;
         }
+        // console.log(sqlStr);
         const minV = [];
         const maxV = [];
+        const aveV = [];
         const l = [];
         const idx = [];
+        // console.log(result.rows);
         result.rows.forEach((v) => {
+            // console.log("v", v);
             const curI = v['i'];
-
-            l.push(curLevel);
-            idx.push(curI - 2 ** curLevel);
+            // l.push(curLevel);
+            // idx.push(curI - 2 ** curLevel);
+            l.push(Math.floor(Math.log2(curI)));
+            idx.push(curI - 2**(Math.floor(Math.log2(curI))));
             minV.push(v['minvd']);
             maxV.push(v['maxvd']);
+            aveV.push(v['avevd']);
         });
-        res.send({ code: 200, msg: "success", data: [l, idx, minV, maxV] });
+        res.send({ code: 200, msg: "success", data: [l, idx, minV, maxV, aveV] });
     });
 }
-
-
 
 function getAllFlags(req, res) {
     const allSingleFlagNames = fs.readdirSync("./flags/single_line");
