@@ -1812,7 +1812,7 @@ export default class LevelDataManager {
         } else {
             //console.log("flag length:", currentFlagInfo.length)
         }
-        let totalNum = 65536;
+        let totalNum = timeRange[1] + 1;
         let kuandu = 600;
         let visitedNodes = 1024;
         allTimes = []
@@ -2044,27 +2044,27 @@ export default class LevelDataManager {
         }
         
         //每次取出来5个，缩小error
-        for(let i=0;i<10;i++){
+        for(let i=0;i<20;i++){
             let queryNodes: Array<TrendTree> = [];
             for(let i=0;i<kuandu;i++){
-                for(let j=0;j<5;j++){
+                for(let j=0;j<10;j++){
                     if(alterNodes[i].size() > 0){
                         let node = alterNodes[i].pop();
-                        if(node !== null){
+                        if(node !== null && (node.timeRange[1]-node.timeRange[0]+1)>=4){
                             queryNodes.push(node);
                         }
                     }
                     else break;
                 }
             }
-            console.log("queryNodes:", queryNodes);
+            // console.log("queryNodes:", queryNodes);
             let losedDataInfoAvg = computeLosedDataRangeV1Avg(queryNodes);
             if (losedDataInfoAvg.length > 0) {
                 await batchLoadDataForRangeLevel1MinMaxMiss123(losedDataInfoAvg, this);
             }
             console.log(" ");
         
-            for(let j=0;j<queryNodes.length-20;j++){
+            for(let j=0;j<queryNodes.length;j++){
                 let index = Math.floor(queryNodes[j].timeRange[0] / (totalNum / kuandu));
                 if(error[index] > 0.1){
                     if(queryNodes[j]._leftChild === null || queryNodes[j]._rightChild === null) continue;
