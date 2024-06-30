@@ -43,13 +43,13 @@ async function computeTableFlag(data) {
             arrayBuffer[j + 1] = 1;
         }
     }
-    fs.writeFileSync(`../flags/${"mock_guassian_sin_om3_8m"}.flagz`, arrayBuffer);
+    fs.writeFileSync(`../flags/${"custom_mock1m_mock_guassian_sin5_1m_om3_1m"}.flagz`, arrayBuffer);
     console.log("compute ordering flag finished")
     //pool.end()
 }
 
 async function nonuniformMinMaxEncode() {
-    const querySQL = `SELECT t,v FROM "raw_data"."mock_guassian_sin_8m"  ORDER by t ASC`
+    const querySQL = `SELECT t,v FROM "raw_data"."texi_data"  ORDER by t ASC`
     const queryData = await pool.query(querySQL);
     computeTableFlag(queryData);
     // return
@@ -133,7 +133,7 @@ async function nonuniformMinMaxEncode() {
             // console.log(curMinT, curMinV, curMaxV, curMaxT);
         }
 
-        let sqlStr = "insert into om3.mock_guassian_sin_om3_8m(i,minvd,maxvd) values "
+        let sqlStr = "insert into om3.texi_data(i,minvd,maxvd) values "
         let i = 0;
         while (i < curMaxVDiff.length) {
             const usedL = maxL - l
@@ -179,7 +179,7 @@ async function nonuniformMinMaxEncode() {
         }
     }
     if (min !== undefined && max !== undefined) {
-        const l0Sql = `insert into om3.mock_guassian_sin_om3_8m(i,minvd,maxvd) values(${-1},${min},${max})`
+        const l0Sql = `insert into om3.texi_data(i,minvd,maxvd) values(${-1},${min},${max})`
         await pool.query(l0Sql);
         pool.end()
     }
