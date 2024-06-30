@@ -1884,6 +1884,7 @@ export default class LevelDataManager {
             return nonUniformColObjs;
         }
         let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
+        visitedNodes += losedDataInfo.length;
         // debugger
         if (losedDataInfo.length > 0) {
             await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);
@@ -2007,11 +2008,11 @@ export default class LevelDataManager {
                 break;
             }
             let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
+            visitedNodes += losedDataInfo.length;
             // console.log("needLoadDifNode:", needLoadDifNode);
             if (losedDataInfo.length > 0) {
                 await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);
             }
-
         }
 
         for(let i=0;i<kuandu;i++){
@@ -2019,11 +2020,12 @@ export default class LevelDataManager {
             if(p !== null && p.level === 10){
                 alterNodes[i].push(p._rightChild!);
                 alterNodes[i].push(p._leftChild!);
-                visitedNodes += 2;
+                visitedNodes += 1;
             }
         }
         //计算error-bound
         let i=0;
+        let error_bound_avg = 0;
         alterNodes.forEach(heap => {  
             const elements = heap.toArray();  
             elements.forEach(element => {  
@@ -2038,13 +2040,16 @@ export default class LevelDataManager {
             }
         }
         //计算估计的平均值和误差率
+        let error_avg = 0;
         for(let i=0;i<kuandu;i++){
             estimate[i] = total[i] / (nonUniformColObjs[i].tEnd - nonUniformColObjs[i].tStart + 1);
             error[i] = error_bound[i] / (nonUniformColObjs[i].vRange[1] - nonUniformColObjs[i].vRange[0]);
+            error_avg += error[i] / kuandu;
+            error_bound_avg += error_bound[i] / kuandu;
         }
         
         //每次取出来5个，缩小error
-        for(let i=0;i<20;i++){
+        for(let i=0;i<30;i++){
             let queryNodes: Array<TrendTree> = [];
             for(let i=0;i<kuandu;i++){
                 for(let j=0;j<10;j++){
@@ -2083,8 +2088,14 @@ export default class LevelDataManager {
                     //加入新的节点
                     alterNodes[index].push(queryNodes[j]._rightChild!);
                     alterNodes[index].push(queryNodes[j]._leftChild!);
-                    visitedNodes+=2;
+                    visitedNodes+=1;
                 }
+            }
+            error_avg = 0;
+            error_bound_avg = 0;
+            for(let i=0;i<kuandu;i++){
+                error_avg += error[i] / kuandu;
+                error_bound_avg += error_bound[i] / kuandu;
             }
             console.log(" ");
         }
