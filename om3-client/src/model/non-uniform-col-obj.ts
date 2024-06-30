@@ -549,7 +549,7 @@ export default class NoUniformColObj {
                     for(let i=0;i<needLoadDifNode2.length;i++){
                         minNode[i+1] = p2[i];
                     }
-                    if(!(min > this.addMin[1] && max < this.addMax[1])){
+                    if(min < this.addMin[1] || max > this.addMax[1]){
                         alternativeNodes[p.level-10].push(this.addMin[3][0]);
                         for(let i=0; i<needLoadDifNode2.length; i++){
                             alternativeNodes2[i][p.level-10].push(this.addMin[3][i+1]);
@@ -578,7 +578,7 @@ export default class NoUniformColObj {
                     for(let i=0;i<needLoadDifNode2.length;i++){
                         maxNode[i+1] = p2[i];
                     }
-                    if(!(min > this.addMin[1] && max < this.addMax[1])){
+                    if(min < this.addMin[1] || max > this.addMax[1]){
                         alternativeNodes[p.level-10].push(this.addMax[3][0]);
                         for(let i=0; i<needLoadDifNode2.length; i++){
                             alternativeNodes2[i][p.level-10].push(this.addMax[3][i+1]);

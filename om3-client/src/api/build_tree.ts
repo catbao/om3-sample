@@ -591,8 +591,8 @@ export async function batchLoadDataForRangeLevel1MinMaxMiss(losedRange: Array<Ar
                     tempArray.push(firstNode);
                     tempArray.push(secondNode);
                 }
-                manager.lruCache.set(firstNode.level+"_"+firstNode.index,firstNode);
-                manager.lruCache.set(secondNode.level+"_"+secondNode.index,secondNode);
+                // manager.lruCache.set(firstNode.level+"_"+firstNode.index,firstNode);
+                // manager.lruCache.set(secondNode.level+"_"+secondNode.index,secondNode);
                 p = p.nextSibling!;
                 count++;
                 if (p === null || count >= difVals.length) {
