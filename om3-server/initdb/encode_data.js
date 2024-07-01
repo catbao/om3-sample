@@ -1,7 +1,7 @@
 const fs = require("fs");
 const { Pool } = require('pg');
 
-const dbConfig = JSON.parse(fs.readFileSync("./dbconfig.json").toString());
+const dbConfig = JSON.parse(fs.readFileSync("/Users/bao/Downloads/om3-sample/om3-server/initdb/dbconfig.json").toString());
 console.log(dbConfig)
 if (!dbConfig['username'] || !dbConfig['hostname'] || !dbConfig['password'] || !dbConfig['db']) {
     throw new Error("db config error");
@@ -51,13 +51,14 @@ async function computeTableFlag(data) {
 async function nonuniformMinMaxEncode() {
     const querySQL = `SELECT t,v FROM "raw_data"."texi_data"  ORDER by t ASC`
     const queryData = await pool.query(querySQL);
-    computeTableFlag(queryData);
+    // computeTableFlag(queryData);
     // return
     let data = queryData.rows;
 
     let min = data[0]['v'];
     let max = data[0]['v'];
-    let maxTime = data[0]['t'];
+    let maxTime = 1048576;
+    let sum = 0;
     for (let i = 0; i < data.length; i++) {
         if (data[i]['v'] < min) {
             min = data[i]['v'];
@@ -68,7 +69,9 @@ async function nonuniformMinMaxEncode() {
         if (data[i]['t'] > maxTime) {
             maxTime = data[i]['t'];
         }
+        sum += data[i]['v'];
     }
+    let ave = sum / maxTime;
     const realLen = 2 ** Math.ceil(Math.log2(maxTime));
     const maxL = Math.ceil(Math.log2(maxTime));
     const dataArray = new Array(realLen)
@@ -78,16 +81,18 @@ async function nonuniformMinMaxEncode() {
     let curL = 1;
     let minV = dataArray
     let maxV = dataArray
+    let aveV = dataArray
     for (let l = curL; l <= maxL; l++) {
 
         console.log("compute level:", l)
 
         let curMinVDiff = new Array(2 ** (maxL - l));
         let curMaxVDiff = new Array(2 ** (maxL - l));
+        let curAveVDiff = new Array(2 ** (maxL - l))
 
         let curMinV = new Array(2 ** (maxL - l));
         let curMaxV = new Array(2 ** (maxL - l));
-
+        let curAveV = new Array(2 ** (maxL - l))
 
         for (let i = 0; i < 2 ** (maxL - l + 1); i += 2) {
 
@@ -124,16 +129,34 @@ async function nonuniformMinMaxEncode() {
             }
             curMaxV[i / 2] = curV;
             curMaxVDiff[i / 2] = curDif;
+
+            //Ave
+            if (aveV[i] === undefined && aveV[i + 1] !== undefined) {
+                curV = aveV[i + 1];
+                curDif = 0;
+            } else if (aveV[i] !== undefined && aveV[i + 1] === undefined) {
+                curV = aveV[i];
+                curDif = undefined;
+            } else if (aveV[i] === undefined && aveV[i + 1] === undefined) {
+                curV = undefined;
+                curDif = undefined;
+            } else {
+                curV = (aveV[i] + aveV[i + 1]) / 2;
+                curDif = aveV[i] - aveV[i + 1];
+            }
+            curAveV[i / 2] = curV;
+            curAveVDiff[i / 2] = curDif;
         }
         minV = curMinV;
         maxV = curMaxV;
+        aveV = curAveV;
 
         if (l === 1) {
             continue
             // console.log(curMinT, curMinV, curMaxV, curMaxT);
         }
 
-        let sqlStr = "insert into om3.texi_data(i,minvd,maxvd) values "
+        let sqlStr = "insert into om3.mock1m_mock_guassian_sin5_1m_om3_1m(i,minvd,maxvd,avevd) values "
         let i = 0;
         while (i < curMaxVDiff.length) {
             const usedL = maxL - l
@@ -145,9 +168,9 @@ async function nonuniformMinMaxEncode() {
                     }
 
                     if (tempStr === '') {
-                        tempStr += ` (${(2 ** usedL) + j},${curMinVDiff[j] === undefined ? "NULL" : curMinVDiff[j]},${curMaxVDiff[j] === undefined ? "NULL" : curMaxVDiff[j]})`;
+                        tempStr += ` (${(2 ** usedL) + j},${curMinVDiff[j] === undefined ? "NULL" : curMinVDiff[j]},${curMaxVDiff[j] === undefined ? "NULL" : curMaxVDiff[j]},${curAveVDiff[j] === undefined ? "NULL" : curAveVDiff[j]})`;
                     } else {
-                        tempStr += `,(${(2 ** usedL) + j},${curMinVDiff[j] === undefined ? "NULL" : curMinVDiff[j]},${curMaxVDiff[j] === undefined ? "NULL" : curMaxVDiff[j]})`;
+                        tempStr += `,(${(2 ** usedL) + j},${curMinVDiff[j] === undefined ? "NULL" : curMinVDiff[j]},${curMaxVDiff[j] === undefined ? "NULL" : curMaxVDiff[j]},${curAveVDiff[j] === undefined ? "NULL" : curAveVDiff[j]})`;
                     }
                 }
 
@@ -158,9 +181,9 @@ async function nonuniformMinMaxEncode() {
                     }
 
                     if (tempStr === '') {
-                        tempStr += ` (${(2 ** usedL) + j},${curMinVDiff[j] === undefined ? "NULL" : curMinVDiff[j]},${curMaxVDiff[j] === undefined ? "NULL" : curMaxVDiff[j]})`;
+                        tempStr += ` (${(2 ** usedL) + j},${curMinVDiff[j] === undefined ? "NULL" : curMinVDiff[j]},${curMaxVDiff[j] === undefined ? "NULL" : curMaxVDiff[j]},${curAveVDiff[j] === undefined ? "NULL" : curAveVDiff[j]})`;
                     } else {
-                        tempStr += `,(${(2 ** usedL) + j},${curMinVDiff[j] === undefined ? "NULL" : curMinVDiff[j]},${curMaxVDiff[j] === undefined ? "NULL" : curMaxVDiff[j]})`;
+                        tempStr += `,(${(2 ** usedL) + j},${curMinVDiff[j] === undefined ? "NULL" : curMinVDiff[j]},${curMaxVDiff[j] === undefined ? "NULL" : curMaxVDiff[j]},${curAveVDiff[j] === undefined ? "NULL" : curAveVDiff[j]})`;
                     }
                 }
             }
@@ -179,7 +202,7 @@ async function nonuniformMinMaxEncode() {
         }
     }
     if (min !== undefined && max !== undefined) {
-        const l0Sql = `insert into om3.texi_data(i,minvd,maxvd) values(${-1},${min},${max})`
+        const l0Sql = `insert into om3.mock1m_mock_guassian_sin5_1m_om3_1m(i,minvd,maxvd,avevd) values(${-1},${min},${max},${ave})`
         await pool.query(l0Sql);
         pool.end()
     }

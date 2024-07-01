@@ -1828,6 +1828,10 @@ export default class LevelDataManager {
         let total = new Array(kuandu).fill(0);  //估计的总和
         let estimate = new Array(kuandu).fill(0); //估计的平均值
         let error = new Array(kuandu).fill(0); //误差归一化
+        let shijiwuchalv = new Array(kuandu).fill(0);
+        let test = [];
+        let time = [];
+        let startT = new Date().getTime();
 
         let colIndex = 0;
         for (let i = 0; i < this.levelIndexObjs[currentLevel].firstNodes.length; i++) {
@@ -2016,16 +2020,18 @@ export default class LevelDataManager {
         }
 
         for(let i=0;i<kuandu;i++){
-            let p = alterNodes[i].pop();
+            let p = alterNodes[i].peek();
             if(p !== null && p.level === 10){
                 alterNodes[i].push(p._rightChild!);
                 alterNodes[i].push(p._leftChild!);
                 visitedNodes += 1;
+                alterNodes[i].pop();
             }
         }
         //计算error-bound
         let i=0;
         let error_bound_avg = 0;
+        let shijiwucha_avg = 0;
         alterNodes.forEach(heap => {  
             const elements = heap.toArray();  
             elements.forEach(element => {  
@@ -2043,20 +2049,29 @@ export default class LevelDataManager {
         let error_avg = 0;
         for(let i=0;i<kuandu;i++){
             estimate[i] = total[i] / (nonUniformColObjs[i].tEnd - nonUniformColObjs[i].tStart + 1);
-            error[i] = error_bound[i] / (nonUniformColObjs[i].vRange[1] - nonUniformColObjs[i].vRange[0]);
+            error[i] = error_bound[i] / (nonUniformColObjs[i].vRange[1] - nonUniformColObjs[i].vRange[0] + 1);
+            shijiwuchalv[i] = Math.abs(estimate[i] - nonUniformColObjs[i].average) / nonUniformColObjs[i].average;
             error_avg += error[i] / kuandu;
             error_bound_avg += error_bound[i] / kuandu;
+            shijiwucha_avg += shijiwuchalv[i] / kuandu;
         }
-        
-        //每次取出来5个，缩小error
-        for(let i=0;i<30;i++){
+        test.push(error_bound_avg);
+        test.push(error_avg);
+        test.push(shijiwucha_avg);
+        test.push(visitedNodes);
+        time.push(new Date().getTime() - startT);
+
+        //每次取出来10个，缩小error
+        for(let i=0;i<19;i++){
+            let everyStartT = new Date().getTime();
             let queryNodes: Array<TrendTree> = [];
             for(let i=0;i<kuandu;i++){
-                for(let j=0;j<10;j++){
+                for(let j=0;j<20;j++){
                     if(alterNodes[i].size() > 0){
-                        let node = alterNodes[i].pop();
+                        let node = alterNodes[i].peek();
                         if(node !== null && (node.timeRange[1]-node.timeRange[0]+1)>=4){
                             queryNodes.push(node);
+                            alterNodes[i].pop();
                         }
                     }
                     else break;
@@ -2072,12 +2087,13 @@ export default class LevelDataManager {
             for(let j=0;j<queryNodes.length;j++){
                 let index = Math.floor(queryNodes[j].timeRange[0] / (totalNum / kuandu));
                 if(error[index] > 0.1){
-                    if(queryNodes[j]._leftChild === null || queryNodes[j]._rightChild === null) continue;
+                    // if(queryNodes[j]._leftChild === null || queryNodes[j]._rightChild === null) continue;
                     //估计平均值
                     total[index] -= (queryNodes[j].yArray[2] + queryNodes[j].yArray[1]) / 2 * (queryNodes[j].timeRange[1] - queryNodes[j].timeRange[0] + 1);
                     total[index] += (queryNodes[j]._leftChild!.yArray[2] + queryNodes[j]._leftChild!.yArray[1]) / 2 * (queryNodes[j]._leftChild!.timeRange[1] - queryNodes[j]._leftChild!.timeRange[0] + 1);
                     total[index] += (queryNodes[j]._rightChild!.yArray[2] + queryNodes[j]._rightChild!.yArray[1]) / 2 * (queryNodes[j]._rightChild!.timeRange[1] - queryNodes[j]._rightChild!.timeRange[0] + 1);
                     estimate[index] = total[index] / (nonUniformColObjs[index].tEnd - nonUniformColObjs[index].tStart + 1);
+                    // shijiwuchalv[index] = Math.abs(estimate[index] - nonUniformColObjs[index].average) / nonUniformColObjs[index].average;
                     //估计误差界限
                     let count = queryNodes[j].timeRange[1] - queryNodes[j].timeRange[0] + 1;
                     error_bound[index] -= (count - 2)*(queryNodes[j].yArray[2] - queryNodes[j].yArray[1])/(sum[index]*2);
@@ -2086,63 +2102,35 @@ export default class LevelDataManager {
                     error_bound[index] += (count2 - 2)*(queryNodes[j]._rightChild!.yArray[2] - queryNodes[j]._rightChild!.yArray[1])/(sum[index]*2);
                     error[index] = error_bound[index] / (nonUniformColObjs[index].vRange[1] - nonUniformColObjs[index].vRange[0]);
                     //加入新的节点
-                    alterNodes[index].push(queryNodes[j]._rightChild!);
-                    alterNodes[index].push(queryNodes[j]._leftChild!);
+                    if(queryNodes[j].timeRange[1] - queryNodes[j].timeRange[0] + 1 >= 8){
+                        alterNodes[index].push(queryNodes[j]._rightChild!);
+                        alterNodes[index].push(queryNodes[j]._leftChild!);
+                    }
                     visitedNodes+=1;
                 }
             }
             error_avg = 0;
             error_bound_avg = 0;
+            shijiwucha_avg = 0;
             for(let i=0;i<kuandu;i++){
                 error_avg += error[i] / kuandu;
                 error_bound_avg += error_bound[i] / kuandu;
+                shijiwucha_avg += Math.abs(estimate[i] - nonUniformColObjs[i].average) / nonUniformColObjs[i].average;
             }
+            shijiwucha_avg = shijiwucha_avg / kuandu;
+            test.push(error_bound_avg);
+            test.push(error_avg);
+            test.push(shijiwucha_avg);
+            test.push(visitedNodes);
+            time.push(new Date().getTime() - startT);
             console.log(" ");
         }
 
-        // for(let l = 11; l<15; l++){
-        //     let layerNodes: Array<TrendTree> = []; 
-        //     for(let i=0;i<kuandu;i++){
-        //         for (let i = 0; i < alterNodes.length; i++) {   
-        //             alterNodes[i] = alterNodes[i].filter(node => {  
-        //                 if (node.level === l) {   
-        //                     layerNodes.push(node);  
-        //                     return false;  
-        //                 }   
-        //                 return true;  
-        //             });  
-        //         }  
-        //     }
-        //     console.log("layerNodes:", layerNodes);
-        //     let losedDataInfoAvg = computeLosedDataRangeV1Avg(layerNodes);
-        //     for(let i=0;i<losedDataInfoAvg.length;i++){
-        //         losedDataInfoAvg.sort((a, b) => a[1] - b[1]); 
-        //     }
-        //     if (losedDataInfoAvg.length > 0) {
-        //         await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfoAvg, this);
-        //     }
-        //     //计算error-bound
-        //     for(let j=0;j<layerNodes.length;j++){
-        //         let index = Math.floor(layerNodes[j].timeRange[0] / (totalNum / kuandu));
-        //         total[index] -= (layerNodes[j].yArray[2] + layerNodes[j].yArray[1]) / 2 * (layerNodes[j].timeRange[1] - layerNodes[j].timeRange[0] + 1);
-        //         total[index] += (layerNodes[j]._leftChild!.yArray[2] + layerNodes[j]._leftChild!.yArray[1]) / 2 * (layerNodes[j]._leftChild!.timeRange[1] - layerNodes[j]._leftChild!.timeRange[0] + 1);
-        //         total[index] += (layerNodes[j]._rightChild!.yArray[2] + layerNodes[j]._rightChild!.yArray[1]) / 2 * (layerNodes[j]._rightChild!.timeRange[1] - layerNodes[j]._rightChild!.timeRange[0] + 1);
-        //         estimate[index] = total[index] / (nonUniformColObjs[index].tEnd - nonUniformColObjs[index].tStart + 1);
-        //         let count = layerNodes[j].timeRange[1] - layerNodes[j].timeRange[0] + 1;
-        //         error_bound[index] -= (count - 2)*(layerNodes[j].yArray[2] - layerNodes[j].yArray[1])/(sum[index]*2);
-        //         let count2 = count / 2;
-        //         error_bound[index] += (count2 - 2)*(layerNodes[j]._leftChild!.yArray[2] - layerNodes[j]._leftChild!.yArray[1])/(sum[index]*2);
-        //         error_bound[index] += (count2 - 2)*(layerNodes[j]._rightChild!.yArray[2] - layerNodes[j]._rightChild!.yArray[1])/(sum[index]*2);
-        //         alterNodes[index].unshift(layerNodes[j]._rightChild!);
-        //         alterNodes[index].unshift(layerNodes[j]._leftChild!);
-        //         error[index] = error_bound[index] / (nonUniformColObjs[index].vRange[1] - nonUniformColObjs[index].vRange[0]);
-        //     }
-        //     // layerNodes.length = 0;
-        // }
-
         for (let i = 0; i < nonUniformColObjs.length; i++) {
+            nonUniformColObjs[i].average = estimate[i];
             nonUniformColObjs[i].checkIsMis();
         }
+        console.log("Time:", time);
         return nonUniformColObjs;
     }
 
