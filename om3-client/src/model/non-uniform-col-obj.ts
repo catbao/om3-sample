@@ -274,8 +274,8 @@ export class NoUniformColObj {
                 this.maxVTimeRange = [tRange.startT, tRange.endT];
             }
             if(this.ordinalLevelCount === 0){
-                this.average = p.yArray[3];
-                this.currentSum += p.yArray[3] * pTRange;
+                // this.average = p.yArray[3];
+                // this.currentSum += p.yArray[3] * pTRange;
                 this.currentPointNum += pTRange;
                 this.currentRange.push([pTimeS, pTimeE]);
                 if(p.timeRange[1] - p.timeRange[0] != 1){
@@ -290,9 +290,9 @@ export class NoUniformColObj {
                 // // let newAverage = (this.average + (1 / levelDif) * p.yArray[3]) / (1 + (1 / levelDif));
                 // let newAverage = (this.average * (levelDif - 1) * 2 + p.yArray[3]) / (levelDif * 2 - 1);
                 // this.average = newAverage;
-                this.currentSum += p.yArray[3] * pTRange;
+                // this.currentSum += p.yArray[3] * pTRange;
                 this.currentPointNum += pTRange;
-                this.average = this.currentSum / this.currentPointNum;
+                // this.average = this.currentSum / this.currentPointNum;
                 this.currentRange.push([pTimeS, pTimeE]);
                 if(p.timeRange[1] - p.timeRange[0] != 1){
                     alterNodes[colIndex].push(p);
@@ -354,8 +354,8 @@ export class NoUniformColObj {
                 this.maxVTimeRange = [tRange.startT, tRange.endT];
             }
             if(this.ordinalLevelCount === 0){
-                this.average = p.yArray[3];
-                this.currentSum += p.yArray[3] * pTRange;
+                // this.average = p.yArray[3];
+                // this.currentSum += p.yArray[3] * pTRange;
                 this.currentPointNum += pTRange;
                 this.currentRange.push([pTimeS, pTimeE]);
                 this.ordinalLevelCount++;
@@ -365,9 +365,9 @@ export class NoUniformColObj {
                 // // let newAverage = (this.average + (1 / levelDif) * p.yArray[3]) / (1 + (1 / levelDif));
                 // let newAverage = (this.average * (levelDif - 1) * 2 + p.yArray[3]) / (levelDif * 2 - 1);
                 // this.average = newAverage;
-                this.currentSum += p.yArray[3] * pTRange;
+                // this.currentSum += p.yArray[3] * pTRange;
                 this.currentPointNum += pTRange;
-                this.average = this.currentSum / this.currentPointNum;
+                // this.average = this.currentSum / this.currentPointNum;
                 this.currentRange.push([pTimeS, pTimeE]);
                 this.ordinalLevelCount++;
             }
@@ -399,9 +399,9 @@ export class NoUniformColObj {
         if(index > max && index === max+1){
             this.currentRange.push([index]);
         }
-        this.currentSum += v;
-        this.currentPointNum += 1;
-        this.average = this.currentSum / this.currentPointNum;
+        // this.currentSum += v;
+        // this.currentPointNum += 1;
+        // this.average = this.currentSum / this.currentPointNum;
     }
     addFirstVal(v: number, p?: any) {
         if (v === undefined) {
@@ -418,9 +418,9 @@ export class NoUniformColObj {
         if(min > index && index === min-1){
             this.currentRange.push([index]);
         }
-        this.currentSum += v;
-        this.currentPointNum += 1;
-        this.average = this.currentSum / this.currentPointNum;
+        // this.currentSum += v;
+        // this.currentPointNum += 1;
+        // this.average = this.currentSum / this.currentPointNum;
     }
     forceMerge(val: number, index?: number) {
         if (val === undefined) {

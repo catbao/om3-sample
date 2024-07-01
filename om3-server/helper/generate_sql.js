@@ -337,7 +337,7 @@ function generateSingalLevelSQLWithSubQuery21RawMinMax(losedDataInfo, maxLevel, 
 function generateSingalLevelSQLMinMaxMissQuery(losedDataInfo, maxLevel, tableName){
 
     const curL = losedDataInfo[0][0];
-    let sqlStr = `select i,minvd,maxvd,avevd from ${tableName} where  i in (`;
+    let sqlStr = `select i,minvd,maxvd from ${tableName} where  i in (`;
     
     for (let i = 0; i < losedDataInfo.length - 1; i++) {
         if (losedDataInfo[i][2] === losedDataInfo[i + 1][1] || (losedDataInfo[i][2] + 1) === losedDataInfo[i + 1][1]) {
@@ -366,7 +366,7 @@ function generateSingalLevelSQLMinMaxMissQuery123(losedDataInfo, maxLevel, table
     // if (curL < 1) {
     //     return null;
     // }
-    let sqlStr = `select i,minvd,maxvd,avevd from ${tableName} where i in (`;
+    let sqlStr = `select i,minvd,maxvd from ${tableName} where i in (`;
     // for (let i = 0; i < losedDataInfo.length - 1; i++) {
     //     if (losedDataInfo[i][2] === losedDataInfo[i + 1][1] || (losedDataInfo[i][2] + 1) === losedDataInfo[i + 1][1]) {
     //         losedDataInfo[i][2] = losedDataInfo[i + 1][2];

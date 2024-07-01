@@ -174,7 +174,7 @@ function constructTrendTree(data: Array<any>, tableName?: string) {
     let lastLevelNodes = new Array<TrendTree>();
     let currentLevelNodes = new Array<TrendTree>();
     let nodeNum = 1
-    const root = new TrendTree(null, true, 0, [mintd[0], minvd[0], maxvd[0], avevd[0], maxtd[0]], [mintd[1], minvd[1], maxvd[1], avevd[1], maxtd[1]]);
+    const root = new TrendTree(null, true, 0, [mintd[0], minvd[0], maxvd[0], maxtd[0]], [mintd[1], minvd[1], maxvd[1], maxtd[1]]);
     lastLevelNodes.push(root);
     levelIndex[0] = new LevelIndexObj(0, true);
     levelIndex[0].addLoadedDataRange(root, [0, 0]);
@@ -183,13 +183,13 @@ function constructTrendTree(data: Array<any>, tableName?: string) {
 
             const lastNode = lastLevelNodes[j];
             //@ts-ignore
-            // const yArray1: [number, number, number, number] = new Array(4);
+            const yArray1: [number, number, number, number] = new Array(4);
             //@ts-ignore
-            // const yArray2: [number, number, number, number] = new Array(4);
+            const yArray2: [number, number, number, number] = new Array(4);
             //@ts-ignore
-            const yArray1: [number, number, number, number, number] = new Array(5);
+            // const yArray1: [number, number, number, number, number] = new Array(5);
             //@ts-ignore
-            const yArray2: [number, number, number, number, number] = new Array(5);
+            // const yArray2: [number, number, number, number, number] = new Array(5);
             // yArray1[0] = lastNode.yArray[0];
             // yArray2[0] = lastNode.yArray[0] - lastNode.difference![0];
             // if (lastNode.difference![1] >= 0) {
@@ -228,12 +228,12 @@ function constructTrendTree(data: Array<any>, tableName?: string) {
                 yArray1[2] = lastNode.yArray[2] + lastNode.difference![2];
                 yArray2[2] = lastNode.yArray[2];
             }
-            if(lastNode.difference![3] >= 0 || lastNode.difference![3] <= 0){
-                yArray1[3] = (lastNode.yArray[3] * 2 + lastNode.difference![2]) / 2;
-                yArray2[3] = (lastNode.yArray[3] * 2 - lastNode.difference![2]) / 2;
-            }
-            yArray1[4] = lastNode.yArray[4] + lastNode.difference![4];
-            yArray2[4] = lastNode.yArray[4];
+            // if(lastNode.difference![3] >= 0 || lastNode.difference![3] <= 0){
+            //     yArray1[3] = (lastNode.yArray[3] * 2 + lastNode.difference![2]) / 2;
+            //     yArray2[3] = (lastNode.yArray[3] * 2 - lastNode.difference![2]) / 2;
+            // }
+            yArray1[3] = lastNode.yArray[3] + lastNode.difference![3];
+            yArray2[3] = lastNode.yArray[3];
             //@ts-ignore
             const firstNode = new TrendTree(lastNode, true, lastNode.index, yArray1, i === Math.log2(data.length) ? null : [mintd[j * 2 + 2 ** i], minvd[j * 2 + 2 ** i], maxvd[j * 2 + 2 ** i], avevd[j * 2 + 2 ** i], maxtd[j * 2 + 2 ** i]]);
             //@ts-ignore

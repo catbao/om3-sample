@@ -76,7 +76,7 @@ function queryMinMaxMissData(req, ws){
         }
         const minV = [];
         const maxV = [];
-        const aveV = [];
+        // const aveV = [];
         const l = [];
         const idx = [];
         result.rows.forEach((v) => {
@@ -87,9 +87,9 @@ function queryMinMaxMissData(req, ws){
             // idx.push(curI - 2**(Math.floor(Math.log2(curI))));
             minV.push(v['minvd']);
             maxV.push(v['maxvd']);
-            aveV.push(v['avevd']);
+            // aveV.push(v['avevd']);
         });
-        ws.send(JSON.stringify({ code: 200, msg: "success", data: [l, idx, minV, maxV, aveV] }));
+        ws.send(JSON.stringify({ code: 200, msg: "success", data: [l, idx, minV, maxV] }));
     });
 }
 

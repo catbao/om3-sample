@@ -20,14 +20,14 @@ export async function batchLoadDataForRangeLevel1(losedRange: Array<Array<number
             if (p?.index === j && j === difVals[count].i && p.level === difVals[count].l) {
                 //@ts-ignore
                 p.difference = difVals[count].dif;
-                const yArray1: [number, number, number, number, number] = [0, 0, 0, 0, 0]
-                const yArray2: [number, number, number, number, number] = [0, 0, 0, 0, 0]
+                const yArray1: [number, number, number, number] = [0, 0, 0, 0]
+                const yArray2: [number, number, number, number] = [0, 0, 0, 0]
                 yArray1[0] = p.yArray[0];
                 yArray2[0] = p.yArray[0] - p.difference![0];
-                // yArray1[3] = p.yArray[3] + p.difference![3];
-                // yArray2[3] = p.yArray[3];
-                yArray1[4] = p.yArray[4] + p.difference![4];
-                yArray2[4] = p.yArray[4];
+                yArray1[3] = p.yArray[3] + p.difference![3];
+                yArray2[3] = p.yArray[3];
+                // yArray1[4] = p.yArray[4] + p.difference![4];
+                // yArray2[4] = p.yArray[4];
                 if (p.difference![1] < 0) {
                     yArray1[1] = p.yArray[1];
                     yArray2[1] = p.yArray[1] - p.difference![1];
@@ -42,10 +42,10 @@ export async function batchLoadDataForRangeLevel1(losedRange: Array<Array<number
                     yArray1[2] = p.yArray[2];
                     yArray2[2] = p.yArray[2] - p.difference![2];
                 }
-                if(p.difference![3] <= 0 || p.difference![3] >= 0){
-                    yArray1[3] = (p.yArray[3] * 2 + p.difference![3]) / 2; 
-                    yArray2[3] = (p.yArray[3] * 2 - p.difference![3]) / 2; 
-                }
+                // if(p.difference![3] <= 0 || p.difference![3] >= 0){
+                //     yArray1[3] = (p.yArray[3] * 2 + p.difference![3]) / 2; 
+                //     yArray2[3] = (p.yArray[3] * 2 - p.difference![3]) / 2; 
+                // }
                 const firstNode = new TrendTree(p, true, p.index, yArray1, null);
                 const secondNode = new TrendTree(p, false, p.index, yArray2, null);
                 newTreeNode.push(firstNode);
@@ -122,14 +122,14 @@ export async function batchLoadDataForRangeLevel(losedRange: Array<Array<number>
                 // }
                 // const firstNode = new TrendTree(p, true, p.index, yArray1, null);
                 // const secondNode = new TrendTree(p, false, p.index, yArray2, null);
-                const yArray1: [number, number, number, number, number] = [0, 0, 0, 0, 0]
-                const yArray2: [number, number, number, number, number] = [0, 0, 0, 0, 0]
+                const yArray1: [number, number, number, number] = [0, 0, 0, 0]
+                const yArray2: [number, number, number, number] = [0, 0, 0, 0]
                 yArray1[0] = p.yArray[0];
                 yArray2[0] = p.yArray[0] - p.difference![0];
-                // yArray1[3] = p.yArray[3] + p.difference![3];
-                // yArray2[3] = p.yArray[3];
-                yArray1[4] = p.yArray[4] + p.difference![4];
-                yArray2[4] = p.yArray[4];
+                yArray1[3] = p.yArray[3] + p.difference![3];
+                yArray2[3] = p.yArray[3];
+                // yArray1[4] = p.yArray[4] + p.difference![4];
+                // yArray2[4] = p.yArray[4];
                 if (p.difference![1] < 0) {
                     yArray1[1] = p.yArray[1];
                     yArray2[1] = p.yArray[1] - p.difference![1];
@@ -144,10 +144,10 @@ export async function batchLoadDataForRangeLevel(losedRange: Array<Array<number>
                     yArray1[2] = p.yArray[2];
                     yArray2[2] = p.yArray[2] - p.difference![2];
                 }
-                if(p.difference![3] <= 0 || p.difference![3] >= 0){
-                    yArray1[3] = (p.yArray[3] * 2 + p.difference![3]) / 2; 
-                    yArray2[3] = (p.yArray[3] * 2 - p.difference![3]) / 2; 
-                }
+                // if(p.difference![3] <= 0 || p.difference![3] >= 0){
+                //     yArray1[3] = (p.yArray[3] * 2 + p.difference![3]) / 2; 
+                //     yArray2[3] = (p.yArray[3] * 2 - p.difference![3]) / 2; 
+                // }
                 const firstNode = new TrendTree(p, true, p.index, yArray1, null);
                 const secondNode = new TrendTree(p, false, p.index, yArray2, null);
                 manager.cacheMap.set(firstNode.index, firstNode);
@@ -207,13 +207,13 @@ export async function batchLoadDataForRangeLevelRawMinMax(losedRange: Array<Arra
                 //@ts-ignore
                 p.difference = difVals[count].dif;
                 //@ts-ignore
-                // const yArray1: [number, number, number, number] = difVals[count].dif
+                const yArray1: [number, number, number, number] = difVals[count].dif
+                // @ts-ignore
+                const yArray2: [number, number, number, number] = difVals[count+1].dif
                 //@ts-ignore
-                // const yArray2: [number, number, number, number] = difVals[count+1].dif
-                //@ts-ignore
-                const yArray1: [number, number, number, number, number] = difVals[count].dif
-                //@ts-ignore
-                const yArray2: [number, number, number, number, number] = difVals[count+1].dif
+                // const yArray1: [number, number, number, number, number] = difVals[count].dif
+                // //@ts-ignore
+                // const yArray2: [number, number, number, number, number] = difVals[count+1].dif
                
                 const firstNode = new TrendTree(p, true, p.index, yArray1, null);
                 const secondNode = new TrendTree(p, false, p.index, yArray2, null);
@@ -291,14 +291,14 @@ export async function loadDataForRangeLevel(losedRange: Array<Array<number>>, ma
                 //     yArray1[2] = p.yArray[2];
                 //     yArray2[2] = p.yArray[2] - p.difference![2];
                 // }
-                const yArray1: [number, number, number, number, number] = [0, 0, 0, 0, 0]
-                const yArray2: [number, number, number, number, number] = [0, 0, 0, 0, 0]
+                const yArray1: [number, number, number, number] = [0, 0, 0, 0]
+                const yArray2: [number, number, number, number] = [0, 0, 0, 0]
                 yArray1[0] = p.yArray[0];
                 yArray2[0] = p.yArray[0] - p.difference![0];
-                // yArray1[3] = p.yArray[3] + p.difference![3];
-                // yArray2[3] = p.yArray[3];
-                yArray1[4] = p.yArray[4] + p.difference![4];
-                yArray2[4] = p.yArray[4];
+                yArray1[3] = p.yArray[3] + p.difference![3];
+                yArray2[3] = p.yArray[3];
+                // yArray1[4] = p.yArray[4] + p.difference![4];
+                // yArray2[4] = p.yArray[4];
                 if (p.difference![1] < 0) {
                     yArray1[1] = p.yArray[1];
                     yArray2[1] = p.yArray[1] - p.difference![1];
@@ -313,10 +313,10 @@ export async function loadDataForRangeLevel(losedRange: Array<Array<number>>, ma
                     yArray1[2] = p.yArray[2];
                     yArray2[2] = p.yArray[2] - p.difference![2];
                 }
-                if(p.difference![3] <= 0 || p.difference![3] >= 0){
-                    yArray1[3] = (p.yArray[3] * 2 + p.difference![3]) / 2; 
-                    yArray2[3] = (p.yArray[3] * 2 - p.difference![3]) / 2; 
-                }
+                // if(p.difference![3] <= 0 || p.difference![3] >= 0){
+                //     yArray1[3] = (p.yArray[3] * 2 + p.difference![3]) / 2; 
+                //     yArray2[3] = (p.yArray[3] * 2 - p.difference![3]) / 2; 
+                // }
                 const firstNode = new TrendTree(p, true, p.index, yArray1, null);
                 const secondNode = new TrendTree(p, false, p.index, yArray2, null);
                 newTreeNode.push(firstNode);
@@ -413,14 +413,14 @@ export async function batchLoadDataForRangeLevel1WS(losedRange: Array<Array<numb
                 //     yArray1[2] = p.yArray[2];
                 //     yArray2[2] = p.yArray[2] - p.difference![2];
                 // }
-                const yArray1: [number, number, number, number, number] = [0, 0, 0, 0, 0]
-                const yArray2: [number, number, number, number, number] = [0, 0, 0, 0, 0]
+                const yArray1: [number, number, number, number] = [0, 0, 0, 0]
+                const yArray2: [number, number, number, number] = [0, 0, 0, 0]
                 yArray1[0] = p.yArray[0];
                 yArray2[0] = p.yArray[0] - p.difference![0];
-                // yArray1[3] = p.yArray[3] + p.difference![3];
-                // yArray2[3] = p.yArray[3];
-                yArray1[4] = p.yArray[4] + p.difference![4];
-                yArray2[4] = p.yArray[4];
+                yArray1[3] = p.yArray[3] + p.difference![3];
+                yArray2[3] = p.yArray[3];
+                // yArray1[4] = p.yArray[4] + p.difference![4];
+                // yArray2[4] = p.yArray[4];
                 if (p.difference![1] < 0) {
                     yArray1[1] = p.yArray[1];
                     yArray2[1] = p.yArray[1] - p.difference![1];
@@ -435,10 +435,10 @@ export async function batchLoadDataForRangeLevel1WS(losedRange: Array<Array<numb
                     yArray1[2] = p.yArray[2];
                     yArray2[2] = p.yArray[2] - p.difference![2];
                 }
-                if(p.difference![3] <= 0 || p.difference![3] >= 0){
-                    yArray1[3] = (p.yArray[3] * 2 + p.difference![3]) / 2; 
-                    yArray2[3] = (p.yArray[3] * 2 - p.difference![3]) / 2; 
-                }
+                // if(p.difference![3] <= 0 || p.difference![3] >= 0){
+                //     yArray1[3] = (p.yArray[3] * 2 + p.difference![3]) / 2; 
+                //     yArray2[3] = (p.yArray[3] * 2 - p.difference![3]) / 2; 
+                // }
                 const firstNode = new TrendTree(p, true, p.index, yArray1, null);
                 const secondNode = new TrendTree(p, false, p.index, yArray2, null);
                 newTreeNode.push(firstNode);
@@ -510,10 +510,10 @@ export async function batchLoadDataForRangeLevel1MinMaxMiss(losedRange: Array<Ar
                 }
                 //@ts-ignore
                 p.difference = difVals[count].dif;
-                // const yArray1: [any, any, any, any] = [undefined, undefined, undefined, undefined]
-                // const yArray2: [any, any, any, any] = [undefined, undefined, undefined, undefined]
-                const yArray1: [any, any, any, any, any] = [undefined, undefined, undefined, undefined, undefined]
-                const yArray2: [any, any, any, any, any] = [undefined, undefined, undefined, undefined, undefined]
+                const yArray1: [any, any, any, any] = [undefined, undefined, undefined, undefined]
+                const yArray2: [any, any, any, any] = [undefined, undefined, undefined, undefined]
+                // const yArray1: [any, any, any, any, any] = [undefined, undefined, undefined, undefined, undefined]
+                // const yArray2: [any, any, any, any, any] = [undefined, undefined, undefined, undefined, undefined]
                 if (curNodeType === 'O') {
                     if (p.difference![1] < 0) {
                         yArray1[1] = p.yArray[1];
@@ -529,18 +529,18 @@ export async function batchLoadDataForRangeLevel1MinMaxMiss(losedRange: Array<Ar
                         yArray1[2] = p.yArray[2];
                         yArray2[2] = p.yArray[2] - p.difference![2];
                     }
-                    if(p.difference![3] <= 0 || p.difference![3] >= 0){
-                        yArray1[3] = (p.yArray[3] * 2 + p.difference![3]) / 2; 
-                        yArray2[3] = (p.yArray[3] * 2 - p.difference![3]) / 2; 
-                    }
+                    // if(p.difference![3] <= 0 || p.difference![3] >= 0){
+                    //     yArray1[3] = (p.yArray[3] * 2 + p.difference![3]) / 2; 
+                    //     yArray2[3] = (p.yArray[3] * 2 - p.difference![3]) / 2; 
+                    // }
                 } else if (curNodeType == "LEFTNULL") {
                     yArray2[1] = p.yArray[1];
                     yArray2[2] = p.yArray[2];
-                    yArray2[3] = p.yArray[3] / 2;
+                    // yArray2[3] = p.yArray[3] / 2;
                 } else if (curNodeType == "RIGHTNULL") {
                     yArray1[1] = p.yArray[1];
                     yArray1[2] = p.yArray[2];
-                    yArray1[3] = p.yArray[3] / 2;
+                    // yArray1[3] = p.yArray[3] / 2;
                 } 
 
                 const firstNode = new TrendTree(p, true, p.index, yArray1, null);
@@ -621,10 +621,10 @@ export async function batchLoadDataForRangeLevel1MinMaxMiss123(losedRange: Array
                 }
                 //@ts-ignore
                 p.difference = difVals[count].dif;
-                // const yArray1: [any, any, any, any] = [undefined, undefined, undefined, undefined]
-                // const yArray2: [any, any, any, any] = [undefined, undefined, undefined, undefined]
-                const yArray1: [any, any, any, any, any] = [undefined, undefined, undefined, undefined, undefined]
-                const yArray2: [any, any, any, any, any] = [undefined, undefined, undefined, undefined, undefined]
+                const yArray1: [any, any, any, any] = [undefined, undefined, undefined, undefined]
+                const yArray2: [any, any, any, any] = [undefined, undefined, undefined, undefined]
+                // const yArray1: [any, any, any, any, any] = [undefined, undefined, undefined, undefined, undefined]
+                // const yArray2: [any, any, any, any, any] = [undefined, undefined, undefined, undefined, undefined]
                 if (curNodeType === 'O') {
                     if (p.difference![1] < 0) {
                         yArray1[1] = p.yArray[1];
@@ -640,18 +640,18 @@ export async function batchLoadDataForRangeLevel1MinMaxMiss123(losedRange: Array
                         yArray1[2] = p.yArray[2];
                         yArray2[2] = p.yArray[2] - p.difference![2];
                     }
-                    if(p.difference![3] <= 0 || p.difference![3] >= 0){
-                        yArray1[3] = (p.yArray[3] * 2 + p.difference![3]) / 2; 
-                        yArray2[3] = (p.yArray[3] * 2 - p.difference![3]) / 2; 
-                    }
+                    // if(p.difference![3] <= 0 || p.difference![3] >= 0){
+                    //     yArray1[3] = (p.yArray[3] * 2 + p.difference![3]) / 2; 
+                    //     yArray2[3] = (p.yArray[3] * 2 - p.difference![3]) / 2; 
+                    // }
                 } else if (curNodeType == "LEFTNULL") {
                     yArray2[1] = p.yArray[1];
                     yArray2[2] = p.yArray[2];
-                    yArray2[3] = p.yArray[3] / 2;
+                    // yArray2[3] = p.yArray[3] / 2;
                 } else if (curNodeType == "RIGHTNULL") {
                     yArray1[1] = p.yArray[1];
                     yArray1[2] = p.yArray[2];
-                    yArray1[3] = p.yArray[3] / 2;
+                    // yArray1[3] = p.yArray[3] / 2;
                 } 
 
                 const firstNode = new TrendTree(p, true, p.index, yArray1, null);
@@ -772,8 +772,8 @@ export async function batchLoadDataForRangeLevel2MinMaxMiss(losedRange: Array<Ar
                 //     yArray1[2] = p.yArray[2];
                   
                 // } 
-                const yArray1: [any, any, any, any, any] = [undefined, undefined, undefined, undefined, undefined]
-                const yArray2: [any, any, any, any, any] = [undefined, undefined, undefined, undefined, undefined]
+                const yArray1: [any, any, any, any] = [ undefined, undefined, undefined, undefined]
+                const yArray2: [any, any, any, any] = [ undefined, undefined, undefined, undefined]
                 if (curNodeType === 'O') {
                     if (p.difference![1] < 0) {
                         yArray1[1] = p.yArray[1];
@@ -789,18 +789,18 @@ export async function batchLoadDataForRangeLevel2MinMaxMiss(losedRange: Array<Ar
                         yArray1[2] = p.yArray[2];
                         yArray2[2] = p.yArray[2] - p.difference![2];
                     }
-                    if(p.difference![3] <= 0 || p.difference![3] >= 0){
-                        yArray1[3] = (p.yArray[3] * 2 + p.difference![3]) / 2; 
-                        yArray2[3] = (p.yArray[3] * 2 - p.difference![3]) / 2; 
-                    }
+                    // if(p.difference![3] <= 0 || p.difference![3] >= 0){
+                    //     yArray1[3] = (p.yArray[3] * 2 + p.difference![3]) / 2; 
+                    //     yArray2[3] = (p.yArray[3] * 2 - p.difference![3]) / 2; 
+                    // }
                 } else if (curNodeType == "LEFTNULL") {
                     yArray2[1] = p.yArray[1];
                     yArray2[2] = p.yArray[2];
-                    yArray2[3] = p.yArray[3] / 2;
+                    // yArray2[3] = p.yArray[3] / 2;
                 } else if (curNodeType == "RIGHTNULL") {
                     yArray1[1] = p.yArray[1];
                     yArray1[2] = p.yArray[2];
-                    yArray1[3] = p.yArray[3] / 2;
+                    // yArray1[3] = p.yArray[3] / 2;
                 } 
 
                 const firstNode = new TrendTree(p, true, p.index, yArray1, null);
@@ -898,8 +898,8 @@ export async function batchLoadDataForRangeLevelForMinMaxMiss(losedRange: Array<
                 //     yArray1[1] = p.yArray[1];
                 //     yArray1[2] = p.yArray[2];
                 // }
-                const yArray1: [any, any, any, any, any] = [undefined, undefined, undefined, undefined, undefined]
-                const yArray2: [any, any, any, any, any] = [undefined, undefined, undefined, undefined, undefined]
+                const yArray1: [any, any, any, any] = [undefined, undefined, undefined, undefined]
+                const yArray2: [any, any, any, any] = [undefined, undefined, undefined, undefined]
                 if (curNodeType === 'O') {
                     
                    
@@ -917,21 +917,21 @@ export async function batchLoadDataForRangeLevelForMinMaxMiss(losedRange: Array<
                         yArray1[2] = p.yArray[2];
                         yArray2[2] = p.yArray[2] - p.difference![2];
                     }
-                    if(p.difference![3] <= 0 || p.difference![3] >= 0){
-                        yArray1[3] = (p.yArray[3] * 2 + p.difference![3]) / 2; 
-                        yArray2[3] = (p.yArray[3] * 2 - p.difference![3]) / 2; 
-                    }
+                    // if(p.difference![3] <= 0 || p.difference![3] >= 0){
+                    //     yArray1[3] = (p.yArray[3] * 2 + p.difference![3]) / 2; 
+                    //     yArray2[3] = (p.yArray[3] * 2 - p.difference![3]) / 2; 
+                    // }
                 } else if (curNodeType == "LEFTNULL") {
                    
                     yArray2[1] = p.yArray[1];
                     yArray2[2] = p.yArray[2];
-                    yArray2[3] = p.yArray[3] / 2;
+                    // yArray2[3] = p.yArray[3] / 2;
                   
                 } else if (curNodeType == "RIGHTNULL") {
                  
                     yArray1[1] = p.yArray[1];
                     yArray1[2] = p.yArray[2];
-                    yArray1[3] = p.yArray[3] / 2;
+                    // yArray1[3] = p.yArray[3] / 2;
                   
                 } 
                

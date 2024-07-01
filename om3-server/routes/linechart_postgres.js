@@ -178,7 +178,7 @@ function initWaveletBenchMinMaxMissHandler(req, res) {
     let maxLevel = levelMap[splitArray[splitArray.length - 1]];
     console.log(maxLevel)
     let sqlStr = '';
-    sqlStr = `select i,minvd,maxvd,avevd from om3.${query.table_name} where i<$1 order by i asc`;
+    sqlStr = `select i,minvd,maxvd from om3.${query.table_name} where i<$1 order by i asc`;
     const params = [];
     console.log(query.width)
     params.push(2 ** Math.ceil(Math.log2(query.width)));
@@ -201,11 +201,11 @@ function initWaveletBenchMinMaxMissHandler(req, res) {
                 const tempVal = result.rows[i];
                 const tempL = Math.floor(Math.log2(tempVal['i']));
                 const tempI = tempVal['i'] - 2 ** tempL;
-                finalRes.push({ l: maxLevel - tempL, i: tempI, minvd: tempVal['minvd'], maxvd: tempVal['maxvd'], avevd: tempVal['avevd'] });
+                finalRes.push({ l: maxLevel - tempL, i: tempI, minvd: tempVal['minvd'], maxvd: tempVal['maxvd'] });
             }
             console.log(finalRes.length)
             if (result.rows.length > 0) {
-                finalRes.push({ l: -1, i: 0, minvd: result.rows[0]['minvd'], maxvd: result.rows[0]['maxvd'], avevd: result.rows[0]['avevd'] });
+                finalRes.push({ l: -1, i: 0, minvd: result.rows[0]['minvd'], maxvd: result.rows[0]['maxvd'] });
             }
             // printT(startT)
             console.log("w i t", new Date().getTime() - startT);
@@ -480,7 +480,7 @@ function queryMinMaxMissData(req, res) {
         // console.log(sqlStr);
         const minV = [];
         const maxV = [];
-        const aveV = [];
+        // const aveV = [];
         const l = [];
         const idx = [];
         // console.log(result.rows);
@@ -493,9 +493,9 @@ function queryMinMaxMissData(req, res) {
             idx.push(curI - 2**(Math.floor(Math.log2(curI))));
             minV.push(v['minvd']);
             maxV.push(v['maxvd']);
-            aveV.push(v['avevd']);
+            // aveV.push(v['avevd']);
         });
-        res.send({ code: 200, msg: "success", data: [l, idx, minV, maxV, aveV] });
+        res.send({ code: 200, msg: "success", data: [l, idx, minV, maxV] });
     });
 }
 

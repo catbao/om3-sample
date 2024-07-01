@@ -222,7 +222,7 @@ export function batchLoadMinMaxMissWithWs(losedDataInfo:Array<Array<number>>, da
             const resultArray = [];
             if (result && result[0] && result[0].length > 0) {
                 for (let i = 0; i < result[0].length; i++) {
-                    resultArray.push({ l: result[0][i], i: result[1][i], dif: [0, result[2][i], result[3][i], result[4][i], 0] });
+                    resultArray.push({ l: result[0][i], i: result[1][i], dif: [0, result[2][i], result[3][i], 0] });
                 }
             }
             resolve(resultArray)
@@ -245,7 +245,7 @@ export async function batchLoadMinMaxMissWithWs123(losedDataInfo:Array<Array<num
     const resultArray = [];
     if (result && result[0] && result[0].length > 0) {
         for (let i = 0; i < result[0].length; i++) {
-            resultArray.push({ l:  result[0][i], i: result[1][i], dif: [0,result[2][i], result[3][i], result[4][i], 0] });
+            resultArray.push({ l:  result[0][i], i: result[1][i], dif: [0,result[2][i], result[3][i], 0] });
         }
     }
     return resultArray;
