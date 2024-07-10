@@ -2087,13 +2087,13 @@ export default class LevelDataManager {
             for(let j=0;j<queryNodes.length;j++){
                 let index = Math.floor(queryNodes[j].timeRange[0] / (totalNum / kuandu));
                 if(error[index] > 0.1){
-                    // if(queryNodes[j]._leftChild === null || queryNodes[j]._rightChild === null) continue;
+                    if(queryNodes[j]._leftChild === null || queryNodes[j]._rightChild === null) continue;
                     //估计平均值
                     total[index] -= (queryNodes[j].yArray[2] + queryNodes[j].yArray[1]) / 2 * (queryNodes[j].timeRange[1] - queryNodes[j].timeRange[0] + 1);
                     total[index] += (queryNodes[j]._leftChild!.yArray[2] + queryNodes[j]._leftChild!.yArray[1]) / 2 * (queryNodes[j]._leftChild!.timeRange[1] - queryNodes[j]._leftChild!.timeRange[0] + 1);
                     total[index] += (queryNodes[j]._rightChild!.yArray[2] + queryNodes[j]._rightChild!.yArray[1]) / 2 * (queryNodes[j]._rightChild!.timeRange[1] - queryNodes[j]._rightChild!.timeRange[0] + 1);
                     estimate[index] = total[index] / (nonUniformColObjs[index].tEnd - nonUniformColObjs[index].tStart + 1);
-                    // shijiwuchalv[index] = Math.abs(estimate[index] - nonUniformColObjs[index].average) / nonUniformColObjs[index].average;
+                    shijiwuchalv[index] = (Math.abs(estimate[index] - nonUniformColObjs[index].average)) / nonUniformColObjs[index].average;
                     //估计误差界限
                     let count = queryNodes[j].timeRange[1] - queryNodes[j].timeRange[0] + 1;
                     error_bound[index] -= (count - 2)*(queryNodes[j].yArray[2] - queryNodes[j].yArray[1])/(sum[index]*2);
@@ -2106,6 +2106,8 @@ export default class LevelDataManager {
                         alterNodes[index].push(queryNodes[j]._rightChild!);
                         alterNodes[index].push(queryNodes[j]._leftChild!);
                     }
+                    // alterNodes[index].push(queryNodes[j]._rightChild!);
+                    // alterNodes[index].push(queryNodes[j]._leftChild!);
                     visitedNodes+=1;
                 }
             }
@@ -2115,14 +2117,15 @@ export default class LevelDataManager {
             for(let i=0;i<kuandu;i++){
                 error_avg += error[i] / kuandu;
                 error_bound_avg += error_bound[i] / kuandu;
-                shijiwucha_avg += Math.abs(estimate[i] - nonUniformColObjs[i].average) / nonUniformColObjs[i].average;
+                shijiwucha_avg += shijiwuchalv[i] / kuandu;
             }
-            shijiwucha_avg = shijiwucha_avg / kuandu;
+            // shijiwucha_avg = shijiwucha_avg / kuandu;
             test.push(error_bound_avg);
             test.push(error_avg);
             test.push(shijiwucha_avg);
             test.push(visitedNodes);
             time.push(new Date().getTime() - startT);
+            // time.push(visitedNodes);
             console.log(" ");
         }
 
@@ -2130,6 +2133,20 @@ export default class LevelDataManager {
             nonUniformColObjs[i].average = estimate[i];
             nonUniformColObjs[i].checkIsMis();
         }
+
+        // const data: number[] = estimate;
+        // const dataStr = data.join('\n');
+        // const blob = new Blob([dataStr], { type: 'text/plain' });
+        // const url = URL.createObjectURL(blob);
+        // const a = document.createElement('a');
+        // a.href = url;
+        // a.download = 'data.txt';
+        // a.style.display = 'none';  // 隐藏链接
+        // document.body.appendChild(a);
+        // a.click();
+        // document.body.removeChild(a);
+        // URL.revokeObjectURL(url);
+
         console.log("Time:", time);
         return nonUniformColObjs;
     }

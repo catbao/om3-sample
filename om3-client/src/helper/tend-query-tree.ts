@@ -63,6 +63,7 @@ export default class TrendTree {
             throw new Error("This level is protected")
         }
         this.timeRange = [];
+        // let range = 262144;
         let range = 1048576;
         if(this.timeRange.length == 0){
             const nodeDataRange = range / (2 ** this.level);
