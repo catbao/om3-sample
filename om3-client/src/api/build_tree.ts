@@ -696,7 +696,7 @@ export async function batchLoadDataForRangeLevel1MinMaxMiss123(losedRange: Array
         }
     }
     // console.log("  ");
-    console.log("manager:", manager);
+    // console.log("manager:", manager);
 }
 
 

@@ -1815,6 +1815,7 @@ export default class LevelDataManager {
         let totalNum = timeRange[1] + 1;
         let kuandu = 600;
         let visitedNodes = 1024;
+        let nodesNum = 1048576;
         allTimes = []
         // console.time("v_c")
         const nonUniformColObjs = computeTimeSE(currentLevel, width, timeRange, this.realDataRowNum, this.maxLevel);
@@ -2019,6 +2020,8 @@ export default class LevelDataManager {
             }
         }
 
+        let k = 50;
+        let range = nodesNum / kuandu;
         for(let i=0;i<kuandu;i++){
             let p = alterNodes[i].peek();
             if(p !== null && p.level === 10){
@@ -2062,7 +2065,7 @@ export default class LevelDataManager {
         time.push(new Date().getTime() - startT);
 
         //每次取出来10个，缩小error
-        for(let i=0;i<19;i++){
+        for(let i=0;i<10;i++){
             let everyStartT = new Date().getTime();
             let queryNodes: Array<TrendTree> = [];
             for(let i=0;i<kuandu;i++){
