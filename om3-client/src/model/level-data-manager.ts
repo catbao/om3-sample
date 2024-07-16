@@ -1815,20 +1815,28 @@ export default class LevelDataManager {
         let totalNum = timeRange[1] + 1;
         let kuandu = 600;
         let visitedNodes = 1024;
+        let nodesNum = 1048576;
+        let user_specified = 100;
+        let groups = Math.ceil(nodesNum / user_specified);
         allTimes = []
         // console.time("v_c")
-        const nonUniformColObjs = computeTimeSE(currentLevel, width, timeRange, this.realDataRowNum, this.maxLevel);
+        const nonUniformColObjs = computeTimeSE(currentLevel, groups, timeRange, this.realDataRowNum, this.maxLevel);
+        const nonUniformColObjs2 = computeTimeSE(currentLevel, kuandu, timeRange, this.realDataRowNum, this.maxLevel);
         let needLoadDifNode: Array<TrendTree> = [];
         // let alterNodes: Array<Array<TrendTree>> = Array.from({length: kuandu}, () => []);
         // let alterNodesArray: Array<Array<TrendTree>> = Array.from({length: kuandu}, () => new Array<TrendTree>());
-        let alterNodes: Array<MinHeap<TrendTree>> = Array.from({ length: kuandu }, () => new MinHeap<TrendTree>());  
-        let groundNodes: Array<Array<TrendTree>> = Array.from({length: kuandu}, () => new Array<TrendTree>());
-        let sum = new Array(kuandu).fill(0);
-        let error_bound = new Array(kuandu).fill(0); //误差值
-        let total = new Array(kuandu).fill(0);  //估计的总和
-        let estimate = new Array(kuandu).fill(0); //估计的平均值
-        let error = new Array(kuandu).fill(0); //误差归一化
-        let shijiwuchalv = new Array(kuandu).fill(0);
+        let alterNodes: Array<MinHeap<TrendTree>> = Array.from({ length: groups }, () => new MinHeap<TrendTree>());  
+        let groundNodes: Array<Array<TrendTree>> = Array.from({length: groups}, () => new Array<TrendTree>());
+        let sum = new Array(groups).fill(0);
+        let error_bound = new Array(groups).fill(0); //误差值
+        let total = new Array(groups).fill(0);  //估计的总和
+        let estimate = new Array(groups).fill(0); //估计的平均值
+        let error = new Array(groups).fill(0); //误差归一化
+        let shijiwuchalv = new Array(groups).fill(0);
+        let upper_bound = new Array(groups).fill(0);
+        let low_bound = new Array(groups).fill(0);
+        let min_perPixel = new Array(kuandu).fill(10000);
+        let max_perPixel = new Array(kuandu).fill(-10000);
         let test = [];
         let time = [];
         let startT = new Date().getTime();
@@ -2019,9 +2027,9 @@ export default class LevelDataManager {
             }
         }
 
-        for(let i=0;i<kuandu;i++){
+        for(let i=0;i<groups;i++){
             let p = alterNodes[i].peek();
-            if(p !== null && p.level === 10){
+            if(p !== null && p.level === 14){
                 alterNodes[i].push(p._rightChild!);
                 alterNodes[i].push(p._leftChild!);
                 visitedNodes += 1;
@@ -2037,23 +2045,39 @@ export default class LevelDataManager {
             elements.forEach(element => {  
                 error_bound[i] += this.computeError(element, sum, i);
                 total[i] += (element!.yArray[2] + element!.yArray[1]) / 2 * (element!.timeRange[1] - element!.timeRange[0]+1);
+                low_bound[i] += element!.yArray[2]+(element!.timeRange[1] - element!.timeRange[0])*element!.yArray[1];
+                upper_bound[i] += element!.yArray[1]+(element!.timeRange[1] - element!.timeRange[0])*element!.yArray[2];
             });  
             i++;
         });
-        for(let i=0;i<kuandu;i++){
+        for(let i=0;i<groups;i++){
             for (const element of groundNodes[i]){
                 total[i] += (element.yArray[2] + element.yArray[1]) / 2 * (element.timeRange[1] - element.timeRange[0]+1);
+                low_bound[i] += (element.yArray[2] + element.yArray[1]);
+                upper_bound[i] += (element.yArray[2] + element.yArray[1]);
             }
+            low_bound[i] /= sum[i];
+            upper_bound[i] /= sum[i];
         }
         //计算估计的平均值和误差率
         let error_avg = 0;
-        for(let i=0;i<kuandu;i++){
+        let groupsPerPixel = groups / kuandu;
+        for(let i=0;i<groups;i++){
             estimate[i] = total[i] / (nonUniformColObjs[i].tEnd - nonUniformColObjs[i].tStart + 1);
             error[i] = error_bound[i] / (nonUniformColObjs[i].vRange[1] - nonUniformColObjs[i].vRange[0] + 1);
             shijiwuchalv[i] = Math.abs(estimate[i] - nonUniformColObjs[i].average) / nonUniformColObjs[i].average;
-            error_avg += error[i] / kuandu;
-            error_bound_avg += error_bound[i] / kuandu;
-            shijiwucha_avg += shijiwuchalv[i] / kuandu;
+            // low_bound[i] = (nonUniformColObjs[i].vRange[1]+(user_specified-1)*nonUniformColObjs[i].vRange[0]) / user_specified;
+            // upper_bound[i] = (nonUniformColObjs[i].vRange[0]+(user_specified-1)*nonUniformColObjs[i].vRange[1]) / user_specified;
+            error_avg += error[i] / groups;
+            error_bound_avg += error_bound[i] / groups;
+            shijiwucha_avg += shijiwuchalv[i] / groups;
+            let pixelOfGroups = Math.floor(i / groupsPerPixel);
+            min_perPixel[pixelOfGroups] = Math.min(min_perPixel[pixelOfGroups], estimate[i]);
+            max_perPixel[pixelOfGroups] = Math.max(max_perPixel[pixelOfGroups], estimate[i]);
+        }
+        for(let i=0;i<kuandu;i++){
+            nonUniformColObjs2[i].aveRange[0] = min_perPixel[i];
+            nonUniformColObjs2[i].aveRange[1] = max_perPixel[i];
         }
         test.push(error_bound_avg);
         test.push(error_avg);
@@ -2061,12 +2085,30 @@ export default class LevelDataManager {
         test.push(visitedNodes);
         time.push(new Date().getTime() - startT);
 
-        //每次取出来10个，缩小error
-        for(let i=0;i<19;i++){
+        let toRemove = [];
+        for(let i=0;i<alterNodes.length;i++){
+            let pixelOfGroups = Math.floor(i / groupsPerPixel);
+            if(low_bound[i] > min_perPixel[pixelOfGroups] && upper_bound[i] < max_perPixel[pixelOfGroups]){
+                // toRemove.push(i); 
+                alterNodes[i] = new MinHeap<TrendTree>();
+            }
+        }
+        // for (let j = toRemove.length - 1; j >= 0; j--) {  
+        //     alterNodes.splice(toRemove[j], 1); 
+        // }
+        
+
+        //每次取出来20个，缩小error
+        for(let i=0;i<20;i++){
             let everyStartT = new Date().getTime();
             let queryNodes: Array<TrendTree> = [];
-            for(let i=0;i<kuandu;i++){
-                for(let j=0;j<20;j++){
+            for(let i=0;i<alterNodes.length;i++){
+                if(alterNodes[i].size() === 0) continue;
+                console.log(alterNodes[i].size());
+                let pixelOfGroups = Math.floor(i / groupsPerPixel);
+                // min_perPixel[pixelOfGroups] = 10000;
+                // max_perPixel[pixelOfGroups] = -10000;
+                for(let j=0;j<10;j++){
                     if(alterNodes[i].size() > 0){
                         let node = alterNodes[i].peek();
                         if(node !== null && (node.timeRange[1]-node.timeRange[0]+1)>=4){
@@ -2084,9 +2126,13 @@ export default class LevelDataManager {
             }
             console.log(" ");
         
+            // for(let i=0;i<kuandu;i++){
+            //     min_perPixel[i] = 10000;
+            //     max_perPixel[i] = -10000;
+            // }
             for(let j=0;j<queryNodes.length;j++){
-                let index = Math.floor(queryNodes[j].timeRange[0] / (totalNum / kuandu));
-                if(error[index] > 0.1){
+                let index = Math.floor(queryNodes[j].timeRange[0] / (totalNum / groups));
+                // if(error[index] > 0.1){
                     if(queryNodes[j]._leftChild === null || queryNodes[j]._rightChild === null) continue;
                     //估计平均值
                     total[index] -= (queryNodes[j].yArray[2] + queryNodes[j].yArray[1]) / 2 * (queryNodes[j].timeRange[1] - queryNodes[j].timeRange[0] + 1);
@@ -2094,6 +2140,9 @@ export default class LevelDataManager {
                     total[index] += (queryNodes[j]._rightChild!.yArray[2] + queryNodes[j]._rightChild!.yArray[1]) / 2 * (queryNodes[j]._rightChild!.timeRange[1] - queryNodes[j]._rightChild!.timeRange[0] + 1);
                     estimate[index] = total[index] / (nonUniformColObjs[index].tEnd - nonUniformColObjs[index].tStart + 1);
                     shijiwuchalv[index] = (Math.abs(estimate[index] - nonUniformColObjs[index].average)) / nonUniformColObjs[index].average;
+                    let pixelOfGroups = Math.floor(index / groupsPerPixel);
+                    min_perPixel[pixelOfGroups] = Math.min(min_perPixel[pixelOfGroups], estimate[index]);
+                    max_perPixel[pixelOfGroups] = Math.max(max_perPixel[pixelOfGroups], estimate[index]);
                     //估计误差界限
                     let count = queryNodes[j].timeRange[1] - queryNodes[j].timeRange[0] + 1;
                     error_bound[index] -= (count - 2)*(queryNodes[j].yArray[2] - queryNodes[j].yArray[1])/(sum[index]*2);
@@ -2109,15 +2158,19 @@ export default class LevelDataManager {
                     // alterNodes[index].push(queryNodes[j]._rightChild!);
                     // alterNodes[index].push(queryNodes[j]._leftChild!);
                     visitedNodes+=1;
-                }
+                // }
             }
             error_avg = 0;
             error_bound_avg = 0;
             shijiwucha_avg = 0;
+            for(let i=0;i<groups;i++){
+                error_avg += error[i] / groups;
+                error_bound_avg += error_bound[i] / groups;
+                shijiwucha_avg += shijiwuchalv[i] / groups;
+            }
             for(let i=0;i<kuandu;i++){
-                error_avg += error[i] / kuandu;
-                error_bound_avg += error_bound[i] / kuandu;
-                shijiwucha_avg += shijiwuchalv[i] / kuandu;
+                nonUniformColObjs2[i].aveRange[0] = min_perPixel[i];
+                nonUniformColObjs2[i].aveRange[1] = max_perPixel[i];
             }
             // shijiwucha_avg = shijiwucha_avg / kuandu;
             test.push(error_bound_avg);
@@ -2129,9 +2182,13 @@ export default class LevelDataManager {
             console.log(" ");
         }
 
-        for (let i = 0; i < nonUniformColObjs.length; i++) {
-            nonUniformColObjs[i].average = estimate[i];
-            nonUniformColObjs[i].checkIsMis();
+        for(let i=0;i<kuandu;i++){
+            nonUniformColObjs2[i].aveRange[0] = min_perPixel[i];
+            nonUniformColObjs2[i].aveRange[1] = max_perPixel[i];
+        }
+        for (let i = 0; i < nonUniformColObjs2.length; i++) {
+            // nonUniformColObjs[i].average = estimate[i];
+            nonUniformColObjs2[i].checkIsMis();
         }
 
         // const data: number[] = estimate;
@@ -2148,7 +2205,7 @@ export default class LevelDataManager {
         // URL.revokeObjectURL(url);
 
         console.log("Time:", time);
-        return nonUniformColObjs;
+        return nonUniformColObjs2;
     }
 
     computeError(t:any, sum:any, i:number){

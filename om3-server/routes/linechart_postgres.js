@@ -182,6 +182,7 @@ function initWaveletBenchMinMaxMissHandler(req, res) {
     const params = [];
     console.log(query.width)
     params.push(2 ** Math.ceil(Math.log2(query.width)));
+    // params.push(2 ** 14);
     const sqlQuery = {
         text: sqlStr,
         values: params

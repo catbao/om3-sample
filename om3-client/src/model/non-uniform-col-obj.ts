@@ -19,6 +19,7 @@ export class NoUniformColObj {
     currentRange: Array<Array<number>>;
     ordinalLevelCount: number;
     vRange: Array<number>;
+    aveRange: Array<number>;
     width: number;
     globalDataLen: number;
     positionInfo: {
@@ -51,6 +52,7 @@ export class NoUniformColObj {
         this.minVTimeRange = [0, 0];
         this.maxVTimeRange = [0, 0];
         this.vRange = [Infinity, -Infinity];
+        this.aveRange = [Infinity, -Infinity];
         this.width = width;
         this.col = col;
         this.tStart = tStart;
@@ -98,6 +100,8 @@ export class NoUniformColObj {
         this.ordinalLevelCount = 0;
         this.vRange[0] = Infinity;
         this.vRange[1] = -Infinity;
+        this.aveRange[0] = Infinity;
+        this.aveRange[1] = -Infinity;
         this.globalDataLen = globalDataLen;
         this.maxLevel = maxLevel
         this.positionInfo.startX = 0;

@@ -50,37 +50,64 @@ export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
     const pading = { top: 20, bottom: 80, left: 45, right: 45 };
     const svg = d3.select("#content-container").append("svg");
     svg
-        .attr("width", lineChartObj.width + pading.left + pading.right)
-        .attr("height", lineChartObj.height + pading.top + pading.bottom)
+        // .attr("width", lineChartObj.width + pading.left + pading.right)
+        // .attr("height", lineChartObj.height + pading.top + pading.bottom)
+        .attr("width", 600 + pading.left + pading.right)
+        .attr("height", 600 + pading.top + pading.bottom)
         .attr("transform", `translate(${lineChartObj.x},${lineChartObj.y})`)
         .style("background-color", "#fff");
-    const foreignId = `foreign${lineChartObj.width + Math.random()}`;
+    // const foreignId = `foreign${lineChartObj.width + Math.random()}`;
+    const foreignId = `foreign${600 + Math.random()}`;
     const foreigG = svg.append("g").attr("transfrom", `translate(${pading.left},${pading.top})`)
-    let foreignObj: any = foreigG.append("foreignObject").attr("id", foreignId).attr("x", pading.left).attr("y", pading.top).attr('width', lineChartObj.width).attr('height', lineChartObj.height);
+    // let foreignObj: any = foreigG.append("foreignObject").attr("id", foreignId).attr("x", pading.left).attr("y", pading.top).attr('width', lineChartObj.width).attr('height', lineChartObj.height);
+    let foreignObj: any = foreigG.append("foreignObject").attr("id", foreignId).attr("x", pading.left).attr("y", pading.top).attr('width', 600).attr('height', 600);
     const canvas = document.createElement("canvas");
     (canvas as any).__data__ = {}
     document.getElementById(foreignId)?.appendChild(canvas);
-    canvas.width = lineChartObj.width;
-    canvas.height = lineChartObj.height;
+    // canvas.width = lineChartObj.width;
+    // canvas.height = lineChartObj.height;
+    canvas.width = 600;
+    canvas.height = 600;
     let ctx = canvas.getContext("2d");
 
+    // const indexToTimeStampScale = d3.scaleLinear().domain([nodeIndexRange[0], nodeIndexRange[1]]).range([realTimeStampRange[0], realTimeStampRange[1]]);
+    // const xScale: any = d3.scaleLinear().domain([0, lineChartObj.width]).range([0, lineChartObj.width]);
+    // let showTimeXScale: any = d3.scaleTime().domain([new Date(realTimeStampRange[0]), new Date(realTimeStampRange[1])]).range([0, lineChartObj.width]);
+    // let yScale: any = d3.scaleLinear().domain([lineChartObj.data.minv, lineChartObj.data.maxv]).range([lineChartObj.height, 0]);
+    // let xReScale = d3.scaleLinear().domain([0, lineChartObj.width]).range([0, lineChartObj.dataManager.realDataRowNum - 1]);
+    // let showXTimeScale: any = d3.scaleTime().domain([new Date(realTimeStampRange[0]), new Date(realTimeStampRange[1])]).range([0, lineChartObj.width]);
+
+    // let zoomAxis = d3.axisBottom(showTimeXScale);
+    // let yAxis = d3.axisLeft(yScale)
+    // let xAxis = d3.axisBottom(showXTimeScale)
+    // const timeBrushObj = d3.brushX().extent([[0, 10], [lineChartObj.width, 40]]);
+
+    // timeBrushObj.on("end", brushed);
+    // timeBrushObj.on("start", () => {
+    //     console.log("start")
+    // })
+    // const timeBoxG = svg.append("g").attr("transform", `translate(${pading.left},${pading.top + 50 + lineChartObj.height - 20})`).call(timeBrushObj).call(timeBrushObj.move, [0, lineChartObj.width]);
+    // let zoomAxisG = svg.append("g").attr('style', 'user-select:none').attr("transform", `translate(${pading.left},${lineChartObj.height + pading.top + 50})`).attr("class", 'x axis').call(zoomAxis)
+    // let xAxisG = svg.append("g").attr('style', 'user-select:none').attr("transform", `translate(${pading.left},${lineChartObj.height + pading.top})`).attr("class", 'x axis').call(xAxis)
+    // let yAxisG = svg.append("g").attr('style', 'user-select:none').attr("transform", `translate(${pading.left},${pading.top})`).attr("class", 'y axis').call(yAxis);
+
     const indexToTimeStampScale = d3.scaleLinear().domain([nodeIndexRange[0], nodeIndexRange[1]]).range([realTimeStampRange[0], realTimeStampRange[1]]);
-    const xScale: any = d3.scaleLinear().domain([0, lineChartObj.width]).range([0, lineChartObj.width]);
-    let showTimeXScale: any = d3.scaleTime().domain([new Date(realTimeStampRange[0]), new Date(realTimeStampRange[1])]).range([0, lineChartObj.width]);
+    const xScale: any = d3.scaleLinear().domain([0, 600]).range([0, 600]);
+    let showTimeXScale: any = d3.scaleTime().domain([new Date(realTimeStampRange[0]), new Date(realTimeStampRange[1])]).range([0, 600]);
     let yScale: any = d3.scaleLinear().domain([lineChartObj.data.minv, lineChartObj.data.maxv]).range([lineChartObj.height, 0]);
-    let xReScale = d3.scaleLinear().domain([0, lineChartObj.width]).range([0, lineChartObj.dataManager.realDataRowNum - 1]);
-    let showXTimeScale: any = d3.scaleTime().domain([new Date(realTimeStampRange[0]), new Date(realTimeStampRange[1])]).range([0, lineChartObj.width]);
+    let xReScale = d3.scaleLinear().domain([0, 600]).range([0, lineChartObj.dataManager.realDataRowNum - 1]);
+    let showXTimeScale: any = d3.scaleTime().domain([new Date(realTimeStampRange[0]), new Date(realTimeStampRange[1])]).range([0, 600]);
 
     let zoomAxis = d3.axisBottom(showTimeXScale);
     let yAxis = d3.axisLeft(yScale)
     let xAxis = d3.axisBottom(showXTimeScale)
-    const timeBrushObj = d3.brushX().extent([[0, 10], [lineChartObj.width, 40]]);
+    const timeBrushObj = d3.brushX().extent([[0, 10], [600, 40]]);
 
     timeBrushObj.on("end", brushed);
     timeBrushObj.on("start", () => {
         console.log("start")
     })
-    const timeBoxG = svg.append("g").attr("transform", `translate(${pading.left},${pading.top + 50 + lineChartObj.height - 20})`).call(timeBrushObj).call(timeBrushObj.move, [0, lineChartObj.width]);
+    const timeBoxG = svg.append("g").attr("transform", `translate(${pading.left},${pading.top + 50 + lineChartObj.height - 20})`).call(timeBrushObj).call(timeBrushObj.move, [0, 600]);
     let zoomAxisG = svg.append("g").attr('style', 'user-select:none').attr("transform", `translate(${pading.left},${lineChartObj.height + pading.top + 50})`).attr("class", 'x axis').call(zoomAxis)
     let xAxisG = svg.append("g").attr('style', 'user-select:none').attr("transform", `translate(${pading.left},${lineChartObj.height + pading.top})`).attr("class", 'x axis').call(xAxis)
     let yAxisG = svg.append("g").attr('style', 'user-select:none').attr("transform", `translate(${pading.left},${pading.top})`).attr("class", 'y axis').call(yAxis);
@@ -89,24 +116,33 @@ export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
     function updateCanvasWidth() {
 
         //@ts-ignore
-        canvas.style.width = lineChartObj.width;
+        canvas.style.width = 600;
         svg
-            .attr("width", lineChartObj.width + pading.left + pading.right)
+            .attr("width", 600 + pading.left + pading.right)
             .attr("height", lineChartObj.height + pading.top + pading.bottom)
-        foreignObj.attr("width", lineChartObj.width);
-        xScale.domain([0, lineChartObj.width]).range([0, lineChartObj.width]);
-        showTimeXScale.domain([new Date(realTimeStampRange[0]), new Date(realTimeStampRange[1])]).range([0, lineChartObj.width]);
-        //showTimeXScale.range([0, lineChartObj.width]);
+        foreignObj.attr("width", 600);
+        xScale.domain([0, 600]).range([0, 600]);
+        showTimeXScale.domain([new Date(realTimeStampRange[0]), new Date(realTimeStampRange[1])]).range([0, 600]);
+        // canvas.style.width = lineChartObj.width;
+        // svg
+        //     .attr("width", lineChartObj.width + pading.left + pading.right)
+        //     .attr("height", lineChartObj.height + pading.top + pading.bottom)
+        // foreignObj.attr("width", lineChartObj.width);
+        // xScale.domain([0, lineChartObj.width]).range([0, lineChartObj.width]);
+        // showTimeXScale.domain([new Date(realTimeStampRange[0]), new Date(realTimeStampRange[1])]).range([0, lineChartObj.width]);
+        ////showTimeXScale.range([0, lineChartObj.width]);
         if (zoomAxisG != null) {
             zoomAxisG.remove();
             zoomAxisG = svg.append("g").attr('style', 'user-select:none').attr("transform", `translate(${pading.left},${lineChartObj.height + pading.top + 50})`).attr("class", 'x axis').call(zoomAxis)
         }
-        timeBrushObj.extent([[0, 10], [lineChartObj.width, 40]]);
+        // timeBrushObj.extent([[0, 10], [lineChartObj.width, 40]]);
+        timeBrushObj.extent([[0, 10], [600, 40]]);
         timeBrushObj.on("end", brushed);
         timeBrushObj.on("start", () => {
             console.log("start")
         })
-        const tempReScale=d3.scaleLinear().domain([0, lineChartObj.dataManager.realDataRowNum - 1]).range([0,lineChartObj.width]);
+        // const tempReScale=d3.scaleLinear().domain([0, lineChartObj.dataManager.realDataRowNum - 1]).range([0,lineChartObj.width]);
+        const tempReScale=d3.scaleLinear().domain([0, lineChartObj.dataManager.realDataRowNum - 1]).range([0,600]);
 
         timeBoxG.call(timeBrushObj).call(timeBrushObj.move, [tempReScale(lineChartObj.timeRange[0]), tempReScale(lineChartObj.timeRange[1])]);
         ctx = canvas.getContext("2d");
@@ -116,7 +152,8 @@ export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
 
 
     function draw(nonUniformColObjs?: Array<NoUniformColObj>,type?:string) {
-        canvas.width = lineChartObj.width;
+        // canvas.width = lineChartObj.width;
+        canvas.width = 600;
         yScale = d3.scaleLinear().domain([lineChartObj.data.minv, lineChartObj.data.maxv]).range([lineChartObj.height, 0]);
         yAxis = d3.axisLeft(yScale)
         if (yAxisG !== null && yAxisG !== undefined) {
@@ -136,80 +173,85 @@ export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
                 .attr("id", "foreign")
                 .attr('x', pading.left)
                 .attr('y', pading.top)
-                .attr('width', lineChartObj.width)
-                .attr('height', lineChartObj.height);
+                .attr('width', 600)
+                .attr('height', 600);
+                // .attr('width', lineChartObj.width)
+                // .attr('height', lineChartObj.height);
             const canvas = document.createElement("canvas");
             document.getElementById("foreign")?.appendChild(canvas);
-            canvas.width = lineChartObj.width;
-            canvas.height = lineChartObj.height;
+            // canvas.width = lineChartObj.width;
+            // canvas.height = lineChartObj.height;
+            canvas.width = 600;
+            canvas.height = 600;
             ctx = canvas.getContext("2d");
         }
 
         if (nonUniformColObjs && ctx) {
-            formatNonPowDataForViewChange(nonUniformColObjs,lineChartObj.width,lineChartObj.maxLen,null)
-            // console.log(nonUniformColObjs);
-            ctx.clearRect(0, 0, lineChartObj.width, lineChartObj.height);
+            // formatNonPowDataForViewChange(nonUniformColObjs,lineChartObj.width,lineChartObj.maxLen,null);
+            // ctx.clearRect(0, 0, lineChartObj.width, lineChartObj.height);
+            formatNonPowDataForViewChange(nonUniformColObjs,600,lineChartObj.maxLen,null);
+            ctx.clearRect(0, 0, 600, 600);
             ctx.beginPath();
             ctx.strokeStyle = "steelblue"
             
             for (let i = 0; i < nonUniformColObjs.length; i++) {
-                if (nonUniformColObjs[i].isMis) {
-                    continue
-                }
-                if (nonUniformColObjs[i].minVTimeRange[0] < nonUniformColObjs[i].maxVTimeRange[0]) {
-                    ctx.moveTo(nonUniformColObjs[i].positionInfo.minX, yScale(nonUniformColObjs[i].vRange[0]));
-                    ctx.lineTo(nonUniformColObjs[i].positionInfo.maxX, yScale(nonUniformColObjs[i].vRange[1]));
-                } else {
-                    ctx.moveTo(nonUniformColObjs[i].positionInfo.minX, yScale(nonUniformColObjs[i].vRange[1]));
-                    ctx.lineTo(nonUniformColObjs[i].positionInfo.maxX, yScale(nonUniformColObjs[i].vRange[0]));
-                }
-                if (i <= nonUniformColObjs.length - 2 && nonUniformColObjs[i].endV !== undefined && nonUniformColObjs[i + 1] !== undefined) {
-                    ctx.moveTo(nonUniformColObjs[i].positionInfo.endX, yScale(nonUniformColObjs[i].endV!));
-                    ctx.lineTo(nonUniformColObjs[i + 1].positionInfo.startX, yScale(nonUniformColObjs[i + 1].startV!));
-                }
+                // if (nonUniformColObjs[i].isMis) {
+                //     continue
+                // }
+                // if (nonUniformColObjs[i].minVTimeRange[0] < nonUniformColObjs[i].maxVTimeRange[0]) {
+                    ctx.moveTo(nonUniformColObjs[i].positionInfo.minX, yScale(nonUniformColObjs[i].aveRange[0]));
+                    ctx.lineTo(nonUniformColObjs[i].positionInfo.maxX, yScale(nonUniformColObjs[i].aveRange[1]));
+                // } else {
+                //     ctx.moveTo(nonUniformColObjs[i].positionInfo.minX, yScale(nonUniformColObjs[i].vRange[1]));
+                //     ctx.lineTo(nonUniformColObjs[i].positionInfo.maxX, yScale(nonUniformColObjs[i].vRange[0]));
+                // }
+                // if (i <= nonUniformColObjs.length - 2 && nonUniformColObjs[i].endV !== undefined && nonUniformColObjs[i + 1] !== undefined) {
+                //     ctx.moveTo(nonUniformColObjs[i].positionInfo.endX, yScale(nonUniformColObjs[i].endV!));
+                //     ctx.lineTo(nonUniformColObjs[i + 1].positionInfo.startX, yScale(nonUniformColObjs[i + 1].startV!));
+                // }
             }
 
             const stack = [];
-            for (let i = 0; i < nonUniformColObjs.length - 1; i++) {
-                if (!nonUniformColObjs[i].isMis && nonUniformColObjs[i + 1].isMis) {
-                    stack.push(nonUniformColObjs[i]);
-                    for (let j = i + 1; j < nonUniformColObjs.length; j++) {
-                        if (nonUniformColObjs[j - 1].isMis && !nonUniformColObjs[j].isMis) {
-                            const co = stack.pop()
-                            if (nonUniformColObjs[j].startV === undefined || co?.endV === undefined) {
-                                console.error("error nonUniform");
-                            }
-                            ctx.moveTo(co!.positionInfo.endX, yScale(co!.endV));
-                            if (nonUniformColObjs[j].startV !== undefined) {
-                                ctx.lineTo(nonUniformColObjs[j].positionInfo.startX, yScale(nonUniformColObjs[j].startV!))
-                            } else {
-                                ctx.lineTo(nonUniformColObjs[j].positionInfo.minX, yScale((nonUniformColObjs[j].vRange[0] + nonUniformColObjs[j].vRange[1]) / 2))
-                            }
+            // for (let i = 0; i < nonUniformColObjs.length - 1; i++) {
+            //     if (!nonUniformColObjs[i].isMis && nonUniformColObjs[i + 1].isMis) {
+            //         stack.push(nonUniformColObjs[i]);
+            //         for (let j = i + 1; j < nonUniformColObjs.length; j++) {
+            //             if (nonUniformColObjs[j - 1].isMis && !nonUniformColObjs[j].isMis) {
+            //                 const co = stack.pop()
+            //                 if (nonUniformColObjs[j].startV === undefined || co?.endV === undefined) {
+            //                     console.error("error nonUniform");
+            //                 }
+            //                 ctx.moveTo(co!.positionInfo.endX, yScale(co!.endV));
+            //                 if (nonUniformColObjs[j].startV !== undefined) {
+            //                     ctx.lineTo(nonUniformColObjs[j].positionInfo.startX, yScale(nonUniformColObjs[j].startV!))
+            //                 } else {
+            //                     ctx.lineTo(nonUniformColObjs[j].positionInfo.minX, yScale((nonUniformColObjs[j].vRange[0] + nonUniformColObjs[j].vRange[1]) / 2))
+            //                 }
 
-                        }
-                    }
-                }
-            }
+            //             }
+            //         }
+            //     }
+            // }
             ctx.stroke();
         } else {
             console.log("error")
         }
 
-        if (nonUniformColObjs && ctx) {
-            formatNonPowDataForViewChange(nonUniformColObjs,lineChartObj.width,lineChartObj.maxLen,null)
-            // console.log(nonUniformColObjs);
-            ctx.clearRect(0, 0, lineChartObj.width, lineChartObj.height);
-            ctx.beginPath();
+        // if (nonUniformColObjs && ctx) {
+        //     formatNonPowDataForViewChange(nonUniformColObjs,lineChartObj.width,lineChartObj.maxLen,null)
+        //     // console.log(nonUniformColObjs);
+        //     ctx.clearRect(0, 0, lineChartObj.width, lineChartObj.height);
+        //     ctx.beginPath();
 
-            ctx.strokeStyle = 'red';
-            for(let i=0; i<nonUniformColObjs.length-1; i++){
-                ctx.moveTo(nonUniformColObjs[i].positionInfo.startX, yScale(nonUniformColObjs[i].average));
-                ctx.lineTo(nonUniformColObjs[i+1].positionInfo.startX, yScale(nonUniformColObjs[i+1].average));
-            }
-            ctx.stroke();
-        } else {
-            console.log("error")
-        }
+        //     ctx.strokeStyle = 'red';
+        //     for(let i=0; i<nonUniformColObjs.length-1; i++){
+        //         ctx.moveTo(nonUniformColObjs[i].positionInfo.startX, yScale(nonUniformColObjs[i].average));
+        //         ctx.lineTo(nonUniformColObjs[i+1].positionInfo.startX, yScale(nonUniformColObjs[i+1].average));
+        //     }
+        //     ctx.stroke();
+        // } else {
+        //     console.log("error")
+        // }
 
     }
 
@@ -265,8 +307,10 @@ export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
             return
         }
         //@ts-ignore
-        canvas.style.width = lineChartObj.width;
-        lineChartObj.dataManager.viewChangeInteractionFinal1(lineChartObj.currentLevel, lineChartObj.width, [lineChartObj.timeRange[0], lineChartObj.timeRange[1]], null,draw).then((columnsInfos) => {
+        // canvas.style.width = lineChartObj.width;
+        // lineChartObj.dataManager.viewChangeInteractionFinal1(lineChartObj.currentLevel, lineChartObj.width, [lineChartObj.timeRange[0], lineChartObj.timeRange[1]], null,draw).then((columnsInfos) => {
+        canvas.style.width = 600;
+        lineChartObj.dataManager.viewChangeInteractionFinal1(lineChartObj.currentLevel, 600, [lineChartObj.timeRange[0], lineChartObj.timeRange[1]], null,draw).then((columnsInfos) => {
             //const nonUniformRenderData = formatNonPowDataForViewChange(columnsInfos, lineChartObj.width, 2 ** lineChartObj.dataManager.maxLevel, yScale);
             //@ts-ignore
             //lineChartObj.nonUniformColObjs = nonUniformRenderData;
@@ -280,7 +324,8 @@ export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
         .attr("x", 0)
         .attr("y", 0)
         .attr("height", lineChartObj.height + pading.top + pading.bottom)
-        .attr("width", lineChartObj.width + pading.left + pading.right)
+        // .attr("width", lineChartObj.width + pading.left + pading.right)
+        .attr("width", 600 + pading.left + pading.right)
         .attr("stroke", "black")
         .attr("stroke-width", 4)
         .attr("fill", "none")
@@ -299,8 +344,10 @@ export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
         })
         .on("mousemove", (e) => {
             if (interactiveInfo.isMouseDown) {
-                svg.attr("width", lineChartObj.width + pading.right + pading.left + (e.offsetX - startOffsetX));
-                dragRect.attr("width", lineChartObj.width + pading.right + pading.left + (e.offsetX - startOffsetX));
+                // svg.attr("width", lineChartObj.width + pading.right + pading.left + (e.offsetX - startOffsetX));
+                // dragRect.attr("width", lineChartObj.width + pading.right + pading.left + (e.offsetX - startOffsetX));
+                svg.attr("width", 600 + pading.right + pading.left + (e.offsetX - startOffsetX));
+                dragRect.attr("width", 600 + pading.right + pading.left + (e.offsetX - startOffsetX));
             }
         })
         .on("mouseleave", () => {
@@ -313,8 +360,10 @@ export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
         .getElementById("content-container")!
         .addEventListener("mousemove", (e) => {
             if (interactiveInfo.isMouseDown) {
-                svg.attr("width", lineChartObj.width + pading.right + pading.left + (e.offsetX - startOffsetX));
-                dragRect.attr("width", lineChartObj.width + pading.right + pading.left + (e.offsetX - startOffsetX));
+                // svg.attr("width", lineChartObj.width + pading.right + pading.left + (e.offsetX - startOffsetX));
+                // dragRect.attr("width", lineChartObj.width + pading.right + pading.left + (e.offsetX - startOffsetX));
+                svg.attr("width", 600 + pading.right + pading.left + (e.offsetX - startOffsetX));
+                dragRect.attr("width", 600 + pading.right + pading.left + (e.offsetX - startOffsetX));
             }
         });
 
@@ -325,15 +374,24 @@ export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
                 interactiveInfo.isMouseDown = false;
                 isMouseover = false;
                 document.body.style.cursor = 'default';
-                let preWidth = lineChartObj.width;
-                lineChartObj.width = lineChartObj.width + (e.offsetX - startOffsetX);
+                // let preWidth = lineChartObj.width;
+                // lineChartObj.width = lineChartObj.width + (e.offsetX - startOffsetX);
+                // if (lineChartObj.width === preWidth) {
+                //     return
+                // }
+                // const interInfo = new InteractionInfo("resize")
+                // interInfo.setRangeW(lineChartObj.timeRange, lineChartObj.width, lineChartObj.currentLevel);
+                // interactionStack.push(interInfo);
+                // resizeW(lineChartObj.width)
+                let preWidth = 600;
+                lineChartObj.width = 600 + (e.offsetX - startOffsetX);
                 if (lineChartObj.width === preWidth) {
                     return
                 }
                 const interInfo = new InteractionInfo("resize")
-                interInfo.setRangeW(lineChartObj.timeRange, lineChartObj.width, lineChartObj.currentLevel);
+                interInfo.setRangeW(lineChartObj.timeRange, 600, lineChartObj.currentLevel);
                 interactionStack.push(interInfo);
-                resizeW(lineChartObj.width)
+                resizeW(600)
             }
         });
 
