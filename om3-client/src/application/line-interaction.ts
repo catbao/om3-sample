@@ -233,6 +233,7 @@ export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
             //     }
             // }
             ctx.stroke();
+            savePNG(canvas);
         } else {
             console.log("error")
         }
@@ -417,4 +418,15 @@ function computeMinMax(columInfo: Array<NoUniformColObj>) {
         min,
         max
     }
+}
+
+function savePNG(canvas: any) {
+    const imgURL = canvas.toDataURL("./image/png");
+    const dlLink = document.createElement("a")
+    dlLink.download = `717_200_2_`
+    dlLink.href = imgURL
+    dlLink.dataset.downloadurl = ["./image/png", dlLink.download, dlLink.href].join(":")
+    document.body.appendChild(dlLink)
+    dlLink.click()
+    document.body.removeChild(dlLink)
 }

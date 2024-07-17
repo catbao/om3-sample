@@ -1814,9 +1814,9 @@ export default class LevelDataManager {
         }
         let totalNum = timeRange[1] + 1;
         let kuandu = 600;
-        let visitedNodes = 1024;
+        let visitedNodes = 16324;
         let nodesNum = 1048576;
-        let user_specified = 100;
+        let user_specified = 200;
         let groups = Math.ceil(nodesNum / user_specified);
         allTimes = []
         // console.time("v_c")
@@ -2086,10 +2086,12 @@ export default class LevelDataManager {
         time.push(new Date().getTime() - startT);
 
         let toRemove = [];
+        let deleted = 0;
         for(let i=0;i<alterNodes.length;i++){
             let pixelOfGroups = Math.floor(i / groupsPerPixel);
             if(low_bound[i] > min_perPixel[pixelOfGroups] && upper_bound[i] < max_perPixel[pixelOfGroups]){
                 // toRemove.push(i); 
+                deleted++;
                 alterNodes[i] = new MinHeap<TrendTree>();
             }
         }
@@ -2098,13 +2100,13 @@ export default class LevelDataManager {
         // }
         
 
-        //每次取出来20个，缩小error
-        for(let i=0;i<20;i++){
+        //每次取出来10个，缩小error
+        for(let i=0;i<5;i++){
             let everyStartT = new Date().getTime();
             let queryNodes: Array<TrendTree> = [];
             for(let i=0;i<alterNodes.length;i++){
                 if(alterNodes[i].size() === 0) continue;
-                console.log(alterNodes[i].size());
+                // console.log(alterNodes[i].size());
                 let pixelOfGroups = Math.floor(i / groupsPerPixel);
                 // min_perPixel[pixelOfGroups] = 10000;
                 // max_perPixel[pixelOfGroups] = -10000;
@@ -2126,10 +2128,6 @@ export default class LevelDataManager {
             }
             console.log(" ");
         
-            // for(let i=0;i<kuandu;i++){
-            //     min_perPixel[i] = 10000;
-            //     max_perPixel[i] = -10000;
-            // }
             for(let j=0;j<queryNodes.length;j++){
                 let index = Math.floor(queryNodes[j].timeRange[0] / (totalNum / groups));
                 // if(error[index] > 0.1){
@@ -2160,6 +2158,37 @@ export default class LevelDataManager {
                     visitedNodes+=1;
                 // }
             }
+
+            let j=0;
+            low_bound.fill(0);
+            upper_bound.fill(0);
+            alterNodes.forEach(heap => {  
+                const elements = heap.toArray();  
+                elements.forEach(element => {  
+                    low_bound[j] += element!.yArray[2]+(element!.timeRange[1] - element!.timeRange[0])*element!.yArray[1];
+                    upper_bound[j] += element!.yArray[1]+(element!.timeRange[1] - element!.timeRange[0])*element!.yArray[2];
+                });  
+                j++;
+            });
+            for(let i=0;i<groups;i++){
+                for (const element of groundNodes[i]){
+                    low_bound[i] += (element.yArray[2] + element.yArray[1]);
+                    upper_bound[i] += (element.yArray[2] + element.yArray[1]);
+                }
+                low_bound[i] /= sum[i];
+                upper_bound[i] /= sum[i];
+            }
+
+            let deleted1 = 0;
+            for(let i=0;i<alterNodes.length;i++){
+                if(alterNodes[i].size() == 0) continue;
+                let pixelOfGroups = Math.floor(i / groupsPerPixel);
+                if(low_bound[i] > min_perPixel[pixelOfGroups] && upper_bound[i] < max_perPixel[pixelOfGroups]){
+                    // toRemove.push(i); 
+                    deleted1++;
+                    alterNodes[i] = new MinHeap<TrendTree>();
+                }
+            }
             error_avg = 0;
             error_bound_avg = 0;
             shijiwucha_avg = 0;
@@ -2179,6 +2208,7 @@ export default class LevelDataManager {
             test.push(visitedNodes);
             time.push(new Date().getTime() - startT);
             // time.push(visitedNodes);
+            console.log("visitedNodes:", visitedNodes);
             console.log(" ");
         }
 
