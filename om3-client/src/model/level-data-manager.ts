@@ -1817,6 +1817,34 @@ export default class LevelDataManager {
         let visitedNodes = 16324;
         let nodesNum = 1048576;
         let user_specified = 200;
+        // let w = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+        //     2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+        //     3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,
+        //     4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,
+        //     5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5
+        // ]
+        // let w = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+        //     1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+        //     1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+        //     1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+        //     1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+        // ]
+        // let w = [
+        //     0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,
+        //     0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,
+        //     0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,
+        //     0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,
+        //     1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0
+        // ] 
+        // let w = [
+        //     0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,    
+        //     0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,
+        //     1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,
+        //     1.3,1,3,1,3,1.3,1.3,1.3,1,3,1,3,1.3,1.3,1.3,1,3,1,3,1.3,1.3,1.3,1,3,1,3,1.3,1.3,1.3,1,3,1,3,1.3,1.3,1.3,1,3,1,3,1.3,1.3,1.3,1,3,1,3,1.3,1.3,1.3,1,3,1,3,1.3,1.3,
+        //     1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.6
+        // ] 
+        let w = [0.77, 1.43, 1.51, 0.27, 0.58, 0.36, 1.65, 1.17, 0.25, 0.35, 0.84, 0.88, 1.65, 1.35, 0.64, 1.15, 0.34, 1.8, 1.79, 0.06, 1.42, 0.21, 1.35, 0.5, 1.33, 0.03, 1.83, 1.74, 0.93, 0.16, 0.67, 1.57, 1.63, 1.95, 0.59, 1.51, 1.09, 0.66, 1.4, 1.93, 0.7, 0.63, 0.37, 1.91, 0.3, 0.22, 1.3, 0.29, 0.99, 0.07, 0.37, 0.16, 1.62, 0.26, 0.03, 0.39, 1.26, 0.07, 0.05, 1.8, 0.36, 0.85, 1.93, 0.21, 1.35, 1.69, 1.16, 1.14, 1.46, 1.68, 0.45, 1.13, 0.46, 0.04, 0.64, 0.67, 0.02, 1.83, 0.59, 0.49, 1.08, 1.82, 1.75, 1.54, 1.03, 0.89, 1.33, 0.17, 1.48, 1.17, 1.92, 1.31, 1.0, 1.06, 1.9, 0.95, 1.59, 1.29, 1.87, 1.11, 1.64, 1.33, 0.37, 0.02, 0.81, 0.53, 1.34, 1.4, 0.58, 0.3, 1.63, 0.32, 1.8, 1.01, 1.52, 0.2, 0.38, 0.03, 0.05, 1.14, 1.66, 0.13, 0.79, 1.23, 0.72, 1.21, 1.43, 1.61, 1.11, 0.22, 0.65, 0.52, 0.85, 1.94, 1.1, 0.76, 0.82, 0.51, 1.04, 0.33, 0.87, 0.86, 1.43, 1.21, 0.93, 1.86, 1.8, 0.36, 1.13, 0.29, 0.72, 0.1, 0.75, 0.73, 1.87, 0.93, 0.91, 0.26, 0.01, 1.97, 0.83, 0.08, 0.91, 0.32, 0.03, 1.55, 0.66, 1.06, 0.8, 1.54, 0.17, 1.98, 0.96, 0.13, 1.03, 0.08, 1.12, 0.6, 0.15, 0.73, 1.07, 0.17, 1.13, 1.99, 1.34, 0.97, 0.38, 1.68, 0.66, 1.67, 0.24, 1.7, 1.09, 1.35, 1.86, 0.9, 0.22, 0.73, 1.94, 0.64];
+
         let groups = Math.ceil(nodesNum / user_specified);
         allTimes = []
         // console.time("v_c")
@@ -2043,18 +2071,26 @@ export default class LevelDataManager {
         alterNodes.forEach(heap => {  
             const elements = heap.toArray();  
             elements.forEach(element => {  
-                error_bound[i] += this.computeError(element, sum, i);
-                total[i] += (element!.yArray[2] + element!.yArray[1]) / 2 * (element!.timeRange[1] - element!.timeRange[0]+1);
-                low_bound[i] += element!.yArray[2]+(element!.timeRange[1] - element!.timeRange[0])*element!.yArray[1];
-                upper_bound[i] += element!.yArray[1]+(element!.timeRange[1] - element!.timeRange[0])*element!.yArray[2];
+                error_bound[i] += this.computeError(element, sum, i, w);
+                let mod = element!.timeRange[0] % user_specified;
+                let weighedSum = 0;
+                for(let i=mod;i<(element!.timeRange[1] - element!.timeRange[0]+1)+mod;i++){
+                    weighedSum += w[i%user_specified];
+                }
+                // total[i] += (element!.yArray[2] + element!.yArray[1]) / 2 * (element!.timeRange[1] - element!.timeRange[0]+1) / weighedSum;
+                total[i] += (element!.yArray[2] + element!.yArray[1]) / 2 * weighedSum;
+                low_bound[i] += weighedSum * element!.yArray[1];
+                upper_bound[i] += weighedSum * element!.yArray[2];
             });  
             i++;
         });
         for(let i=0;i<groups;i++){
             for (const element of groundNodes[i]){
-                total[i] += (element.yArray[2] + element.yArray[1]) / 2 * (element.timeRange[1] - element.timeRange[0]+1);
-                low_bound[i] += (element.yArray[2] + element.yArray[1]);
-                upper_bound[i] += (element.yArray[2] + element.yArray[1]);
+                let mod = element!.timeRange[0] % user_specified;
+                // total[i] += (element.yArray[2] + element.yArray[1]) / 2 * (w[mod%user_specified]+w[(mod+1)%user_specified]);
+                total[i] += (element.yArray[2] + element.yArray[1]) / 2 * (w[mod%user_specified]+w[(mod+1)%user_specified]);
+                low_bound[i] += (element.yArray[2] + element.yArray[1]) / 2 * (w[mod%user_specified]+w[(mod+1)%user_specified]);
+                upper_bound[i] += (element.yArray[2] + element.yArray[1]) / 2 * (w[mod%user_specified]+w[(mod+1)%user_specified]);
             }
             low_bound[i] /= sum[i];
             upper_bound[i] /= sum[i];
@@ -2133,9 +2169,31 @@ export default class LevelDataManager {
                 // if(error[index] > 0.1){
                     if(queryNodes[j]._leftChild === null || queryNodes[j]._rightChild === null) continue;
                     //估计平均值
-                    total[index] -= (queryNodes[j].yArray[2] + queryNodes[j].yArray[1]) / 2 * (queryNodes[j].timeRange[1] - queryNodes[j].timeRange[0] + 1);
-                    total[index] += (queryNodes[j]._leftChild!.yArray[2] + queryNodes[j]._leftChild!.yArray[1]) / 2 * (queryNodes[j]._leftChild!.timeRange[1] - queryNodes[j]._leftChild!.timeRange[0] + 1);
-                    total[index] += (queryNodes[j]._rightChild!.yArray[2] + queryNodes[j]._rightChild!.yArray[1]) / 2 * (queryNodes[j]._rightChild!.timeRange[1] - queryNodes[j]._rightChild!.timeRange[0] + 1);
+                    let mod = queryNodes[j].timeRange[0] % user_specified;
+                    let weighedSum = 0;
+                    for(let i=mod;i<(queryNodes[j].timeRange[1] - queryNodes[j].timeRange[0]+1)+mod;i++){
+                        weighedSum += w[i%user_specified];
+                    }
+                    total[index] -= (queryNodes[j].yArray[2] + queryNodes[j].yArray[1]) / 2 * weighedSum;
+                    // low_bound[index] -= queryNodes[j].yArray[1] * weighedSum;
+                    // upper_bound[index] -= queryNodes[j].yArray[2] * weighedSum;
+                    mod = queryNodes[j]._leftChild!.timeRange[0] % user_specified;
+                    weighedSum = 0;
+                    for(let i=mod;i<(queryNodes[j]._leftChild!.timeRange[1] - queryNodes[j]._leftChild!.timeRange[0]+1)+mod;i++){
+                        weighedSum += w[i%user_specified];
+                    }
+                    total[index] += (queryNodes[j]._leftChild!.yArray[2] + queryNodes[j]._leftChild!.yArray[1]) / 2 * weighedSum;
+                    // low_bound[index] += queryNodes[j]._leftChild!.yArray[1] * weighedSum;
+                    // upper_bound[index] += queryNodes[j]._leftChild!.yArray[2] * weighedSum;
+                    mod = queryNodes[j]._rightChild!.timeRange[0] % user_specified;
+                    weighedSum = 0;
+                    for(let i=mod;i<(queryNodes[j]._rightChild!.timeRange[1] - queryNodes[j]._rightChild!.timeRange[0]+1)+mod;i++){
+                        weighedSum += w[i%user_specified];
+                    }
+                    total[index] += (queryNodes[j]._rightChild!.yArray[2] + queryNodes[j]._rightChild!.yArray[1]) / 2 * weighedSum;
+                    // low_bound[index] += queryNodes[j]._rightChild!.yArray[1] * weighedSum;
+                    // upper_bound[index] += queryNodes[j]._rightChild!.yArray[2] * weighedSum;
+                    
                     estimate[index] = total[index] / (nonUniformColObjs[index].tEnd - nonUniformColObjs[index].tStart + 1);
                     shijiwuchalv[index] = (Math.abs(estimate[index] - nonUniformColObjs[index].average)) / nonUniformColObjs[index].average;
                     let pixelOfGroups = Math.floor(index / groupsPerPixel);
@@ -2238,9 +2296,14 @@ export default class LevelDataManager {
         return nonUniformColObjs2;
     }
 
-    computeError(t:any, sum:any, i:number){
+    computeError(t:any, sum:any, i:number, w:any){
         let count = t.timeRange[1] - t.timeRange[0] + 1;
-        return (count - 2)*(t.yArray[2] - t.yArray[1])/(sum[i]*2);
+        let start = t.timeRange[0] % 200;
+        let minn = 10000;
+        for(let i=start;i<start+count;i++){
+            minn = Math.min(minn, w[i%200]);
+        }
+        return minn*(t.yArray[2] - t.yArray[1]);
     }
 }
 

@@ -423,7 +423,7 @@ function computeMinMax(columInfo: Array<NoUniformColObj>) {
 function savePNG(canvas: any) {
     const imgURL = canvas.toDataURL("./image/png");
     const dlLink = document.createElement("a")
-    dlLink.download = `717_200_2_`
+    dlLink.download = `720_200_2_`
     dlLink.href = imgURL
     dlLink.dataset.downloadurl = ["./image/png", dlLink.download, dlLink.href].join(":")
     document.body.appendChild(dlLink)
