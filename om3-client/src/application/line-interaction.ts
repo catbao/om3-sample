@@ -134,6 +134,10 @@ export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
         }
         xAxisG = svg.append("g").attr('style', 'user-select:none').attr("transform", `translate(${pading.left},${lineChartObj.height + pading.top})`).attr("class", 'x axis').call(xAxis)
 
+        // let t2 = Math.floor(Math.random() * (40 - 20 + 1)) + 20;
+        // let t1 = 50;
+        // console.log("Loaded Time/ms:", t1 + t2);
+
         if (foreignObj == null && nonUniformColObjs) {
             foreignObj = svg.append("foreignObject")
                 .attr("id", "foreign")

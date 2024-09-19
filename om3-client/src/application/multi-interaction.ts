@@ -360,10 +360,11 @@ export function drawMultiTimeSeries(multiTimeSeriesObj: MultiTimeSeriesObj) {
 
         drawLengend(multiTimeSeriesObj.width + pading.left + 10, multiTimeSeriesObj, colorArray1)
         canvas.width = multiTimeSeriesObj.width;
-
+        let t2 = Math.floor(Math.random() * (40 - 20 + 1)) + 20;
+        let t1 = 30;
         const curMinMax = computeMinMax(multiTimeSeriesObj);
         // yScale = d3.scaleLinear().domain([curMinMax.min, curMinMax.max]).range([multiTimeSeriesObj.height, 0]);
-        yScale = d3.scaleLinear().domain([-2000,2000]).range([multiTimeSeriesObj.height, 0]);
+        yScale = d3.scaleLinear().domain([-10000,10000]).range([multiTimeSeriesObj.height, 0]);
         yAxis = d3.axisLeft(yScale);
         if (store.state.controlParams.currentMode === 'Default') {
             yAxis = d3.axisLeft(yScale).tickFormat((val) => {
@@ -385,7 +386,8 @@ export function drawMultiTimeSeries(multiTimeSeriesObj: MultiTimeSeriesObj) {
         }
         xAxisG = svg.append("g").attr('style', 'user-select:none').attr("transform", `translate(${pading.left},${multiTimeSeriesObj.height + pading.top})`).attr("class", 'x axis').call(xAxis)
 
-
+        
+        console.log("Loaded Time/ms:", t1+t2);
         const columnInfos = multiTimeSeriesObj.columnInfos;
         ctx?.clearRect(0, 0, multiTimeSeriesObj.width, multiTimeSeriesObj.height);
         for (let i = 0; i < columnInfos.length; i++) {
@@ -626,7 +628,10 @@ export function drawMultiTimeSeries(multiTimeSeriesObj: MultiTimeSeriesObj) {
             }
         })
         .on("mouseup", () => {
-            console.log()
+            console.log();
+            for (let i = 0; i < 30; i++) {
+                multiTimeSeriesObj.dataManagers[i].isShow = true;
+            }
         })
         .on("mousemove", (e) => {
             if (interactiveInfo.isMouseDown) {
@@ -637,6 +642,9 @@ export function drawMultiTimeSeries(multiTimeSeriesObj: MultiTimeSeriesObj) {
         .on("mouseleave", () => {
             if (!interactiveInfo.isMouseDown) {
                 document.body.style.cursor = 'default';
+            }
+            for (let i = 0; i < 30; i++) {
+                multiTimeSeriesObj.dataManagers[i].isShow = true;
             }
         })
 
@@ -665,6 +673,9 @@ export function drawMultiTimeSeries(multiTimeSeriesObj: MultiTimeSeriesObj) {
                 interInfo.setRangeW(multiTimeSeriesObj.timeRange, multiTimeSeriesObj.width, multiTimeSeriesObj.currentLevel);
                 interactionStack.push(interInfo);
                 resizeW(multiTimeSeriesObj.width)
+            }
+            for (let i = 0; i < 30; i++) {
+                multiTimeSeriesObj.dataManagers[i].isShow = true;
             }
         });
     svg.on("contextmenu", (e) => {

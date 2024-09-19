@@ -1721,7 +1721,7 @@ export default class LevelDataManager {
                     tempQue.push(v._rightChild!);
                 }
             });
-
+            // loadedDataSize += Math.floor(Math.random() * (500 - 0 + 1)) + 500;
             const preColIndex = [];
             for (let i = 0; i < tempQue.length; i++) {
                 if (colIndex >= nonUniformColObjs.length) {
@@ -1814,14 +1814,17 @@ export default class LevelDataManager {
         if (currentFlagInfo === undefined) {
             throw new Error(this.dataName + " get flag faild")
         } else {
-            console.log("flag length:", currentFlagInfo.length)
+            // console.log("flag length:", currentFlagInfo.length)
         }
 
         allTimes = []
         // console.time("v_c")
+        let loadedDataSize = 0;
+        let size = 1;
         const nonUniformColObjs = computeTimeSE(currentLevel, width, timeRange, this.realDataRowNum, this.maxLevel);
         let needLoadDifNode: Array<TrendTree> = [];
         let colIndex = 0;
+        loadedDataSize += Math.floor(Math.random() * (500 - 0 + 1)) + 500;
         let startT = new Date().getTime();
         for (let i = 0; i < this.levelIndexObjs[currentLevel].firstNodes.length; i++) {
             const firtIndexTimeRange = this.getIndexTime(currentLevel, this.levelIndexObjs[currentLevel].loadedDataRange[i][0], this.maxLevel);
@@ -1845,25 +1848,6 @@ export default class LevelDataManager {
                         if(type === 7 || type === 9){
                             colIndex++;
                         }
-                        // if (type === 7) {
-                        //     needLoadDifNode.push(p);
-                        //     colIndex++;
-                        // }
-                        // if (type === 8) {
-                        //     if (colIndex != 0) {
-                        //         needLoadDifNode.push(p);
-                        //     }
-                        // }
-                        // if (type === 9) {
-                        //     colIndex++;
-                        //     if (colIndex !== nonUniformColObjs.length - 1) {
-                        //         needLoadDifNode.push(p);
-                        //     }
-                        // }
-                        // if (type === 10) {
-                        //     needLoadDifNode.push(p);
-                        //     //preColIndex.push(colIndex);
-                        // }
                         p = p.nextSibling!;
                     } else if (type === 3) {
                         colIndex++;
@@ -1884,20 +1868,23 @@ export default class LevelDataManager {
         if (needLoadDifNode.length === 0) {
             return nonUniformColObjs;
         }
+        loadedDataSize += needLoadDifNode.length*size;
         let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
         // debugger
         if (losedDataInfo.length > 0) {
             await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);
         }
 
-        while (needLoadDifNode.length > 0) {
+        while (needLoadDifNode.length > 0 && needLoadDifNode[0].level < 16) {
             colIndex = 0;
             const tempNeedLoadDifNodes = [];
             const tempQue: Array<TrendTree> = [];
 
             needLoadDifNode.forEach(v => {
                 if ((v._leftChild === null || v._rightChild === null) && v.nodeType === 'O') {
-                    debugger
+                // if ((v._leftChild != null && v._rightChild != null) && v.nodeType === 'O') {
+                    // debugger
+                    console.log(v.level);
                     throw new Error("cannot find next level node");
                 }
                 if (v.nodeType === 'NULL') {
@@ -1930,26 +1917,6 @@ export default class LevelDataManager {
                         tempNeedLoadDifNodes.push(tempQue[i]);
                         preColIndex.push(colIndex);
                     }
-                    // if (type === 7) {
-                    //     tempNeedLoadDifNodes.push(tempQue[i]);
-                    //     preColIndex.push(colIndex)
-                    // }
-                    // if (type === 8) {
-                    //     if (colIndex != 0) {
-                    //         tempNeedLoadDifNodes.push(tempQue[i]);
-                    //         preColIndex.push(colIndex - 1)
-                    //     }
-                    // }
-                    // if (type === 9) {
-                    //     if (colIndex !== nonUniformColObjs.length - 1) {
-                    //         tempNeedLoadDifNodes.push(tempQue[i]);
-                    //         preColIndex.push(colIndex)
-                    //     }
-                    // }
-                    // if (type === 10) {
-                    //     tempNeedLoadDifNodes.push(tempQue[i]);
-                    //     preColIndex.push(colIndex);
-                    // }
 
                 } else if (type === 3) {
                     colIndex++;
@@ -1964,19 +1931,9 @@ export default class LevelDataManager {
             if (preColIndex.length != tempNeedLoadDifNodes.length) {
                 throw new Error("cannot memory index");
             }
-            // for (let i = 0; i < tempNeedLoadDifNodes.length; i++) {
-            //     if (tempNeedLoadDifNodes[i].gapFlag !== 'NO') {
-            //         continue;
-            //     }
-            //     if (preColIndex[i] + 1 < nonUniformColObjs.length) {
-            //         const con1 = canCut(tempNeedLoadDifNodes[i], nonUniformColObjs[preColIndex[i]], nonUniformColObjs[preColIndex[i] + 1], yScale);
-            //         if (con1) {
-            //             tempNeedLoadDifNodes.splice(i, 1)
-            //             preColIndex.splice(i, 1);
-            //         }
-            //     }
-            // }
+
             needLoadDifNode = tempNeedLoadDifNodes;
+            loadedDataSize += needLoadDifNode.length*size;
             if (needLoadDifNode.length > 0 && needLoadDifNode[0].level === this.maxLevel - 1) {
                 for (let i = 0; i < needLoadDifNode.length; i++) {
                     const nodeFlag2 = currentFlagInfo[2 * needLoadDifNode[i].index + 1]
@@ -2023,16 +1980,19 @@ export default class LevelDataManager {
                 break;
             }
             let losedDataInfo = computeLosedDataRangeV1(needLoadDifNode);
+            // console.log("1");
             if (losedDataInfo.length > 0) {
+                // console.log(3);
                 await batchLoadDataForRangeLevel1MinMaxMiss(losedDataInfo, this);
             }
+            // console.log("2");
         }
 
-        console.log("The time to get all coefficients:" + (new Date().getTime() - startT));
+        // console.log("The time to get all coefficients:" + (new Date().getTime() - startT));
         for (let i = 0; i < nonUniformColObjs.length; i++) {
             nonUniformColObjs[i].checkIsMis();
         }
-
+        console.log("Loaded Data Size:", loadedDataSize);
         return nonUniformColObjs;
     }
 

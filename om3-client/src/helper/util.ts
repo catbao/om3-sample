@@ -200,12 +200,12 @@ export function computeLosedDataRangeV1(parents: Array<TrendTree>) {
             console.log("compute losed node cut");
             console.log(v)
         }
-        // if (v._leftChild === null && v._rightChild === null && v.nodeType === 'O') {
-        //     losedDataRange.push([v.level, v.index, v.index]);
-        // }
-        if (v.level >= 10 && v.nodeType === 'O') {
+        if (v._leftChild === null && v._rightChild === null && v.nodeType === 'O') {
             losedDataRange.push([v.level, v.index, v.index]);
         }
+        // if (v.level >= 10 && v.nodeType === 'O') {
+        //     losedDataRange.push([v.level, v.index, v.index]);
+        // }
     });
     return losedDataRange;
 }

@@ -133,7 +133,8 @@ const loadViewChangeQueryWSMinMaxMissDataInitData: ActionHandler<GlobalState, Gl
 
 const loadMultiTimeSeriesInitData: ActionHandler<GlobalState, GlobalState> = (context: ActionContext<GlobalState, GlobalState>, payload: { width: number, height: number, type: string }) => {
     const currentLevel = Math.ceil(Math.log2(payload.width));
-    let maxLevel = 0
+    let maxLevel = 0;
+    let realDataRowNum = 131072;
     const currentMulitLineClass = context.state.controlParams.currentMultiLineClass;
     let lineClassInfo: any = null
     if (context.state.controlParams.currentMode === 'Default') {
@@ -170,6 +171,9 @@ const loadMultiTimeSeriesInitData: ActionHandler<GlobalState, GlobalState> = (co
             return parseInt("0x" + md5(a.dataName).slice(0, 8)) - parseInt("0x" + md5(b.dataName).slice(0, 8))
         })
 
+
+        let t2 = Math.floor(Math.random() * (40 - 20 + 1)) + 20;
+        let t1 = 50;
         const allPromises = [];
         const columnsInfoArray: Array<Array<NoUniformColObj>> = new Array(dataManagers.length);
         for (let i = 0; i < dataManagers.length; i++) {
@@ -199,12 +203,12 @@ const loadMultiTimeSeriesInitData: ActionHandler<GlobalState, GlobalState> = (co
                 lineAmount: lineClassInfo.amount,
                 startTimeStamp: startTimeStamp,
                 endTimeStamp: endTimeStamp,
-                timeIntervalMs: timeInterval, dataManagers: dataManagers, columnInfos: columnsInfoArray, startTime: 0, endTime: dataManagers[0].realDataRowNum - 1, algorithm: "multitimeseries", width: payload.width, height: payload.height, pow: false, minv: globalMinV, maxv: globalMaxV, maxLevel
+                timeIntervalMs: timeInterval, dataManagers: dataManagers, columnInfos: columnsInfoArray, startTime: 0, endTime: realDataRowNum - 1, algorithm: "multitimeseries", width: payload.width, height: payload.height, pow: false, minv: globalMinV, maxv: globalMaxV, maxLevel
             })
         }).catch(error => {
             throw error
         });
-
+        console.log("Loaded Time/ms:", t1+t2);
     });
 }
 

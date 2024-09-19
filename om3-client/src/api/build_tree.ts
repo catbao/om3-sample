@@ -503,6 +503,7 @@ export async function batchLoadDataForRangeLevel1MinMaxMiss(losedRange: Array<Ar
         const newTreeNode = [];
         for (let j = losedRange[i][1]; j <= losedRange[i][2];j++) {
             if (p?.index === j && j === difVals[count].i && p.level === difVals[count].l) {
+            // if (p?.index === j) {
                 let dif = difVals[count].dif!;
                 let curNodeType: "O" | "NULL" | "LEFTNULL" | "RIGHTNULL" = 'O';
                 if (dif[1] === null && dif[2] === null) {

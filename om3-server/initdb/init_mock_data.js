@@ -17,7 +17,7 @@ const pool = new Pool({
 function x_plus_sinx() {
     const distribution = gaussian(0, 1);
     return (x) => {
-        return x / 2000 + 500 * Math.sin(x / 100000) + 50 * distribution.ppf(Math.random()) + 1000;
+        return x / 2000 + 500 * Math.sin(x / 100000) + 10 * distribution.ppf(Math.random()) + 1000;
     }
 }
 async function generateAndInsertMockData() {

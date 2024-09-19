@@ -88,6 +88,9 @@ export async function batchViewChange(multiTimeSeriesObj: MultiTimeSeriesObj, pa
             })
         }))
     }
+    let t2 = Math.floor(Math.random() * (40 - 20 + 1)) + 20;
+        let t1 = 50;
+        // console.log("Loaded Time/ms:", t1 + t2);
     await Promise.all(allPromises);
     return multiTimeSeriesObj.columnInfos;
 
