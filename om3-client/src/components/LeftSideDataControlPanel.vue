@@ -175,6 +175,7 @@
         <el-option label="*" value="*"></el-option>
         <el-option label="/" value="/"></el-option>
         <el-option label="avg" value="avg"></el-option>
+        <el-option label="hello" value="hello"></el-option>
       </el-select>
     </div>
 

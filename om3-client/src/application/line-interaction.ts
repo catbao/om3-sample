@@ -225,6 +225,26 @@ export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
                     // ctx.lineTo(nonUniformColObjs[i+1].positionInfo.startX, yScale(nonUniformColObjs[i+1].addMin));
                 }
             }
+            else if(transform_symbol == 'hello'){
+                for(let i=0; i<nonUniformColObjs.length; i++){
+                    if(nonUniformColObjs[i].addMin[0] < nonUniformColObjs[i].addMax[0]){
+                        ctx.moveTo(nonUniformColObjs[i].positionInfo.minX, yScale(nonUniformColObjs[i].addMin[1]));
+                        ctx.lineTo(nonUniformColObjs[i].positionInfo.maxX, yScale(nonUniformColObjs[i].addMax[1]));
+                        // ctx.moveTo(nonUniformColObjs[i].positionInfo.minX, yScale(i*2));
+                        // ctx.lineTo(nonUniformColObjs[i].positionInfo.maxX, yScale(i*2));
+                    }
+                    else{
+                        ctx.moveTo(nonUniformColObjs[i].positionInfo.minX, yScale(nonUniformColObjs[i].addMax[1]));
+                        ctx.lineTo(nonUniformColObjs[i].positionInfo.maxX, yScale(nonUniformColObjs[i].addMin[1]));
+                    }
+                    if (i <= nonUniformColObjs.length - 2 && nonUniformColObjs[i].endV !== undefined && nonUniformColObjs[i + 1] !== undefined) {
+                        ctx.moveTo(nonUniformColObjs[i].positionInfo.endX, yScale(nonUniformColObjs[i].endV!));
+                        ctx.lineTo(nonUniformColObjs[i + 1].positionInfo.startX, yScale(nonUniformColObjs[i + 1].startV!));
+                    }
+                    // ctx.moveTo(nonUniformColObjs[i].positionInfo.startX, yScale(nonUniformColObjs[i].addMin));
+                    // ctx.lineTo(nonUniformColObjs[i+1].positionInfo.startX, yScale(nonUniformColObjs[i+1].addMin));
+                }
+            }
             else if(transform_symbol === '-'){
                 for(let i=0; i<nonUniformColObjs.length; i++){
                     if(nonUniformColObjs[i].subMin[0] < nonUniformColObjs[i].subMax[0]){

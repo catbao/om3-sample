@@ -2245,6 +2245,53 @@ export default class LevelDataManager {
                         
                     }
                 }
+                else if(transform_symbol == 'hello'){
+                    for (let i = 0; i < needLoadDifNode.length; i++) {
+                        let maxL = 0, maxR = 0;
+                        let nodeFlag1 = 0;
+                        if(needLoadDifNode[i].index === undefined) nodeFlag1=0; 
+                        else nodeFlag1 = currentFlagInfo[2 * needLoadDifNode[i].index + 1];
+                        if(nodeFlag1 === 0){
+                            maxL += needLoadDifNode[i].yArray[1];
+                            maxR += needLoadDifNode[i].yArray[2];
+                        } 
+                        else{
+                            maxL += needLoadDifNode[i].yArray[2];
+                            maxR += needLoadDifNode[i].yArray[1];
+                        }
+                        //const nodeFlag2 = currentFlagInfo2[2 * needLoadDifNode[i].index + 1];
+                        for(let k=0; k<currentFlagInfo2.length;++k){
+                            if(currentFlagInfo2[k][needLoadDifNode[i].index * 2 + 1] === 0){
+                                maxL += needLoadDifNode2[k][i].yArray[1];
+                                maxR += needLoadDifNode2[k][i].yArray[2];
+                            }
+                            else{
+                                maxL += needLoadDifNode2[k][i].yArray[2];
+                                maxR += needLoadDifNode2[k][i].yArray[1];
+                            }
+                        }
+                        // let sumOfOtherMin = 0, sumOfOtherMax = 0;
+                        // for(let k=0;k<otherDataManager.length;++k){
+                        //     sumOfOtherMin += needLoadDifNode2[k][i].yArray[1];
+                        //     sumOfOtherMax += needLoadDifNode2[k][i].yArray[2];
+                        // }
+                        if (needLoadDifNode[i].gapFlag === 'NO') {
+                            nonUniformColObjs[preColIndex[i]].addLastVal(maxL, needLoadDifNode[i]);
+                            nonUniformColObjs[preColIndex[i]].forceMerge(maxL);
+                            if (preColIndex[i] + 1 < nonUniformColObjs.length) {
+                                nonUniformColObjs[preColIndex[i] + 1].addFirstVal(maxR, needLoadDifNode[i]);
+                                nonUniformColObjs[preColIndex[i] + 1].forceMerge(maxR);
+                            }
+                        } else {
+                            nonUniformColObjs[preColIndex[i]].addLastVal(maxL, needLoadDifNode[i]);
+                            nonUniformColObjs[preColIndex[i]].forceMerge(maxL);
+
+                            nonUniformColObjs[preColIndex[i] + 1].addFirstVal(maxR, needLoadDifNode[i]);
+                            nonUniformColObjs[preColIndex[i] + 1].forceMerge(maxR);
+                        }
+                        
+                    }
+                }
                 else if(transform_symbol === '-'){
                     for (let i = 0; i < needLoadDifNode.length; i++) {
                         let maxL = 0, maxR = 0;
@@ -2437,6 +2484,21 @@ export default class LevelDataManager {
                             }
                         }
                     }
+                    else if(transform_symbol == 'hello'){
+                        let min = 0, max = 0;
+                        for(let j=0; j<tempArray2.length; j++){
+                            min += tempArray2[j][k].yArray[1];
+                            max += tempArray2[j][k].yArray[2];
+                        }
+                        let level = tempArray[0].level;
+                        let col = Math.floor((timeRange[1] / 2**(level) * tempArray[k].index)/(timeRange[1]/width));
+                        if((tempArray[k].yArray[1] + min > nonUniformColObjs[col].addMin[1]) || (tempArray[k].yArray[2] + max < nonUniformColObjs[col].addMax[1])){
+                            tempArray.splice(k,1);
+                            for(let j=0; j<tempArray2.length; j++){
+                                tempArray2[j].splice(k,1);
+                            }
+                        }
+                    }
                     else if(transform_symbol === '-'){
                         let min = 0, max = 0;
                         for(let j=0; j<tempArray2.length; j++){
@@ -2489,6 +2551,24 @@ export default class LevelDataManager {
                     // console.log("The last level:", tempArray[0].level);
                     for(let k=0; k<tempArray.length; k++){
                         if(transform_symbol === '+'){
+                            let min = tempArray[k].yArray[1];
+                            let max = tempArray[k].yArray[2];
+                            for(let c=0; c<tempArray2.length; c++){
+                                min += tempArray2[c][k].yArray[1];
+                                max += tempArray2[c][k].yArray[2];
+                            }
+                            let level = tempArray[0].level;
+                            // console.log("level:", level);
+                            let col = Math.floor((timeRange[1] / 2**(level) * tempArray[k].index)/(timeRange[1]/width));
+                            // console.log("col:", col);
+                            if(min < nonUniformColObjs[col].addMin[1]){
+                                nonUniformColObjs[col].addMin = [tempArray[k].index, min, level, [tempArray[k]]];
+                            }
+                            if(max > nonUniformColObjs[col].addMax[1]){
+                                nonUniformColObjs[col].addMax = [tempArray[k].index, max, level, [tempArray[k]]];
+                            }
+                        }
+                        else if(transform_symbol == 'hello'){
                             let min = tempArray[k].yArray[1];
                             let max = tempArray[k].yArray[2];
                             for(let c=0; c<tempArray2.length; c++){
@@ -2572,6 +2652,10 @@ export default class LevelDataManager {
                 minValue = Math.min(minValue, nonUniformColObjs[i].addMin[1]);
                 // maxValue = 2000;
                 // minValue = 2000;
+            }
+            else if(transform_symbol == 'hello'){
+                maxValue = Math.max(maxValue, nonUniformColObjs[i].addMax[1]);
+                minValue = Math.min(minValue, nonUniformColObjs[i].addMin[1]);
             }
             else if(transform_symbol === '-'){
                 maxValue = Math.max(maxValue, nonUniformColObjs[i].subMax[1]);
