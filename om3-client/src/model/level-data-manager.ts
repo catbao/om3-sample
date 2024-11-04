@@ -2650,24 +2650,44 @@ export default class LevelDataManager {
             if(transform_symbol === '+'){
                 maxValue = Math.max(maxValue, nonUniformColObjs[i].addMax[1]);
                 minValue = Math.min(minValue, nonUniformColObjs[i].addMin[1]);
+                nonUniformColObjs[i].minVTimeRange[0] = nonUniformColObjs[i].addMin[0];
+                nonUniformColObjs[i].maxVTimeRange[0] = nonUniformColObjs[i].addMax[0];
+                nonUniformColObjs[i].vRange[0] = nonUniformColObjs[i].addMin[1];
+                nonUniformColObjs[i].vRange[1] = nonUniformColObjs[i].addMax[1];
                 // maxValue = 2000;
                 // minValue = 2000;
             }
             else if(transform_symbol == 'hello'){
                 maxValue = Math.max(maxValue, nonUniformColObjs[i].addMax[1]);
                 minValue = Math.min(minValue, nonUniformColObjs[i].addMin[1]);
+                nonUniformColObjs[i].minVTimeRange[0] = nonUniformColObjs[i].addMin[0];
+                nonUniformColObjs[i].maxVTimeRange[0] = nonUniformColObjs[i].addMax[0];
+                nonUniformColObjs[i].vRange[0] = nonUniformColObjs[i].addMin[1];
+                nonUniformColObjs[i].vRange[1] = nonUniformColObjs[i].addMax[1];
             }
             else if(transform_symbol === '-'){
                 maxValue = Math.max(maxValue, nonUniformColObjs[i].subMax[1]);
                 minValue = Math.min(minValue, nonUniformColObjs[i].subMin[1]);
+                nonUniformColObjs[i].minVTimeRange[0] = nonUniformColObjs[i].subMin[0];
+                nonUniformColObjs[i].maxVTimeRange[0] = nonUniformColObjs[i].subMax[0];
+                nonUniformColObjs[i].vRange[0] = nonUniformColObjs[i].subMin[1];
+                nonUniformColObjs[i].vRange[1] = nonUniformColObjs[i].subMax[1];
             }
             else if(transform_symbol === '*'){
                 maxValue = Math.max(maxValue, nonUniformColObjs[i].multiMax[1]);
                 minValue = Math.min(minValue, nonUniformColObjs[i].multiMin[1]);
+                nonUniformColObjs[i].minVTimeRange[0] = nonUniformColObjs[i].multiMin[0];
+                nonUniformColObjs[i].maxVTimeRange[0] = nonUniformColObjs[i].multiMax[0];
+                nonUniformColObjs[i].vRange[0] = nonUniformColObjs[i].multiMin[1];
+                nonUniformColObjs[i].vRange[1] = nonUniformColObjs[i].multiMax[1];
             }
             else if(transform_symbol === '/'){
                 maxValue = Math.max(maxValue, nonUniformColObjs[i].divMax[1]);
                 minValue = Math.min(minValue, nonUniformColObjs[i].divMin[1]);
+                nonUniformColObjs[i].minVTimeRange[0] = nonUniformColObjs[i].divMin[0];
+                nonUniformColObjs[i].maxVTimeRange[0] = nonUniformColObjs[i].divMax[0];
+                nonUniformColObjs[i].vRange[0] = nonUniformColObjs[i].divMin[1];
+                nonUniformColObjs[i].vRange[1] = nonUniformColObjs[i].divMax[1];
             }
             else if(transform_symbol === 'avg'){
                 maxValue = Math.max(maxValue, nonUniformColObjs[i].addMax[1]);
@@ -3516,16 +3536,28 @@ export default class LevelDataManager {
             if(transform_symbol === '+'){
                 maxValue = Math.max(maxValue, nonUniformColObjs[i].addMax[1]);
                 minValue = Math.min(minValue, nonUniformColObjs[i].addMin[1]);
+                nonUniformColObjs[i].minVTimeRange[0] = nonUniformColObjs[i].addMin[0];
+                nonUniformColObjs[i].maxVTimeRange[0] = nonUniformColObjs[i].addMax[0];
+                nonUniformColObjs[i].vRange[0] = nonUniformColObjs[i].addMin[1];
+                nonUniformColObjs[i].vRange[1] = nonUniformColObjs[i].addMax[1];
                 // maxValue = 2000;
                 // minValue = 2000;
             }
             else if(transform_symbol === '-'){
                 maxValue = Math.max(maxValue, nonUniformColObjs[i].subMax[1]);
                 minValue = Math.min(minValue, nonUniformColObjs[i].subMin[1]);
+                nonUniformColObjs[i].minVTimeRange[0] = nonUniformColObjs[i].subMin[0];
+                nonUniformColObjs[i].maxVTimeRange[0] = nonUniformColObjs[i].subMax[0];
+                nonUniformColObjs[i].vRange[0] = nonUniformColObjs[i].subMin[1];
+                nonUniformColObjs[i].vRange[1] = nonUniformColObjs[i].subMax[1];
             }
             else if(transform_symbol === '*'){
                 maxValue = Math.max(maxValue, nonUniformColObjs[i].multiMax[1]);
                 minValue = Math.min(minValue, nonUniformColObjs[i].multiMin[1]);
+                nonUniformColObjs[i].minVTimeRange[0] = nonUniformColObjs[i].multiMin[0];
+                nonUniformColObjs[i].maxVTimeRange[0] = nonUniformColObjs[i].multiMax[0];
+                nonUniformColObjs[i].vRange[0] = nonUniformColObjs[i].multiMin[1];
+                nonUniformColObjs[i].vRange[1] = nonUniformColObjs[i].multiMax[1];
             }
             else if(transform_symbol === '/'){
                 maxValue = Math.max(maxValue, nonUniformColObjs[i].divMax[1]);
