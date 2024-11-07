@@ -1992,7 +1992,7 @@ export default class LevelDataManager {
         for (let i = 0; i < nonUniformColObjs.length; i++) {
             nonUniformColObjs[i].checkIsMis();
         }
-        console.log("Loaded Data Size:", loadedDataSize);
+        // console.log("Loaded Data Size:", loadedDataSize);
         return nonUniformColObjs;
     }
 
