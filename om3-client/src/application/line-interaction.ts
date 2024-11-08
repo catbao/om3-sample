@@ -79,7 +79,7 @@ export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
     let showTimeXScale: any = d3.scaleTime().domain([new Date(realTimeStampRange[0]), new Date(realTimeStampRange[1])]).range([0, lineChartObj.width]);
     // let yScale: any = d3.scaleLinear().domain([lineChartObj.data.minv, lineChartObj.data.maxv]).range([lineChartObj.height, 0]);
     let yScale: any = d3.scaleLinear().domain([-1000, 1000]).range([lineChartObj.height, 0]);
-    let xReScale = d3.scaleLinear().domain([0, lineChartObj.width]).range([0, lineChartObj.dataManager.realDataRowNum - 1]);
+    // let xReScale = d3.scaleLinear().domain([0, lineChartObj.width]).range([0, lineChartObj.dataManager.realDataRowNum - 1]);
     let showXTimeScale: any = d3.scaleTime().domain([new Date(realTimeStampRange[0]), new Date(realTimeStampRange[1])]).range([0, lineChartObj.width]);
 
     let zoomAxis = d3.axisBottom(showTimeXScale);
@@ -116,9 +116,9 @@ export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
         timeBrushObj.on("start", () => {
             console.log("start")
         })
-        const tempReScale=d3.scaleLinear().domain([0, lineChartObj.dataManager.realDataRowNum - 1]).range([0,lineChartObj.width]);
+        // const tempReScale=d3.scaleLinear().domain([0, lineChartObj.dataManager.realDataRowNum - 1]).range([0,lineChartObj.width]);
 
-        timeBoxG.call(timeBrushObj).call(timeBrushObj.move, [tempReScale(lineChartObj.timeRange[0]), tempReScale(lineChartObj.timeRange[1])]);
+        // timeBoxG.call(timeBrushObj).call(timeBrushObj.move, [tempReScale(lineChartObj.timeRange[0]), tempReScale(lineChartObj.timeRange[1])]);
         ctx = canvas.getContext("2d");
     }
 
@@ -329,27 +329,27 @@ export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
             isRebacking = false;
             return
         }
-        const timeRange = [Math.floor(xReScale(selection[0])), Math.floor(xReScale(selection[1]))];
-        if (timeRange[0] < 0) {
-            timeRange[0] = 0;
-        }
-        if (timeRange[1] > nodeIndexRange[1]) {
-            timeRange[1] = nodeIndexRange[1]
-        }
+        // const timeRange = [Math.floor(xReScale(selection[0])), Math.floor(xReScale(selection[1]))];
+        // if (timeRange[0] < 0) {
+        //     timeRange[0] = 0;
+        // }
+        // if (timeRange[1] > nodeIndexRange[1]) {
+        //     timeRange[1] = nodeIndexRange[1]
+        // }
         const interInfo = new InteractionInfo("zoom")
         interInfo.setRangeW(lineChartObj.timeRange, lineChartObj.width, lineChartObj.currentLevel);
         interactionStack.push(interInfo);
         //debugger
-        lineChartObj.dataManager.viewChangeInteractionFinal1(lineChartObj.currentLevel, lineChartObj.width, [timeRange[0], timeRange[1]], null,draw).then((columnsInfos) => {
-            //lineChartObj.nonUniformColObjs = columnsInfos;
-            //const nonUniformRenderData = formatNonPowDataForViewChange(columnsInfos, lineChartObj.width, lineChartObj.maxLen, yScale);
-            lineChartObj.timeRange[0] = timeRange[0];
-            lineChartObj.timeRange[1] = timeRange[1];
-            //@ts-ignore
-            //lineChartObj.nonUniformColObjs = nonUniformRenderData;
+        // lineChartObj.dataManager.viewChangeInteractionFinal1(lineChartObj.currentLevel, lineChartObj.width, [timeRange[0], timeRange[1]], null,draw).then((columnsInfos) => {
+        //     //lineChartObj.nonUniformColObjs = columnsInfos;
+        //     //const nonUniformRenderData = formatNonPowDataForViewChange(columnsInfos, lineChartObj.width, lineChartObj.maxLen, yScale);
+        //     lineChartObj.timeRange[0] = timeRange[0];
+        //     lineChartObj.timeRange[1] = timeRange[1];
+        //     //@ts-ignore
+        //     //lineChartObj.nonUniformColObjs = nonUniformRenderData;
 
-            draw(columnsInfos);
-        })
+        //     draw(columnsInfos);
+        // })
     }
 
     async function resizeW(width: number) {
@@ -360,21 +360,23 @@ export function drawViewChangeLineChart(lineChartObj: ViewChangeLineChartObj) {
         lineChartObj.width = width;
         updateCanvasWidth();
 
-        if (currentLevel + 1 >= lineChartObj.dataManager.maxLevel - 1) {
-            return
-        }
+        // if (currentLevel + 1 >= lineChartObj.dataManager.maxLevel - 1) {
+        //     return
+        // }
         //@ts-ignore
         canvas.style.width = lineChartObj.width;
-        lineChartObj.dataManager.viewChangeInteractionFinal1(lineChartObj.currentLevel, lineChartObj.width, [lineChartObj.timeRange[0], lineChartObj.timeRange[1]], null,draw).then((columnsInfos) => {
-            //const nonUniformRenderData = formatNonPowDataForViewChange(columnsInfos, lineChartObj.width, 2 ** lineChartObj.dataManager.maxLevel, yScale);
-            //@ts-ignore
-            //lineChartObj.nonUniformColObjs = nonUniformRenderData;
-            draw(columnsInfos);
-        })
-        // let mode = "single";
-        // let type = "resize"
-        // const combinedUrl = `/line_chart/getDataForSingleLine?mode=${mode}&width=${lineChartObj.width}&table_name=${currentMulitLineClass}&startTime=${lineChartObj.timeRange[0]}&endTime=${lineChartObj.timeRange[1]}&nteract_type=${type}`;
-        // const showColumns = get(combinedUrl);
+        // lineChartObj.dataManager.viewChangeInteractionFinal1(lineChartObj.currentLevel, lineChartObj.width, [lineChartObj.timeRange[0], lineChartObj.timeRange[1]], null,draw).then((columnsInfos) => {
+        //     //const nonUniformRenderData = formatNonPowDataForViewChange(columnsInfos, lineChartObj.width, 2 ** lineChartObj.dataManager.maxLevel, yScale);
+        //     //@ts-ignore
+        //     //lineChartObj.nonUniformColObjs = nonUniformRenderData;
+        //     draw(columnsInfos);
+        // })
+
+        let mode = "single";
+        let type = "resize"
+        const combinedUrl = `/line_chart/getDataForSingleLine?mode=${mode}&width=${lineChartObj.width}&table_name=${null}&startTime=${lineChartObj.timeRange[0]}&endTime=${lineChartObj.timeRange[1]}&nteract_type=${type}`;
+        const showColumns = await get(combinedUrl);
+        draw(showColumns);
     }
     let isMouseover = false;
     let startOffsetX = 0;

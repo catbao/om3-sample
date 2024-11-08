@@ -4,10 +4,6 @@ import store, { MultiTimeSeriesObj } from "@/store";
 import * as d3 from 'd3';
 import { batchViewChange, batchGetData } from "../batch/m5batch";
 
-
-
-
-
 let nameMap: any = [
     //green
     {
@@ -159,15 +155,11 @@ let nameMap: any = [
 
 
 ]
-
-
 let namedMap = new Map<any, any>()
 for (let i = 0; i < nameMap.length; i++) {
     const key = Object.keys(nameMap[i])[0];
     namedMap.set(key, nameMap[i][key])
 }
-
-
 
 class InteractionInfo {
     type: string
@@ -194,8 +186,6 @@ class InteractionInfo {
 }
 
 let interactionStack: Array<InteractionInfo> = [];
-
-
 
 export function drawMultiTimeSeries(multiTimeSeriesObj: MultiTimeSeriesObj) {
     let realTimeStampRange: Array<number> = [multiTimeSeriesObj.startTimeStamp, multiTimeSeriesObj.endTimeStamp];
@@ -231,7 +221,6 @@ export function drawMultiTimeSeries(multiTimeSeriesObj: MultiTimeSeriesObj) {
     canvas.height = multiTimeSeriesObj.height;
     let ctx = canvas.getContext("2d");
 
-
     //const timeRangeScale = d3.scaleLinear().domain([1493733884409, 1493829248294]).range([0, 2 ** 20 - 1]);
     const indexToTimeStampScale = d3.scaleLinear().domain([nodeIndexRange[0], nodeIndexRange[1]]).range([realTimeStampRange[0], realTimeStampRange[1]]);
     const xScale: any = d3.scaleLinear().domain([0, multiTimeSeriesObj.width]).range([0, multiTimeSeriesObj.width]);
@@ -240,7 +229,6 @@ export function drawMultiTimeSeries(multiTimeSeriesObj: MultiTimeSeriesObj) {
 
     let xReScale = d3.scaleLinear().domain([0, multiTimeSeriesObj.width]).range([0, multiTimeSeriesObj.dataManagers[0].realDataRowNum - 1]);
     let showXTimeScale: any = d3.scaleTime().domain([new Date(realTimeStampRange[0]), new Date(realTimeStampRange[1])]).range([0, multiTimeSeriesObj.width]);
-
 
     let zoomAxis = d3.axisBottom(showTimeXScale);
     let yAxis = d3.axisLeft(yScale);
@@ -265,19 +253,13 @@ export function drawMultiTimeSeries(multiTimeSeriesObj: MultiTimeSeriesObj) {
     const timeBoxG = svg.append("g").attr("transform", `translate(${pading.left},${pading.top + 50 + multiTimeSeriesObj.height - 20})`).call(timeBrushObj).call(timeBrushObj.move, [0, multiTimeSeriesObj.width]);
     foreigG.call(timeBoxBrushObj)
 
-
     let zoomAxisG = svg.append("g").attr('style', 'user-select:none').attr("transform", `translate(${pading.left},${multiTimeSeriesObj.height + pading.top + 50})`).attr("class", 'x axis').call(zoomAxis)
     let xAxisG = svg.append("g").attr('style', 'user-select:none').attr("transform", `translate(${pading.left},${multiTimeSeriesObj.height + pading.top})`).attr("class", 'x axis').call(xAxis)
     let yAxisG = svg.append("g").attr('style', 'user-select:none').attr("transform", `translate(${pading.left},${pading.top})`).attr("class", 'y axis').call(yAxis);
 
 
     //@ts-ignore
-
-
-
-
     function updateCanvasWidth() {
-
         //@ts-ignore
         canvas.style.width = multiTimeSeriesObj.width;
         svg
@@ -303,10 +285,8 @@ export function drawMultiTimeSeries(multiTimeSeriesObj: MultiTimeSeriesObj) {
     }
 
     let lengendG: any = null;
-
-
+    
     function drawLengend(leftOffset: number, multiTimeSeriesObj: MultiTimeSeriesObj, colorArray: Array<string>) {
-
         if (lengendG !== null) {
             lengendG.remove()
         }
@@ -348,20 +328,15 @@ export function drawMultiTimeSeries(multiTimeSeriesObj: MultiTimeSeriesObj) {
 
                     showNum++;
                 }
-
             }
         }
-
     }
 
 
     function draw() {
         const colorArray1 = ["#b3de69", "#fdb462", "#80b1d3", "#fb8072", "#bebada", "#ffffb3", "#8dd3c7", "#1f77b4", "#aec7e8", "#ff7f0e", "#ffbb78", "#2ca02c", "#98df8a", "#d62728", "#ff9896", "#9467bd", "#c5b0d5", "#8c564b", "#c49c94", "#e377c2", "#f7b6d2", "#7f7f7f", "#c7c7c7", "#bcbd22", "#dbdb8d", "#17becf", "#9edae5", "#393b79", "#5254a3", "#6b6ecf", "#9c9ede", "#637939", "#8ca252", "#b5cf6b", "#cedb9c", "#8c6d31", "#bd9e39", "#e7ba52", "#843c39", "#ad494a", "#d6616b", "#e7969c", "#7b4173", "#a55194", "#ce6dbd", "#de9ed6"];
-
         drawLengend(multiTimeSeriesObj.width + pading.left + 10, multiTimeSeriesObj, colorArray1)
         canvas.width = multiTimeSeriesObj.width;
-        let t2 = Math.floor(Math.random() * (40 - 20 + 1)) + 20;
-        let t1 = 30;
         const curMinMax = computeMinMax(multiTimeSeriesObj);
         // yScale = d3.scaleLinear().domain([curMinMax.min, curMinMax.max]).range([multiTimeSeriesObj.height, 0]);
         yScale = d3.scaleLinear().domain([-10000,10000]).range([multiTimeSeriesObj.height, 0]);
@@ -377,17 +352,13 @@ export function drawMultiTimeSeries(multiTimeSeriesObj: MultiTimeSeriesObj) {
         }
         yAxisG = svg.append("g").attr('style', 'user-select:none').attr("transform", `translate(${pading.left},${pading.top})`).attr("class", 'y axis').call(yAxis);
 
-
-
         showXTimeScale = d3.scaleTime().domain([new Date(Math.floor(indexToTimeStampScale(multiTimeSeriesObj.timeRange[0]))), new Date(Math.floor(indexToTimeStampScale(multiTimeSeriesObj.timeRange[1])))]).range([0, multiTimeSeriesObj.width]);
         xAxis = d3.axisBottom(showXTimeScale);
         if (xAxisG !== null && xAxisG !== undefined) {
             xAxisG.remove();
         }
         xAxisG = svg.append("g").attr('style', 'user-select:none').attr("transform", `translate(${pading.left},${multiTimeSeriesObj.height + pading.top})`).attr("class", 'x axis').call(xAxis)
-
         
-        console.log("Loaded Time/ms:", t1+t2);
         const columnInfos = multiTimeSeriesObj.columnInfos;
         ctx?.clearRect(0, 0, multiTimeSeriesObj.width, multiTimeSeriesObj.height);
         for (let i = 0; i < columnInfos.length; i++) {
@@ -476,23 +447,15 @@ export function drawMultiTimeSeries(multiTimeSeriesObj: MultiTimeSeriesObj) {
         //@ts-ignore
         canvas.style.width = multiTimeSeriesObj.width
         batchGetData(multiTimeSeriesObj.dataManagers, multiTimeSeriesObj.currentLevel, 0, nodeIndexRange[1], multiTimeSeriesObj.maxLevel, width, { inter: "resize", noRet: true }).then(res => {
-     
             batchViewChange(multiTimeSeriesObj, { inter: "resize" }).then((allColumnInfos) => {
                 multiTimeSeriesObj.pow = false;
                 multiTimeSeriesObj.columnInfos = allColumnInfos;
-
-
-
                 draw();
             })
         })
-
-
-
     }
 
     function zoomIn(timeRange: Array<number>) {
-
         //timeboxStack = [];
         const currentLevel = multiTimeSeriesObj.currentLevel;
         multiTimeSeriesObj.currentLevel = 10;//currentLevel + 1
@@ -503,19 +466,14 @@ export function drawMultiTimeSeries(multiTimeSeriesObj: MultiTimeSeriesObj) {
             return
         }
 
-
         const needLoadLevel = 2 ** Math.ceil(Math.log2(width))
         batchGetData(multiTimeSeriesObj.dataManagers, 10, 0, 2 ** 10 - 1, multiTimeSeriesObj.maxLevel, width, { inter: "zoom_in", noRet: true }).then(res => {
-
             batchViewChange(multiTimeSeriesObj, { inter: "zoom_in" }).then((allColumnInfos) => {
                 multiTimeSeriesObj.pow = false;
                 multiTimeSeriesObj.columnInfos = allColumnInfos;
                 draw();
             })
         });
-
-
-
     }
 
 
@@ -546,10 +504,6 @@ export function drawMultiTimeSeries(multiTimeSeriesObj: MultiTimeSeriesObj) {
         interactionStack.push(interInfo);
         zoomIn([timeRange[0], timeRange[1]])
     }
-
-
-
-
 
     let timeboxStack: Array<Array<boolean>> = [];
 

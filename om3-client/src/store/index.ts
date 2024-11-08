@@ -250,11 +250,13 @@ export interface ViewChangeLineChartObj {
   x: number;
   y: number;
   timeRange: [number, number];
-  algorithm: string;
-  root: TrendTree;
-  data: { powRenderData: Array<any>, noPowRenderData: Array<any>, maxv: number, minv: number };
-  params: [number, number];
-  dataManager: LevelDataManager;
+  // algorithm: string;
+  // root: TrendTree;
+  // data: { powRenderData: Array<any>, noPowRenderData: Array<any>, maxv: number, minv: number };
+  minV: number;
+  maxV: number;
+  // params: [number, number];
+  // dataManager: LevelDataManager;
   historyQueryStack?: Array<Array<number>>;
   currentLevel: number;
   nonUniformColObjs?: Array<NoUniformColObj>
