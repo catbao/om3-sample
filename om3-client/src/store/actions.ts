@@ -194,7 +194,7 @@ const computeLineTransform: ActionHandler<GlobalState, GlobalState> = (context: 
 
     maxLevel = lineClassInfo['level'];
     
-    let type = 'only_show';
+    let type = '';
     experiment = 'case1';
     let parallel = 0;
     let startTime = 0;

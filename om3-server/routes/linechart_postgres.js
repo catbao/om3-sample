@@ -540,44 +540,6 @@ function computeM4TimeSE(width,timeRange){
     return res
 }
 
-async function start(){
-    const args = process.argv.slice();
-    console.log(args);
-    let table_name1=args[2]
-    let table_name_others=args[3]
-    let symble = args[4]
-    let mode = args[5] //multi or single
-    let width= Number(args[6])
-    let height = Number(args[7])
-    
-    let startTime = Number(args[8])
-    let endTime = Number(args[9])
-    let interact_type = args[10]
-
-    let experiment = args[11]
-    let parallel = Number(args[12])
-    let errorBound = Number(args[13])
-
-    console.log(startTime,endTime,parallel,errorBound)
-
-    switch(experiment){
-        case 'om3':
-            await om3(table_name1,table_name_others,symble,'',width,height,mode,parallel,errorBound,startTime,endTime, interact_type)
-            break; 
-        case 'case1':
-            await Case1(table_name1,table_name_others,symble,'',width,height,mode,parallel,errorBound,startTime,endTime, interact_type)
-            ;break;
-        case 'case2':
-            await Case2(table_name1,table_name_others,symble,'',width,height,mode,parallel,errorBound,startTime,endTime, interact_type)
-            ;break;
-        case 'case3':
-            await Case3(table_name1,table_name_others,symble,'',width,height,mode,parallel,errorBound,startTime,endTime, interact_type)
-            ;break;
-        case 'test':
-            await test();break
-    }
-}
-
 function generateM4(result, width, startTime, endTime){
     let res = computeM4TimeSE(width, [startTime, endTime]);
     //console.log(res)
