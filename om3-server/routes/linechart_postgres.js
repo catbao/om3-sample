@@ -32,8 +32,6 @@ function init() {
     //console.log(stockTableMap);
 }
 
-
-
 const pool = getPool()
 const levelMap = {
     "1t": 10,
@@ -61,7 +59,39 @@ const levelMap = {
 }
 //const customDBPoolMap() = new Map();
 
+class M4 {
+    constructor(){
+        this.max = -Infinity
+        this.min = Infinity
+        this.start_time = 0
+        this.end_time = 0
+        this.st_v = 0
+        this.et_v = 0
 
+        //一个M4代表一个像素列
+        this.innerNodes = []    //像素列内的node
+        this.stNodeIndex = null   //像素列左边界的node index
+        this.etNodeIndex = null   //像素列内右边界node index
+
+        //跟计算有关的
+        this.alternativeNodesMax = []
+        this.alternativeNodesMin = [];
+        this.currentComputingNodeMax = null
+        this.currentComputingNodeMin = null
+        this.isCompletedMax = false;
+        this.isCompletedMin = false;
+
+        //跟计算均值有关
+        this.stInterval = null
+        this.etInterval = null
+        this.minDLL = null
+        this.maxDLL = null
+        this.stNodes = []
+        this.etNodes = []
+
+    }
+    
+}
 
 let allTimes = [];
 
@@ -73,8 +103,14 @@ router.post("/batchLevelDataProgressiveWaveletMinMaxMiss", batchLevelDataProgres
 router.get('/init_multi_timeseries', init_multi_timeseries);
 router.get('/init_transform_timeseries', init_transform_timeseries);
 router.get("/getAllFlags", getAllFlags);
-
 router.get('/getAllTables', getAllTables);
+
+router.get('/getDataForSingleLine', getDataForSingleLine);
+router.get('/testGetDataForSingleLine', testGetDataForSingleLine);
+router.get('/getDataForMultiLines', getDataForMultiLines);
+router.get('/testGetDataForMultiLines', testGetDataForMultiLines);
+router.get('/case1', Case1);
+router.get('/om3', om3);
 
 router.get('/getAllMultiLineClassInfo', getAllMulitLineClassInfo);
 router.get('/getAllFlagNames', getAllFlagNames);
@@ -90,11 +126,750 @@ router.get('/getAllCustomTableAndInfo', getAllCustomTableAndInfo);
 router.get('/getAllDefaultTableAndInfo', getAllDefaultTableAndInfo);
 router.get('/performTransformForMultiLine', performTransformForMultiLine);
 router.get("/getAllMultiLineClassAndLinesInfo", getAllMultiLineClassAndLinesInfo);
-router.get("/onlyChild", onlyChild);
-router.get("/getChildTree", getChildTree);
 //router.options('/batchLevelDataProgressiveWavelet',batchLevelDataProgressiveWaveletPostHandler)
 
+class FunInfo{
+    constructor(funName, extremes){
+        this.funName = funName;
+        this.intervalRange = 0
+        this.extremes = []
+        this.mode = 'multi'
+        if(extremes != null){
+            this.extremes.push(...extremes)
+        }
+    };
+    
+    compute(x){
+        let y = x + 1
+        return y
+    }
+    //根据funName函数体，依次计算Xs的函数值，返回Ys数组
+    computes(Xs){
+        let Ys=[]
+        for(let i=0;i<Xs.length;i++)
+        {
+            //todo
+            //Ys.push(sin()+cos()+....)
+            let x=Xs[i]
+            let y=this.compute(x)
+            Ys.push(y)
+        }
+        return Ys
+    }
+}
 
+async function getDataForSingleLine(req, ress){
+    let table1 = "raw_data_old.mock_guassian_sin1_6ht";
+    let table2 = "raw_data_old.mock_guassian_sin2_6ht";
+    let symbol = '+';
+    let width = 600;
+
+    let sql = `SELECT ${table1}.t AS t, ${table1}.v AS v FROM ${table1} order by t asc `
+    let result1 = await pool.query(sql);
+    sql = `SELECT ${table2}.t AS t, ${table2}.v AS v FROM ${table2} order by t asc`
+    let result2 = await pool.query(sql);
+
+
+    // todo 两表相加，并输出width的M4数组
+    let t3 = new Array(result2.rows.length)
+
+    switch(symbol){
+        case '+':
+            for(let i=0;i<result1.rows.length;i++){
+                let t=result1.rows[i].t
+                let v = (result1.rows[i].v + result2.rows[i].v)
+
+                //console.log(result1.rows[i].v , result2.rows[i].v,result1.rows[i].v + result2.rows[i].v)
+                
+                let pair = { t: t, v: v };
+                t3[i] = pair
+            };
+            break;
+        case '-':
+            for(let i=0;i<result1.rows.length;i++){
+                let t=result1.rows[i].t
+                let v = (result1.rows[i].v - result2.rows[i].v)
+                
+                let pair = { t: t, v: v };
+                t3[i] = pair
+            };
+            break;
+        case '*':
+            for(let i=0;i<result1.rows.length;i++){
+                let t=result1.rows[i].t
+                let v = (result1.rows[i].v * result2.rows[i].v)
+                
+                let pair = { t: t, v: v };
+                t3[i] = pair
+            }
+            break;
+        case '/':
+            for(let i=0;i<result1.rows.length;i++){
+                let t=result1.rows[i].t
+                let v = (result1.rows[i].v / result2.rows[i].v)
+                
+                let pair = { t: t, v: v };
+                t3[i] = pair
+            }
+            break;
+    }
+
+
+    let num = t3.length
+
+
+    let PARTITION = Math.floor(num/width)
+
+    let res = computeM4TimeSE(width, [0, num - 1])
+    // let min_arr = []
+    // let max_arr = []
+    res.forEach(e =>{
+        let min = Infinity;
+        let max = -Infinity;
+        for(let i = e.start_time; i <= e.end_time; i++){
+
+            if(t3[i].v < min){
+                min = t3[i].v
+            }
+
+            if(t3[i].v > max){
+                max = t3[i].v
+            }
+        }
+        e.min = min
+        e.max = max
+        e.st_v = t3[e.start_time].v
+        e.et_v = t3[e.end_time].v
+    })
+    ress.send(res);
+}
+
+async function testGetDataForSingleLine(req, ress){
+    let table1 = "raw_data_old.mock_guassian_sin1_6ht";
+    let table2 = "raw_data_old.mock_guassian_sin2_6ht";
+    let symbol = '+';
+    let width = 800;
+
+    let sql = `SELECT ${table1}.t AS t, ${table1}.v AS v FROM ${table1} order by t asc `
+    let result1 = await pool.query(sql);
+    sql = `SELECT ${table2}.t AS t, ${table2}.v AS v FROM ${table2} order by t asc`
+    let result2 = await pool.query(sql);
+
+
+    // todo 两表相加，并输出width的M4数组
+    let t3 = new Array(result2.rows.length)
+
+    switch(symbol){
+        case '+':
+            for(let i=0;i<result1.rows.length;i++){
+                let t=result1.rows[i].t
+                let v = (result1.rows[i].v + result2.rows[i].v)
+
+                //console.log(result1.rows[i].v , result2.rows[i].v,result1.rows[i].v + result2.rows[i].v)
+                
+                let pair = { t: t, v: v };
+                t3[i] = pair
+            };
+            break;
+        case '-':
+            for(let i=0;i<result1.rows.length;i++){
+                let t=result1.rows[i].t
+                let v = (result1.rows[i].v - result2.rows[i].v)
+                
+                let pair = { t: t, v: v };
+                t3[i] = pair
+            };
+            break;
+        case '*':
+            for(let i=0;i<result1.rows.length;i++){
+                let t=result1.rows[i].t
+                let v = (result1.rows[i].v * result2.rows[i].v)
+                
+                let pair = { t: t, v: v };
+                t3[i] = pair
+            }
+            break;
+        case '/':
+            for(let i=0;i<result1.rows.length;i++){
+                let t=result1.rows[i].t
+                let v = (result1.rows[i].v / result2.rows[i].v)
+                
+                let pair = { t: t, v: v };
+                t3[i] = pair
+            }
+            break;
+    }
+
+
+    let num = t3.length
+
+
+    let PARTITION = Math.floor(num/width)
+
+    let res = computeM4TimeSE(width, [0, num - 1])
+    // let min_arr = []
+    // let max_arr = []
+    res.forEach(e =>{
+        let min = Infinity;
+        let max = -Infinity;
+        for(let i = e.start_time; i <= e.end_time; i++){
+
+            if(t3[i].v < min){
+                min = t3[i].v
+            }
+
+            if(t3[i].v > max){
+                max = t3[i].v
+            }
+        }
+        e.min = min
+        e.max = max
+        e.st_v = t3[e.start_time].v
+        e.et_v = t3[e.end_time].v
+    })
+    ress.send(res);
+}
+
+async function getDataForMultiLines(req, ress){
+    let table1 = "raw_data_old.mock_guassian_sin1_6ht";
+    let table2 = "raw_data_old.mock_guassian_sin2_6ht";
+    let symbol = '+';
+    let width = 600;
+
+    let sql = `SELECT ${table1}.t AS t, ${table1}.v AS v FROM ${table1} order by t asc `
+    let result1 = await pool.query(sql);
+    sql = `SELECT ${table2}.t AS t, ${table2}.v AS v FROM ${table2} order by t asc`
+    let result2 = await pool.query(sql);
+
+
+    // todo 两表相加，并输出width的M4数组
+    let t3 = new Array(result2.rows.length)
+
+    switch(symbol){
+        case '+':
+            for(let i=0;i<result1.rows.length;i++){
+                let t=result1.rows[i].t
+                let v = (result1.rows[i].v + result2.rows[i].v)
+
+                //console.log(result1.rows[i].v , result2.rows[i].v,result1.rows[i].v + result2.rows[i].v)
+                
+                let pair = { t: t, v: v };
+                t3[i] = pair
+            };
+            break;
+        case '-':
+            for(let i=0;i<result1.rows.length;i++){
+                let t=result1.rows[i].t
+                let v = (result1.rows[i].v - result2.rows[i].v)
+                
+                let pair = { t: t, v: v };
+                t3[i] = pair
+            };
+            break;
+        case '*':
+            for(let i=0;i<result1.rows.length;i++){
+                let t=result1.rows[i].t
+                let v = (result1.rows[i].v * result2.rows[i].v)
+                
+                let pair = { t: t, v: v };
+                t3[i] = pair
+            }
+            break;
+        case '/':
+            for(let i=0;i<result1.rows.length;i++){
+                let t=result1.rows[i].t
+                let v = (result1.rows[i].v / result2.rows[i].v)
+                
+                let pair = { t: t, v: v };
+                t3[i] = pair
+            }
+            break;
+    }
+
+
+    let num = t3.length
+
+
+    let PARTITION = Math.floor(num/width)
+
+    let res = computeM4TimeSE(width, [0, num - 1])
+    // let min_arr = []
+    // let max_arr = []
+    res.forEach(e =>{
+        let min = Infinity;
+        let max = -Infinity;
+        for(let i = e.start_time; i <= e.end_time; i++){
+
+            if(t3[i].v < min){
+                min = t3[i].v
+            }
+
+            if(t3[i].v > max){
+                max = t3[i].v
+            }
+        }
+        e.min = min
+        e.max = max
+        e.st_v = t3[e.start_time].v
+        e.et_v = t3[e.end_time].v
+    })
+    let res2 = [res, res];
+    ress.send(res2);
+}
+
+async function testGetDataForMultiLines(req, ress){
+    let table1 = "raw_data_old.mock_guassian_sin1_6ht";
+    let table2 = "raw_data_old.mock_guassian_sin1_6ht";
+    let symbol = '+';
+    let width = 600;
+
+    let sql = `SELECT ${table1}.t AS t, ${table1}.v AS v FROM ${table1} order by t asc `
+    let result1 = await pool.query(sql);
+    sql = `SELECT ${table2}.t AS t, ${table2}.v AS v FROM ${table2} order by t asc`
+    let result2 = await pool.query(sql);
+
+
+    // todo 两表相加，并输出width的M4数组
+    let t3 = new Array(result2.rows.length)
+
+    switch(symbol){
+        case '+':
+            for(let i=0;i<result1.rows.length;i++){
+                let t=result1.rows[i].t
+                let v = (result1.rows[i].v + result2.rows[i].v)
+
+                //console.log(result1.rows[i].v , result2.rows[i].v,result1.rows[i].v + result2.rows[i].v)
+                
+                let pair = { t: t, v: v };
+                t3[i] = pair
+            };
+            break;
+        case '-':
+            for(let i=0;i<result1.rows.length;i++){
+                let t=result1.rows[i].t
+                let v = (result1.rows[i].v - result2.rows[i].v)
+                
+                let pair = { t: t, v: v };
+                t3[i] = pair
+            };
+            break;
+        case '*':
+            for(let i=0;i<result1.rows.length;i++){
+                let t=result1.rows[i].t
+                let v = (result1.rows[i].v * result2.rows[i].v)
+                
+                let pair = { t: t, v: v };
+                t3[i] = pair
+            }
+            break;
+        case '/':
+            for(let i=0;i<result1.rows.length;i++){
+                let t=result1.rows[i].t
+                let v = (result1.rows[i].v / result2.rows[i].v)
+                
+                let pair = { t: t, v: v };
+                t3[i] = pair
+            }
+            break;
+    }
+
+
+    let num = t3.length
+
+
+    let PARTITION = Math.floor(num/width)
+
+    let res = computeM4TimeSE(width, [0, num - 1])
+    // let min_arr = []
+    // let max_arr = []
+    res.forEach(e =>{
+        let min = Infinity;
+        let max = -Infinity;
+        for(let i = e.start_time; i <= e.end_time; i++){
+
+            if(t3[i].v < min){
+                min = t3[i].v
+            }
+
+            if(t3[i].v > max){
+                max = t3[i].v
+            }
+        }
+        e.min = min
+        e.max = max
+        e.st_v = t3[e.start_time].v
+        e.et_v = t3[e.end_time].v
+    })
+    let res2 = [res, res];
+    ress.send(res2);
+}
+
+function computeM4TimeSE(width,timeRange){
+    const res = []
+    for(i = 0;i<width;i ++){
+        res.push(new M4())
+    }
+
+    let globalStart = timeRange[0]
+    let globalEnd = timeRange[1]
+
+    //timeRangeLength个点，分给width个桶
+    const timeRangeLength = globalEnd - globalStart + 1
+
+    // 平均每个桶，分的点数
+    const everyNum = timeRangeLength/width
+
+    // 第一个M4，以globalStart开始
+    res[0].start_time = globalStart;
+    //res[0].end_time = Math.ceil(everyNum) - 1
+
+
+    for(i = 1;i<width;i ++){
+
+        // 当前M4开始，是上一个M4开始+平均每个桶分的点数，向上取整
+        res[i].start_time=Math.ceil( i * everyNum)
+
+        // 上一个M4结尾，是下一个M4开始-1
+        res[i-1].end_time = res[i].start_time - 1
+
+    }
+
+    //最后一个M4，以globalEnd结尾
+    res[width-1].end_time=globalEnd
+
+    return res
+}
+
+async function start(){
+    const args = process.argv.slice();
+    console.log(args);
+    let table_name1=args[2]
+    let table_name_others=args[3]
+    let symble = args[4]
+    let mode = args[5] //multi or single
+    let width= Number(args[6])
+    let height = Number(args[7])
+    
+    let startTime = Number(args[8])
+    let endTime = Number(args[9])
+    let interact_type = args[10]
+
+    let experiment = args[11]
+    let parallel = Number(args[12])
+    let errorBound = Number(args[13])
+
+    console.log(startTime,endTime,parallel,errorBound)
+
+    switch(experiment){
+        case 'om3':
+            await om3(table_name1,table_name_others,symble,'',width,height,mode,parallel,errorBound,startTime,endTime, interact_type)
+            break; 
+        case 'case1':
+            await Case1(table_name1,table_name_others,symble,'',width,height,mode,parallel,errorBound,startTime,endTime, interact_type)
+            ;break;
+        case 'case2':
+            await Case2(table_name1,table_name_others,symble,'',width,height,mode,parallel,errorBound,startTime,endTime, interact_type)
+            ;break;
+        case 'case3':
+            await Case3(table_name1,table_name_others,symble,'',width,height,mode,parallel,errorBound,startTime,endTime, interact_type)
+            ;break;
+        case 'test':
+            await test();break
+    }
+}
+
+function generateM4(result, width, startTime, endTime){
+    let res = computeM4TimeSE(width, [startTime, endTime]);
+    //console.log(res)
+    let MIN = Infinity;
+    let MAX = -Infinity;
+    let difference = startTime;
+    res.forEach(e =>{
+        let min = Infinity;
+        let max = -Infinity;
+        for(let i = e.start_time; i <= e.end_time; i++){
+            if(result[i - difference].v < min){
+                min = result[i - difference].v
+            }
+
+            if(result[i - difference].v > max){
+                max = result[i - difference].v
+            }
+        }
+        e.min = min
+        e.max = max
+        e.st_v = result[e.start_time - difference].v
+        e.et_v = result[e.end_time - difference].v
+        // 更新MIN,MAX
+        if (MIN > min) { MIN = min; }
+        if (MAX < max) { MAX = max; }       
+    })
+
+    return {
+        M4_array: res,
+        min_value: MIN,
+        max_value: MAX
+    }
+}
+
+async function readDataFromDB(pool, table_name, startTime, endTime) {
+    let sql = `select t, v from ${table_name} `;
+    // 如果 endTime < 0, 取全量数据
+    if (endTime >= 0){
+        sql = sql.concat(`where t between ${startTime} and ${endTime} `);
+    }
+    sql = sql.concat('order by t asc')
+    console.log(`sql: ${sql}`);
+
+    let result = await pool.query(sql);
+    return result.rows;
+}
+
+function compute(computeData, funInfo, interact_type){
+    if(interact_type == 'only_show'){
+        return computeData[0]
+    }
+    let r = 0;
+    switch (funInfo.funName) {
+        case '+':
+            for (let i = 0; i < computeData.length; i++) {
+                r += computeData[i]
+            }
+        break;
+
+        case '-':
+            r = computeData[0];
+            for (let i = 1; i < computeData.length; i++) {
+                r -= computeData[i]
+            }
+        break;
+
+        case '*':
+            r = computeData[0];
+            for (let i = 1; i < computeData.length; i++) {
+                r = r * computeData[i]
+            }
+        break;
+
+        case '/':
+            r = computeData[0];
+            for (let i = 1; i < computeData.length; i++) {
+                r /= computeData[i]
+            }
+        break;
+
+        case 'x^y':
+            r = computeData[0] ** computeData[1];
+        break;
+
+        case '(1-x^3)(1-y^3)^2':
+            r = ((1 - computeData[0] ** 3) * (1 - computeData[1] ** 3)) ** 2;
+        break;
+
+        case 'mean':
+            for (let i = 0; i < computeData.length; i++) {
+                r += computeData[i]
+            }
+            r /= computeData.length;
+        break;
+
+        case 'variance':
+            let mean = 0;
+            for (let i = 0; i < computeData.length; i++) {
+                mean += computeData[i]
+            }
+            mean /= computeData.length;
+
+            for (let i = 0; i < computeData.length; i++) {
+                r += (computeData[i] - mean) ** 2
+            }
+            r /= computeData.length;
+        break;
+
+        case 'sin':
+            r = Math.sin(computeData[0]);
+        break;
+    }
+    return r;
+}
+
+function removeEndChar(str, charToRemove) {
+    const regex = new RegExp(charToRemove + '$'); // 创建正则表达式，匹配结尾的字符
+    return str.replace(regex, ''); // 替换为空字符串
+  }
+
+//两表分别从数据库取出来，程序做加法，程序做M4
+async function Case1(req, res){
+    console.log('Case1')
+    let table_name1=req.query['table_name']
+    let table_name_others=req.query['table_name_others']
+    let symble = req.query['symbol']
+    let mode = req.query['mode'] //compute or show/multi
+    let width= req.query['width']
+    let height = req.query['height']
+
+    let startTime = req.query['startTime']
+    let endTime = req.query['endTime']
+    let interact_type = req.query['interact_type']
+
+    let experiment = req.query['experiment']
+    let parallel = req.query['parallel']
+    let errorBound = req.query['errorBound']
+    let params = ''
+    console.log(table_name1,table_name_others,symble,params,width,height,mode,parallel,errorBound,startTime,endTime, interact_type)
+    //对单点函数，extremes是极值点；对均值，extremes是区间长度；对加权均值，extremes是加权数组， 如[1,-1,3,1,-1]
+    //  symble = symble.split(';')
+    //  if (symble.length > 1) {
+    //      params = symble[1].split(',')
+    //  } else {
+    //      params = []
+    //  }
+    let funInfo = new FunInfo(symble, params)
+
+    let tables = []
+    let results = []
+    tables.push(table_name1)
+    if (table_name_others.length > 0) {
+        tables.push(table_name_others)
+    }
+
+    for(let i=0;i<tables.length;i++){
+        // if(tables[i].endsWith('_om3')){
+        //     tables[i] = removeEndChar(tables[i], '_om3');
+        // }
+        tables[i] = tables[i]
+            .replace(/^om3_multi\./, 'om3_raw_data.')
+            .replace(/mock12ht_mock/, 'mock')
+            .replace(/_om3_test$/, '');
+    }
+    console.log(tables)
+
+    let M4_arrays = [];
+    let min_values = [];
+    let max_values = [];
+
+    let dataLength = 0
+
+    for(let i=0;i<tables.length;i++){
+        let result = await readDataFromDB(pool, tables[i], startTime, endTime);
+        startTime = result[0].t;
+        endTime = result[result.length - 1].t;
+        dataLength = result.length
+        results.push(result)
+    }
+
+    if(mode == 'show'){
+        for(let i=0;i<results.length;i++){
+            let result =results[i]
+            let {M4_array: M4_array, min_value: min_value, max_value: max_value} = generateM4(result, width, startTime, endTime);
+            M4_arrays.push(M4_array);
+            min_values.push(min_value);
+            max_values.push(max_value);
+            // outputM4(M4_array)
+        }
+
+        res.send({
+            M4_array: M4_arrays,
+            min_value: min_values,
+            max_value: max_values
+        })
+    }
+
+    let result = []
+    for(let i=0;i<dataLength;i++){
+        let computeData = []
+        for(let j=0;j<results.length;j++){
+            computeData.push(results[j][i].v)
+        }
+        let v = compute(computeData, funInfo, interact_type)
+        let pair = { t: results[0][i].t, v: v };
+        result.push(pair)
+    }
+
+    let {M4_array: M4_array, min_value: min_value, max_value: max_value} = generateM4(result, width, startTime, endTime);
+
+    M4_arrays.push(M4_array);
+    min_values.push(min_value);
+    max_values.push(max_value);
+
+    // outputM4(M4_array)
+
+    res.send({
+        M4_array: M4_arrays,
+        min_value: min_values,
+        max_value: max_values
+    })
+}
+
+async function om3(req, res){
+    let table_name1=req.query['table_name']
+    let table_name_others=req.query['table_name_others']
+    let symble = req.query['symbol']
+    let mode = req.query['mode'] //multi or single
+    let width= req.query['width']
+    let height = req.query['height']
+
+    let startTime = req.query['startTime']
+    let endTime = req.query['endTime']
+    let interact_type = req.query['interact_type']
+
+    let experiment = req.query['experiment']
+    let parallel = req.query['parallel']
+    let errorBound = req.query['errorBound']
+    let params = ''
+
+    let tables = []
+    tables.push(table_name1)
+    if(table_name_others.length > 0){
+        tables.push(table_name_others)
+    }
+
+    //对单点函数，extremes是极值点；对均值，extremes是区间长度；对加权均值，extremes是加权数组， 如[1,-1,3,1,-1]
+    symble = symble.split(';')
+    if(symble.length > 0){
+        params = symble[1].split(',')
+    }else{
+        params = []
+    }
+
+    let funInfo = new  FunInfo(symble[0],params)
+    if(funInfo.funName == 'sin' || funInfo.funName == 'Box-Cox'){
+        funInfo.mode = 'single'
+    } else {
+        funInfo.mode = 'multi'
+    }
+    
+    if(funInfo.funName == 'avg' && funInfo.mode == 'single'){
+        funInfo.intervalRange = funInfo.extremes[0]
+        
+    }else if(funInfo.funName == 'avg_w' && funInfo.mode == 'single'){
+        funInfo.intervalRange = funInfo.extremes.length
+    }
+
+    //let currentPool = pool
+    //let M4_array = multi_compute(table1, table2, symbol, width)
+    let screen_m4 = await computeMultyOrSingle(tables, funInfo, width,height, mode, symble, parallel, errorBound,startTime,endTime)
+    //let M4_array = await computeMultyOrSingle([table1], funInfo, width, 'single', symbol, parallel)
+
+    // outputM4(screen_m4.M4_array)
+
+    //向客户端发送M4_array结果
+    //send(M4_array)
+
+    let M4_arrays = [];
+    let min_values = [];
+    let max_values = [];
+
+    M4_arrays.push(screen_m4.M4_array);
+    min_values.push(screen_m4.exactMax);
+    max_values.push(screen_m4.exactMin);
+
+    res.send({
+        M4_array: M4_arrays,
+        min_value: min_values,
+        max_value: max_values
+    })
+}
 
 let queryTime = [];
 function m4BenchmarkHandler(req, res) {
@@ -164,7 +939,6 @@ function m4BenchmarkHandler(req, res) {
     });
 }
 
-
 function initWaveletBenchMinMaxMissHandler(req, res) {
     res.setHeader("Access-Control-Allow-Origin", "*");
 
@@ -225,7 +999,6 @@ function initWaveletBenchMinMaxMissHandler(req, res) {
     }
 
 }
-
 
 function batchLevelDataProgressiveWaveletMinMaxMissPostHandler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -308,12 +1081,9 @@ function batchLevelDataProgressiveWaveletMinMaxMissPostHandler(req, res) {
     });
 }
 
-
 let allWaveletTables = []
 function getAllTables(req, res) {
     res.setHeader("Access-Control-Allow-Origin", "*");
-
-
     const sqlStr = `select table_schema||'.'||table_name as table_fullname from information_schema."tables" where table_type = 'BASE TABLE' and table_schema not in ('pg_catalog', 'information_schema');`
     pool.query(sqlStr, (err, result) => {
         if (err) {
@@ -335,7 +1105,6 @@ function getAllTables(req, res) {
 let allTables = [];
 let lineType = ''
 let maxLevel = 20;
-
 
 let allMultiSeriesTables = [];
 let multiSeriesClass = 'stock'
@@ -517,166 +1286,6 @@ function init_transform_timeseries(req, res){
     Promise.all(allPromises).then(() => {
         res.send(retureRes);
     });
-}
-
-function getChildTree(req, res) {
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    const query = req.query;
-    let level = parseInt(query['level']);
-    let index = parseInt(query['index']);
-    // const p2 = query['p2'];
-    // let pArray = [];
-    // pArray.push(p);
-    // for(let i =0;i<p2.length;i++){
-    //     pArray.push(p2[i]);
-    // }
-    // console.log("pArray:", pArray);
-    const line1 = query['dataset1'];
-    let line2 = query['dataset2'];
-    console.log("line2:",line2);
-    line2 = line2.split(",");
-    console.log("split_line2:",line2);
-    const allMultiSeriesTables = [];
-    allMultiSeriesTables.push(line1);
-    for(let i=0;i<line2.length;++i){
-        allMultiSeriesTables.push(line2[i]);
-    }
-    console.log("getChildTree:allMultiSeriesTables:", allMultiSeriesTables);
-
-    const retureRes = [];
-    const userCookie = req.headers['authorization'];
-    let currentPool = pool
-    if (query.mode === 'Custom') {
-        if (userCookie === '' || userCookie === null || userCookie === undefined) {
-            res.send({ code: 400, msg: "cookie not found", data: { result: "fail" } })
-            return
-        }
-        if (!customDBPoolMap().has(userCookie)) {
-            res.send({ code: 400, msg: "custom db not create connection", data: { result: "fail" } })
-            return
-        }
-        currentPool = customDBPoolMap().get(userCookie);
-    }
-    index = (2 ** level + index);
-    let needLoadChildNode = [];
-    needLoadChildNode.push(index);
-    needLoadChildNode.push(index * 2);
-    needLoadChildNode.push(index * 2 + 1);
-    maxLevel = 16;
-    console.log("level, maxLevel, index:", level, maxLevel, index);
-    for(let i=level+1; i<parseInt(maxLevel)-1; i++){
-        // let temp = [];
-        let len = needLoadChildNode.length;
-        for(let j=(len+1)/2-1; j<len; j++){
-            needLoadChildNode.push(needLoadChildNode[j] * 2);
-            needLoadChildNode.push(needLoadChildNode[j] * 2 + 1);
-        }
-    }
-    // console.log("needLoadChildNode:", needLoadChildNode);
-    const allPromises = new Array();
-    let amount = allMultiSeriesTables.length;
-    for(let i=0; i<amount; ++i){
-        allPromises.push(new Promise((resolve, reject) => {
-            const curTableLevel = getTableLevel(allMultiSeriesTables[i]);
-            const timeSeriresRes = {
-                tn: allMultiSeriesTables[i],
-                d: [],
-                l: curTableLevel,
-            }
-            // const sqlStr = `select i,minvd,maxvd,avevd from ${allMultiSeriesTables[i]} where i<$1 order by i asc`;
-            let sqlStr = `select i,minvd,maxvd,avevd from ${allMultiSeriesTables[i]} where i in (`;
-            for(let j=0; j<needLoadChildNode.length-1; j++){
-                sqlStr += `${needLoadChildNode[j]},`
-            }
-            sqlStr += `${needLoadChildNode[needLoadChildNode.length-1]}) order by i asc`;
-            currentPool.query(sqlStr,(err, result) => {
-                if(err){
-                    console.log(sqlStr);
-                    console.log(err);
-                    currentPool.end();
-                    throw err;
-                }
-                const finalRes = [];
-                for(let i=0; i<result.rows.length; ++i){
-                    const tempVal = result.rows[i];
-                    const tempL = Math.floor(Math.log2(tempVal['i']));
-                    const tempI = tempVal['i'] - 2 ** tempL;
-                    finalRes.push({ l: curTableLevel - tempL, i: tempI, minvd: tempVal['minvd'], maxvd: tempVal['maxvd'], avevd: tempVal['avevd'] });
-                    // finalRes.push({minvd:tempVal['minvd'],maxvd:tempVal['maxvd'],avevd:tempVal['avevd']});
-                }
-                // if (result.rows.length > 0) {
-                //     finalRes.push({ l: -1, i: 0, minvd: result.rows[0]['minvd'], maxvd: result.rows[0]['maxvd'], avevd: result.rows[0]['avevd'] });
-                // }
-                timeSeriresRes.d = finalRes;
-                //console.log(timeSeriresRes)
-                retureRes.push(timeSeriresRes)
-                resolve();
-            });
-        }));
-    }
-    Promise.all(allPromises).then(() => {
-        res.send(retureRes);
-    });
-}
-
-function onlyChild(req, res) {
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    const query = req.query;
-    const dataName = query['dataName'];
-    // console.log("dataName:",dataName);
-    const dataName1 = query['dataNames'];
-    let dataNames = [];
-    dataNames.push(dataName);
-    for(let i =0;i<dataName1.length;i++){
-        dataNames.push(dataName1[i]);
-    }
-    console.log("dataNames:",dataNames);
-    const p = query['p'];
-    const p2 = query['p2'];
-    let pArray = [];
-    pArray.push(p);
-    for(let i =0;i<p2.length;i++){
-        pArray.push(p2[i]);
-    }
-    console.log(pArray);
-    const retureRes = [];
-    const userCookie = req.headers['authorization'];
-    let currentPool = pool
-    if (query.mode === 'Custom') {
-        if (userCookie === '' || userCookie === null || userCookie === undefined) {
-            res.send({ code: 400, msg: "cookie not found", data: { result: "fail" } })
-            return
-        }
-        if (!customDBPoolMap().has(userCookie)) {
-            res.send({ code: 400, msg: "custom db not create connection", data: { result: "fail" } })
-            return
-        }
-        currentPool = customDBPoolMap().get(userCookie);
-    }
-    for(let i=0; i<dataNames.length+1; ++i){
-        allPromises.push(new Promise((resolve, reject) => {
-            let level = pArray[i].level;
-            let index = pArray[i].index;
-            let sqlStr = `select i,minvd,maxvd,avevd from ${dataNames[i]} where i = ${(2 ** level + index)*2} and i = ${(2 ** level + index)*2+1} order by i asc`;
-            currentPool.query(sqlStr,(err, result) => {
-                if(err){
-                    console.log(sqlQuery1);
-                    console.log(err);
-                    currentPool.end();
-                    throw err;
-                }
-                const finalRes = [];
-                for(let i=0; i<result.rows.length; ++i){
-                    const tempVal = result.rows[i];
-                    finalRes.push({minvd:tempVal['minvd'],maxvd:tempVal['maxvd'],avevd:tempVal['avevd']});
-                }
-                // if (result.rows.length > 0) {
-                //     finalRes.push({ l: -1, i: 0, minvd: result.rows[0]['minvd'], maxvd: result.rows[0]['maxvd'], avevd: result.rows[0]['avevd'] });
-                // }
-                resolve();
-            });
-        }));
-    }
 }
 
 function queryMinMaxMissData(req, res) {

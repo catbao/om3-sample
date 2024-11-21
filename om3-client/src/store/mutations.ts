@@ -134,7 +134,22 @@ function addMultiTimeSeriesObj(state: GlobalState, info: {
     lineAmount: number,
     startTimeStamp: number,
     endTimeStamp: number,
-    timeIntervalMs: number, dataManagers: Array<LevelDataManager>, powRenderData: Array<{ renderData: Array<any>, minv: number, maxv: number }>, columnInfos: Array<Array<NoUniformColObj>>, url: string, startTime: number, endTime: number, algorithm: string, width: number, height: number, pow: boolean, minv: number, maxv: number, maxLevel: number
+    timeIntervalMs: number, 
+    // dataManagers: Array<LevelDataManager>, 
+    // powRenderData: Array<{ renderData: Array<any>, minv: number, maxv: number }>, 
+    columnInfos: Array<Array<any>>, 
+    isShow: Array<boolean>,
+    dataName: Array<string>,
+    url: string, 
+    startTime: number,
+    endTime: number, 
+    algorithm: string, 
+    width: number, 
+    height: number, 
+    pow: boolean, 
+    minv: number, 
+    maxv: number, 
+    maxLevel: number
 }) {
     const multiTImeSeriesObj: MultiTimeSeriesObj = {
         id: uuidv4(),
@@ -142,11 +157,13 @@ function addMultiTimeSeriesObj(state: GlobalState, info: {
         height: info.height,
         x: Math.random() * 60,
         y: Math.random() * 60,
-        powRenderData: info.powRenderData,
+        // powRenderData: info.powRenderData,
         columnInfos: info.columnInfos,
+        isShow: [true, true, true, true, true, true, true, true, true, true],
+        dataName: [],
         timeRange: [0, info.endTime],
         algorithm: info.algorithm,
-        dataManagers: info.dataManagers,
+        // dataManagers: info.dataManagers,
         params: [0, 0],
         currentLevel: Math.ceil(Math.log2(info.width)),
         pow: info.pow,
@@ -159,7 +176,7 @@ function addMultiTimeSeriesObj(state: GlobalState, info: {
         endTimeStamp: info.endTimeStamp,
         timeIntervalMs: info.timeIntervalMs
     }
-    if (info.dataManagers.length > 0) {
+    if (info.columnInfos.length > 0) {
         emitter.emit("add_multi_timeseries_obj", multiTImeSeriesObj);
     } else {
         throw new Error("cannot load time box data from server");
@@ -303,6 +320,14 @@ function alterSelectedOption(state: GlobalState, option: string){
     state.controlParams.transform_symbol = option;
 }
 
+function alterSelectedExperiment(state: GlobalState, option: string){
+    state.controlParams.experiment = option;
+}
+
+function alterSelectedComputeOrShow(state: GlobalState, option: string){
+    state.controlParams.computeOrShow = option;
+}
+
 function updateCustomTableAndInfo(state: GlobalState, info: { customTables: Array<string>,customTableInfo:Array<any> }){
     const tableInfoMap=new Map<string,any>()
     for(let i=0;i<info.customTableInfo.length;i++){
@@ -369,6 +394,8 @@ export {
     alterProgressive,
     setAllMultiLineClassAndLinesMap,
     alterSelectedOption,
+    alterSelectedExperiment,
+    alterSelectedComputeOrShow,
     alterStopEarly,
     alterNoStopEarly,
 }

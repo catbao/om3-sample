@@ -1,11 +1,18 @@
 <template>
   <div class="data-control-panel radius">
+
+    <div class="d-flex ms-2" marginTop="10px">
+        <input type="number" class="form-control form-control-sm dim-input" v-model="widthRef" />
+        <span style="line-height: 31px">×</span>
+        <input type="number" class="form-control form-control-sm dim-input" v-model="heightRef" />
+      </div>  
     <div class="choose_container choose_mode_container ms-1">
       <el-radio-group v-model="chooseMode" size="medium" @change="handleModeChange">
         <el-radio-button label="Default"></el-radio-button>
         <el-radio-button label="Custom"></el-radio-button>
       </el-radio-group>
     </div>
+
 
     <div class="dbsetting-control-container mt-2" v-if="chooseMode === 'Custom'">
       <div>
@@ -124,14 +131,12 @@
         <el-radio-button label="Single"></el-radio-button>
         <el-radio-button label="Multi"></el-radio-button>
       </el-radio-group>
-
     </div>
+
     <div class="progressive-container ms-1 mt-2" v-if="chooseLineType==='Single'">
       <span>Progressive</span>
         <el-switch v-model="progressive" name="Progressive"  @change="handleProgressiveChange"/>
     </div>
-
-
 
     <div class="table-choose-container mt-2 ms-1" v-if="chooseLineType == 'Single'">
       <el-select v-model="currentTable" placeholder="Select" size="medium" v-if="chooseMode === 'Default'"
@@ -187,14 +192,32 @@
       </el-select>   
     </div>
 
-    <div class="mt-2 mb-1" v-if="chooseLineType == 'Multi'">
+    <div class="mt-2 mb-1">
+      <el-select v-model="selectedExperiment" placeholder="Experiment" @change="handleSelectedExperiment">
+        <el-option label="om3" value="om3"></el-option>
+        <el-option label="case1" value="case1"></el-option>
+      </el-select>
+    </div>
+
+    <div class="mt-2 mb-1">
+      <el-select v-model="selectedComputeOrShow" placeholder="Compute/Show" @change="handleSelectedComputeOrShow">
+        <el-option label="compute" value="compute"></el-option>
+        <el-option label="show" value="show"></el-option>
+      </el-select>
+    </div>
+
+    <div class="mt-2 mb-1">
+        <el-input v-model="errorBound" placeholder="errorBound" />
+    </div>
+
+    <!-- <div class="mt-2 mb-1" v-if="chooseLineType == 'Multi'">
         <el-switch v-model="isStopEarly" name="OM3 StopEarly" />
         <label>{{ "Stop Early" }}</label>
-    </div>
+    </div> -->
 
     <div v-if="chooseLineType == 'Multi'">
       <button id="create_panel_btn" type="button" class="btn btn-secondary ms-2 mt-2 ml-4" style="width: 100px; height: 40px;" @click.prevent="handleComputePanel">
-        compute
+        create
       </button>
     </div>
 
@@ -390,7 +413,6 @@ export default defineComponent({
       // console.log("computeAllMultiLineClassAndLinesMap:", store.state.allMultiLineClassAndLinesMap['bao'])
       console.log(startFullTime, endFullTime, this.customMultiLineClassName, Array.from(this.multiLineTableNames.values()))
     }
-    
   },
 
   watch: {
@@ -451,8 +473,26 @@ export default defineComponent({
     const currentMultiClassALine = ref(store.state.controlParams.currentMultiLineClassALine);
     const currentMultiClassLines = ref(store.state.controlParams.currentMultiLineClassLines);
     const selectedOption = ref(store.state.controlParams.transform_symbol);
+    const selectedExperiment = ref(store.state.controlParams.experiment);
+    const selectedComputeOrShow = ref(store.state.controlParams.computeOrShow);
     // const multiLineClassAndLinesMap = ref(store.state.allMultiLineClassAndLinesMap);
 
+    const widthRef = ref(600);
+    const heightRef = ref(600);
+    const errorBound = ref(0);
+    const currentDB = computed(() => {
+      return store.state.controlParams.currentDB;
+    });
+
+    const handleComputePanel = () => {
+      console.log("currentMultiClassALine:",currentMultiClassALine.value);
+      console.log(Array.from(currentMultiClassLines.value));
+      const payload = {
+          width: widthRef.value,
+          height: heightRef.value,
+      };
+      store.dispatch("computeLineTransform", [currentMultiClassALine.value, Array.from(currentMultiClassLines.value), selectedOption.value, selectedExperiment.value, payload, errorBound, selectedComputeOrShow.value]);
+    }
 
     const allSampleAlgoritem = store.state.controlParams.sampleMethods;
 
@@ -487,16 +527,17 @@ export default defineComponent({
       store.commit("alterSampleMethod", currentSampleAlgorithm.value);
     };
 
-    const handleComputePanel = () => {
-      console.log("currentMultiClassALine:",currentMultiClassALine.value);
-      console.log(Array.from(currentMultiClassLines.value));
-      // console.log("Current Symbol:", selectedOption);
-      store.dispatch("computeLineTransform", [currentMultiClassALine.value, Array.from(currentMultiClassLines.value), selectedOption.value]);
-    }
-
     const handleSelectedOption = () => {
       console.log("Current Symbol:", selectedOption.value);
       store.commit("alterSelectedOption", selectedOption.value);
+    }
+
+    const handleSelectedExperiment = () => {
+      store.commit("alterSelectedExperiment", selectedExperiment.value);
+    }
+
+    const handleSelectedComputeOrShow = () => {
+      store.commit("alterSelectedComputeOrShow", selectedComputeOrShow.value);
     }
 
     const handleModeChange = () => {
@@ -577,6 +618,13 @@ export default defineComponent({
       handleComputePanel,
       selectedOption,
       handleSelectedOption,
+      selectedExperiment,
+      handleSelectedExperiment,
+      selectedComputeOrShow,
+      handleSelectedComputeOrShow,
+      widthRef,
+      heightRef,
+      errorBound
     };
   },
 });
@@ -599,5 +647,21 @@ export default defineComponent({
 
 .multi-line-select {
   width: 100%;
+}
+
+.device-control-panel {
+  min-height: 25px;
+  background-color: #fff;
+}
+
+.device-dimensions-menu-show {
+  position: absolute;
+  inset: 0px auto auto 0px;
+  margin: 0px;
+  transform: translate(0px, 40px);
+}
+
+.dim-input {
+  max-width: 4rem;
 }
 </style>

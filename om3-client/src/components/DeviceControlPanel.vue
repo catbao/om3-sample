@@ -13,7 +13,7 @@
         </ul>
       </div>
       <i class="bi bi-arrow-clockwise"></i>
-      <div class="d-flex ms-2">
+      <!-- <div class="d-flex ms-2">
         <input type="number" class="form-control form-control-sm dim-input" v-model="widthRef" />
         <span style="line-height: 31px">×</span>
         <input type="number" class="form-control form-control-sm dim-input" v-model="heightRef" />
@@ -25,15 +25,15 @@
               d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z" />
           </svg>
         </button>
-      </div>
+      </div> -->
       <div class="ms-2" v-if="false">
         <el-date-picker v-model="dateRangeRef" type="datetimerange" range-separator="To"
           :start-placeholder="'2019-07-13 00:00:00'" :end-placeholder="'2020-04-29 00:00:00'">
         </el-date-picker>
       </div>
-      <button id="create_panel_btn" type="button" class="btn btn-secondary ms-2" @click.prevent="handleCreatePanel">
+      <!-- <button id="create_panel_btn" type="button" class="btn btn-secondary ms-2" @click.prevent="handleCreatePanel">
         create
-      </button>
+      </button> -->
     </div>
   </div>
 </template>
@@ -78,7 +78,7 @@ export default defineComponent({
           height: heightRef.value,
           name: "load_shape_search",
         };
-        store.dispatch("loadMultiTimeSeriesInitData", payload);
+        store.dispatch("computeLineTransform", payload);
         return;
       }else{
         console.log("multi wavle");

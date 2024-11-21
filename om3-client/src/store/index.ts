@@ -164,12 +164,14 @@ export interface MultiTimeSeriesObj {
   y: number;
   timeRange: [number, number];
   algorithm: string;
-  powRenderData: Array<{ renderData: Array<any>, maxv: number, minv: number }>;
+  // powRenderData: Array<{ renderData: Array<any>, maxv: number, minv: number }>;
   params: [number, number];
-  dataManagers: Array<LevelDataManager>;
+  // dataManagers: Array<LevelDataManager>;
   currentLevel: number;
   pow: boolean,
-  columnInfos: Array<Array<NoUniformColObj>>,
+  columnInfos: Array<Array<any>>,
+  isShow: Array<boolean>,
+  dataName: Array<string>,
   minv: number,
   maxv: number,
   maxLevel: number,
@@ -308,6 +310,8 @@ export interface GlobalState {
     semanticInterval: number;
     semanticType: 'ms' | 's' | 'm' | 'h' | 'd' | 'W' | 'M' | 'Y';
     transform_symbol: string;
+    experiment: string;
+    computeOrShow: string;
     stopEarly: boolean;
   },
 }
@@ -354,6 +358,8 @@ export default createStore<GlobalState>({
       semanticInterval: 6000,
       semanticType: 'h',
       transform_symbol: "",
+      experiment: "",
+      computeOrShow: "",
       stopEarly: false,
     }
   },

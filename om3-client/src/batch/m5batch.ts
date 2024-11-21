@@ -65,37 +65,37 @@ function rebuildColObj(currentLevel: number, width: number, timeRange: Array<num
 
 
 
-export async function batchViewChange(multiTimeSeriesObj: MultiTimeSeriesObj, params: { inter: AllInteraction }) {
-    const dataManagers = multiTimeSeriesObj.dataManagers;
-    const managerMap = new Map<string, LevelDataManager>();
-    const lineNum = dataManagers.length;
-    const width = multiTimeSeriesObj.width;
-    const maxLevel = multiTimeSeriesObj.maxLevel;
-    const currentLevel = multiTimeSeriesObj.currentLevel;
-    const timeRange = multiTimeSeriesObj.timeRange;
-    console.log(multiTimeSeriesObj)
+// export async function batchViewChange(multiTimeSeriesObj: MultiTimeSeriesObj, params: { inter: AllInteraction }) {
+//     const dataManagers = multiTimeSeriesObj.dataManagers;
+//     const managerMap = new Map<string, LevelDataManager>();
+//     const lineNum = dataManagers.length;
+//     const width = multiTimeSeriesObj.width;
+//     const maxLevel = multiTimeSeriesObj.maxLevel;
+//     const currentLevel = multiTimeSeriesObj.currentLevel;
+//     const timeRange = multiTimeSeriesObj.timeRange;
+//     console.log(multiTimeSeriesObj)
 
-    const allPromises=[];
-    for(let i=0;i<multiTimeSeriesObj.columnInfos.length;i++){
-        const dataManager=multiTimeSeriesObj.dataManagers[i];
-        if(!dataManager.isShow){
-            continue;
-        }
-        allPromises.push(new Promise((resolve,rej)=>{
-            dataManager.viewChangeInteractionFinal1(10,width,timeRange,null,null).then((nonCol)=>{
-                multiTimeSeriesObj.columnInfos[i]=nonCol;
-                resolve(null)
-            })
-        }))
-    }
-    let t2 = Math.floor(Math.random() * (40 - 20 + 1)) + 20;
-        let t1 = 50;
-        // console.log("Loaded Time/ms:", t1 + t2);
-    await Promise.all(allPromises);
-    return multiTimeSeriesObj.columnInfos;
+//     const allPromises=[];
+//     for(let i=0;i<multiTimeSeriesObj.columnInfos.length;i++){
+//         const dataManager=multiTimeSeriesObj.dataManagers[i];
+//         if(!dataManager.isShow){
+//             continue;
+//         }
+//         allPromises.push(new Promise((resolve,rej)=>{
+//             dataManager.viewChangeInteractionFinal1(10,width,timeRange,null,null).then((nonCol)=>{
+//                 multiTimeSeriesObj.columnInfos[i]=nonCol;
+//                 resolve(null)
+//             })
+//         }))
+//     }
+//     let t2 = Math.floor(Math.random() * (40 - 20 + 1)) + 20;
+//         let t1 = 50;
+//         // console.log("Loaded Time/ms:", t1 + t2);
+//     await Promise.all(allPromises);
+//     return multiTimeSeriesObj.columnInfos;
 
     
-}
+// }
 
 async function batchLoadDataForMultiLine1(allLoedData: Array<{ tn: string, lr: Array<Array<number>> }>, maxLevel: number, dataManagers: Map<string, LevelDataManager>) {
     if (allLoedData.length === 0) {
@@ -220,85 +220,85 @@ export async function batchGetData(dataManagers: Array<LevelDataManager>, level:
     return await Promise.all(allPromises);
 }
 
-export async function viewChangeInteraction(multiTimeSeriesObj: MultiTimeSeriesObj, callback: any) {
-    const allPromises = [];
-    const allColumnInfos = new Array(multiTimeSeriesObj.dataManagers.length);
-    for (let i = 0; i < multiTimeSeriesObj.dataManagers.length; i++) {
-        allPromises.push(new Promise((resolve, reject) => {
-            multiTimeSeriesObj.dataManagers[i].viewChangeInteraction(multiTimeSeriesObj.currentLevel, multiTimeSeriesObj.width, multiTimeSeriesObj.timeRange, null).then(uniformOobj => {
-                allColumnInfos[i] = uniformOobj;
-                resolve(null);
-            })
-        }))
-    }
-    Promise.all(allPromises).then((res) => {
-        multiTimeSeriesObj.columnInfos = allColumnInfos;
-        callback()
-    })
-}
+// export async function viewChangeInteraction(multiTimeSeriesObj: MultiTimeSeriesObj, callback: any) {
+//     const allPromises = [];
+//     const allColumnInfos = new Array(multiTimeSeriesObj.dataManagers.length);
+//     for (let i = 0; i < multiTimeSeriesObj.dataManagers.length; i++) {
+//         allPromises.push(new Promise((resolve, reject) => {
+//             multiTimeSeriesObj.dataManagers[i].viewChangeInteraction(multiTimeSeriesObj.currentLevel, multiTimeSeriesObj.width, multiTimeSeriesObj.timeRange, null).then(uniformOobj => {
+//                 allColumnInfos[i] = uniformOobj;
+//                 resolve(null);
+//             })
+//         }))
+//     }
+//     Promise.all(allPromises).then((res) => {
+//         multiTimeSeriesObj.columnInfos = allColumnInfos;
+//         callback()
+//     })
+// }
 
-export async function loadData(multiTimeSeriesObj: MultiTimeSeriesObj, level: number, start: number, end: number, width: number, callback: any) {
-    const allPromises = [];
-    const allColumnInfos = new Array(multiTimeSeriesObj.dataManagers.length);
-    allPromises.push(new Promise((resolve, reject) => {
-        multiTimeSeriesObj.dataManagers.forEach((manager, i) => {
-            manager.getData(level, start, end, true).then(() => {
-                manager.viewChangeInteraction(level, width, multiTimeSeriesObj.timeRange, null).then((uniformOobj) => {
-                    allColumnInfos[i] = uniformOobj;
-                    resolve(null);
-                }
+// export async function loadData(multiTimeSeriesObj: MultiTimeSeriesObj, level: number, start: number, end: number, width: number, callback: any) {
+//     const allPromises = [];
+//     const allColumnInfos = new Array(multiTimeSeriesObj.dataManagers.length);
+//     allPromises.push(new Promise((resolve, reject) => {
+//         multiTimeSeriesObj.dataManagers.forEach((manager, i) => {
+//             manager.getData(level, start, end, true).then(() => {
+//                 manager.viewChangeInteraction(level, width, multiTimeSeriesObj.timeRange, null).then((uniformOobj) => {
+//                     allColumnInfos[i] = uniformOobj;
+//                     resolve(null);
+//                 }
 
-                )
-            })
-        })
-    }))
-    Promise.all(allPromises).then(() => {
-        multiTimeSeriesObj.columnInfos = allColumnInfos;
-        callback()
-    })
-
-
-}
+//                 )
+//             })
+//         })
+//     }))
+//     Promise.all(allPromises).then(() => {
+//         multiTimeSeriesObj.columnInfos = allColumnInfos;
+//         callback()
+//     })
 
 
+// }
 
-export async function zoomInIneraction(multiTimeSeriesObj: MultiTimeSeriesObj, callback: any) {
-    const allPromises = [];
-    const allColumnInfos = new Array(multiTimeSeriesObj.dataManagers.length);
-    const baseInfo = computeTimeFilterBaseLevelInfo(multiTimeSeriesObj.timeRange, multiTimeSeriesObj.width, multiTimeSeriesObj.maxLevel);
-    const computeColInfoT = computeColTimeRange(multiTimeSeriesObj.currentLevel, multiTimeSeriesObj.width, multiTimeSeriesObj.timeRange, 2 ** multiTimeSeriesObj.maxLevel, multiTimeSeriesObj.maxLevel)
-    multiTimeSeriesObj.currentLevel = baseInfo[0];
-    for (let i = 0; i < multiTimeSeriesObj.dataManagers.length; i++) {
-        allPromises.push(new Promise((resolve, reject) => {
-            multiTimeSeriesObj.dataManagers[i].getData(baseInfo[0], baseInfo[1], baseInfo[2], true).then(() => {
-               console.log("data")
-            })
 
-        }))
-    }
-    Promise.all(allPromises).then((res) => {
-        multiTimeSeriesObj.columnInfos = allColumnInfos;
-        //multiTimeSeriesObj.currentLevel=baseInfo[0];
-        callback()
-    })
-}
 
-export async function panInIneraction(multiTimeSeriesObj: MultiTimeSeriesObj, callback: any) {
-    const allPromises = [];
-    const allColumnInfos = new Array(multiTimeSeriesObj.dataManagers.length);
-    const baseInfo = computeTimeFilterBaseLevelInfo(multiTimeSeriesObj.timeRange, multiTimeSeriesObj.width, multiTimeSeriesObj.maxLevel);
-    const computeColInfoT = computeColTimeRange(multiTimeSeriesObj.currentLevel, multiTimeSeriesObj.width, multiTimeSeriesObj.timeRange, 2 ** multiTimeSeriesObj.maxLevel, multiTimeSeriesObj.maxLevel)
-    for (let i = 0; i < multiTimeSeriesObj.dataManagers.length; i++) {
-        allPromises.push(new Promise((resolve, reject) => {
-            multiTimeSeriesObj.dataManagers[i].getData(baseInfo[0], baseInfo[1], baseInfo[2], true).then(() => {
-                console.log("getdata")
-            })
+// export async function zoomInIneraction(multiTimeSeriesObj: MultiTimeSeriesObj, callback: any) {
+//     const allPromises = [];
+//     const allColumnInfos = new Array(multiTimeSeriesObj.dataManagers.length);
+//     const baseInfo = computeTimeFilterBaseLevelInfo(multiTimeSeriesObj.timeRange, multiTimeSeriesObj.width, multiTimeSeriesObj.maxLevel);
+//     const computeColInfoT = computeColTimeRange(multiTimeSeriesObj.currentLevel, multiTimeSeriesObj.width, multiTimeSeriesObj.timeRange, 2 ** multiTimeSeriesObj.maxLevel, multiTimeSeriesObj.maxLevel)
+//     multiTimeSeriesObj.currentLevel = baseInfo[0];
+//     for (let i = 0; i < multiTimeSeriesObj.dataManagers.length; i++) {
+//         allPromises.push(new Promise((resolve, reject) => {
+//             multiTimeSeriesObj.dataManagers[i].getData(baseInfo[0], baseInfo[1], baseInfo[2], true).then(() => {
+//                console.log("data")
+//             })
 
-        }))
-    }
-    Promise.all(allPromises).then((res) => {
-        multiTimeSeriesObj.columnInfos = allColumnInfos;
-        multiTimeSeriesObj.currentLevel = baseInfo[0];
-        callback()
-    })
-}
+//         }))
+//     }
+//     Promise.all(allPromises).then((res) => {
+//         multiTimeSeriesObj.columnInfos = allColumnInfos;
+//         //multiTimeSeriesObj.currentLevel=baseInfo[0];
+//         callback()
+//     })
+// }
+
+// export async function panInIneraction(multiTimeSeriesObj: MultiTimeSeriesObj, callback: any) {
+//     const allPromises = [];
+//     const allColumnInfos = new Array(multiTimeSeriesObj.dataManagers.length);
+//     const baseInfo = computeTimeFilterBaseLevelInfo(multiTimeSeriesObj.timeRange, multiTimeSeriesObj.width, multiTimeSeriesObj.maxLevel);
+//     const computeColInfoT = computeColTimeRange(multiTimeSeriesObj.currentLevel, multiTimeSeriesObj.width, multiTimeSeriesObj.timeRange, 2 ** multiTimeSeriesObj.maxLevel, multiTimeSeriesObj.maxLevel)
+//     for (let i = 0; i < multiTimeSeriesObj.dataManagers.length; i++) {
+//         allPromises.push(new Promise((resolve, reject) => {
+//             multiTimeSeriesObj.dataManagers[i].getData(baseInfo[0], baseInfo[1], baseInfo[2], true).then(() => {
+//                 console.log("getdata")
+//             })
+
+//         }))
+//     }
+//     Promise.all(allPromises).then((res) => {
+//         multiTimeSeriesObj.columnInfos = allColumnInfos;
+//         multiTimeSeriesObj.currentLevel = baseInfo[0];
+//         callback()
+//     })
+// }
