@@ -665,7 +665,8 @@ async function Case1(req, res){
     console.log('Case1')
     let table_name1=req.query['table_name']
     let table_name_others=req.query['table_name_others']
-    let symble = req.query['symbol']
+    // let symbol = req.query['symbol']
+    let symbol = '+';
     let mode = req.query['mode'] //compute or show/multi
     let width= req.query['width']
     let height = req.query['height']
@@ -678,7 +679,7 @@ async function Case1(req, res){
     let parallel = req.query['parallel']
     let errorBound = req.query['errorBound']
     let params = ''
-    console.log(table_name1,table_name_others,symble,params,width,height,mode,parallel,errorBound,startTime,endTime, interact_type)
+    console.log(table_name1,table_name_others,symbol,width,height,mode,parallel,errorBound,startTime,endTime, interact_type)
     //对单点函数，extremes是极值点；对均值，extremes是区间长度；对加权均值，extremes是加权数组， 如[1,-1,3,1,-1]
     //  symble = symble.split(';')
     //  if (symble.length > 1) {
@@ -686,7 +687,8 @@ async function Case1(req, res){
     //  } else {
     //      params = []
     //  }
-    let funInfo = new FunInfo(symble, params)
+    console.log("symbol:", symbol);
+    let funInfo = new FunInfo(symbol, params)
 
     let tables = []
     let results = []
